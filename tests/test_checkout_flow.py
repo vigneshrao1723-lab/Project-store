@@ -33,6 +33,8 @@ def stock_of(product):
 
 
 def test_happy_path_reserves_stock_then_delivers_after_payment(buyer, rag):
+    rag.delivery_url = "https://files.example.com/kit-abc123"      # seeded products have no link
+    db.session.commit()
     before = rag.stock
     add(buyer, rag, 2)
     r = checkout(buyer, billing_name="Vignesh")
@@ -46,7 +48,7 @@ def test_happy_path_reserves_stock_then_delivers_after_payment(buyer, rag):
 
     paid = pay(buyer, order).get_json()
     assert paid["status"] == "paid"
-    assert paid["items"][0]["download_url"].startswith("https://")
+    assert paid["items"][0]["download_url"] == "https://files.example.com/kit-abc123"
     assert stock_of(rag) == before - 2                      # no second deduction
 
 

@@ -17,7 +17,7 @@
       <h2>Your downloads</h2>
       <ul class="plain">
         {% for i in order.items %}
-        <li><span>{{ i.title }}</span>{% if i.product.delivery_url %}<a href="{{ i.product.delivery_url }}" rel="noopener">Open download</a>{% else %}<span class="muted">Link coming soon. You'll be emailed.</span>{% endif %}</li>
+        <li><span>{{ i.title }}</span>{% if i.product.delivery_url %}<a href="{{ i.product.delivery_url }}" rel="noopener">Open download</a>{% else %}<span class="muted">Link coming soon. Contact the store.</span>{% endif %}</li>
         {% endfor %}
       </ul>
     </section>

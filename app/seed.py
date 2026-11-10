@@ -25,7 +25,7 @@ PRODUCTS = [
             "Runs on a single laptop with Python. No cloud account needed."),
         tech="Python, Kyber-1024, RSA-2048, AES-256-GCM, TCP sockets",
         includes="Client and server source\nBenchmark scripts and sample results\nSetup guide for Windows and Linux\nArchitecture notes on the handshake",
-        delivery_url="https://github.com/vigneshrao1723-lab/Quantum-Resistant-Secure-Communication-System",
+        delivery_url="",
         price=249900, stock=25),
     dict(
         slug="advanced-rag-knowledge-assistant", category="ai-data", featured=True,
@@ -39,7 +39,7 @@ PRODUCTS = [
             "Point it at any folder of PDFs or text files."),
         tech="Python, LangChain, FAISS, Flask, Streamlit",
         includes="Ingestion and chunking pipeline\nStreamlit interface\nSample document set\nSetup guide and design notes",
-        delivery_url="https://github.com/vigneshrao1723-lab/advanced-rag-knowledge-assistant",
+        delivery_url="",
         price=299900, stock=18),
     dict(
         slug="project-store-platform", category="web-backend", featured=True,
@@ -53,7 +53,7 @@ PRODUCTS = [
             "Dockerfile and a CI pipeline."),
         tech="Flask, MySQL, REST APIs, Docker, GitHub Actions, Razorpay",
         includes="Full source with tests\nDocker Compose setup\nCI workflow\nArchitecture and API notes",
-        delivery_url="https://github.com/vigneshrao1723-lab/project-store",
+        delivery_url="",
         price=199900, stock=30),
     dict(
         slug="smart-home-soc-fpga", category="hardware-vlsi", featured=False,

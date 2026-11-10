@@ -1,5 +1,6 @@
 """The download link is what the buyer pays for, so it must appear only once an order is paid."""
 from app.extensions import db
+from app.models import Product
 
 from .conftest import login, make_user
 
@@ -95,3 +96,20 @@ def test_someone_elses_paid_order_does_not_reveal_the_link(app, buyer, rag):
     anonymous = app.test_client()
     assert SECRET_LINK not in anonymous.get(f"/orders/{public_id}", follow_redirects=True).get_data(as_text=True)
     assert SECRET_LINK not in anonymous.get(f"/api/v1/orders/{public_id}").get_data(as_text=True)
+
+
+def test_seeded_products_ship_without_download_links(app):
+    """The catalogue is a public demo, so the seed must not point buyers at any real repository or file."""
+    products = db.session.scalars(db.select(Product)).all()
+    assert len(products) >= 4
+    assert [p.slug for p in products if p.delivery_url] == []
+
+
+def test_paid_order_without_a_link_says_to_contact_the_store(buyer, rag):
+    public_id = _start_order(buyer, rag)
+    buyer.post(f"/checkout/test-pay/{public_id}", data={"outcome": "pay"})
+    page = buyer.get(f"/orders/{public_id}").get_data(as_text=True)
+    assert "Link coming soon. Contact the store." in page
+    assert "Open download" not in page
+    assert "emailed" not in page                  # the store sends no email, so it must not promise one
+    assert not buyer.get(f"/api/v1/orders/{public_id}").get_json()["items"][0]["download_url"]

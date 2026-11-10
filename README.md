@@ -4,6 +4,8 @@ A full-stack store for selling finished engineering projects: sign-in, a searcha
 
 Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design.
 
+**This is an open-source demo store.** The source is public (MIT), so there is no paywall. The download links in the seeded catalogue are blank placeholders that show where a link would go; they protect nothing. If you run a store like this for your own work, set private links as described in [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
+
 ## Run it with Docker (MySQL)
 
 ```bash
@@ -80,7 +82,7 @@ What it does not do:
 ## Tests
 
 ```bash
-pytest                                   # 96 tests (2 skip without MySQL), about 40 seconds
+pytest                                   # 98 tests (2 skip without MySQL), about 40 seconds
 pytest --cov=app --cov-report=term-missing
 
 # Concurrency tests need MySQL or MariaDB row locks. The migration and sign-in limit tests also run there:
@@ -107,7 +109,7 @@ Errors are `{"error": "...", "fields": {...}}` with a matching status code.
 ## Make it yours
 
 * Seed projects live in `app/seed.py`. Edit products in the admin screen afterwards.
-* **Download links:** the seeded links point at GitHub repositories. If a repository is public, anyone can read it without buying. Replace every one before selling for real. See [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
+* **Download links:** the seeded products have no link, so a paid order's page says "Link coming soon. Contact the store." until you set one in the admin screen. Never use a public repository as a link. See [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 * Run `flask release-expired` from cron if you don't use the Docker sweeper.
 
 ## How to set up the private delivery links
@@ -137,11 +139,11 @@ Do this for every product:
 - [ ] Quantum-Resistant Secure Communication System
 - [ ] Advanced RAG Knowledge Assistant
 - [ ] Production E-Commerce Platform. This is the source of the store itself. Do not use the repository that hosts it unless that repository is private.
-- [ ] Smart Home SoC on FPGA. Leave the link empty until it ships. While it is empty the order page says "Link coming soon", and no email is sent, so set the link before you put it on sale.
+- [ ] Smart Home SoC on FPGA. Leave the link empty until it ships. While it is empty the order page says "Link coming soon. Contact the store." The app sends no email, so set the link before you put it on sale.
 
 ### Seed data and existing databases
 
-`flask seed` only adds a product whose slug is not in the database yet. Changing links in `app/seed.py` does not change a database that already has the products, so edit those in the admin screen. A new database (for example a fresh Docker volume) gets whatever `app/seed.py` holds, so check or replace the links straight after the first start.
+`flask seed` only adds a product whose slug is not in the database yet. Changing links in `app/seed.py` does not change a database that already has the products, so edit those in the admin screen. A new database (for example a fresh Docker volume) gets products with no links, so set them in the admin screen before you sell anything. A database that was seeded before the links were blanked still has the old ones, which point at public GitHub repositories, until you edit them.
 
 ## Layout
 
