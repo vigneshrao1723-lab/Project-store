@@ -80,7 +80,7 @@ What it does not do:
 ## Tests
 
 ```bash
-pytest                                   # 93 tests (2 skip without MySQL), about 35 seconds
+pytest                                   # 96 tests (2 skip without MySQL), about 40 seconds
 pytest --cov=app --cov-report=term-missing
 
 # Concurrency tests need MySQL or MariaDB row locks. The migration and sign-in limit tests also run there:
@@ -107,8 +107,41 @@ Errors are `{"error": "...", "fields": {...}}` with a matching status code.
 ## Make it yours
 
 * Seed projects live in `app/seed.py`. Edit products in the admin screen afterwards.
-* **Download links:** the seeded links point at GitHub repositories. If a repository is public, anyone can read it without buying. Replace each link with a private one (a private repo invite page, or a file link) before selling for real.
+* **Download links:** the seeded links point at GitHub repositories. If a repository is public, anyone can read it without buying. Replace every one before selling for real. See [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 * Run `flask release-expired` from cron if you don't use the Docker sweeper.
+
+## How to set up the private delivery links
+
+Each product has one **Download link**. When an order is paid, the order page shows that link to the person who paid, and to nobody before that (`tests/test_delivery_links.py` checks the order page, the pay page, the order and product APIs, and other users). The app sends no email and does not ask buyers for a GitHub username, so the link must either work for any buyer as it is, or you give access yourself after each sale.
+
+**The link must never be the public repository.** A public repo can be read by anyone without paying. For each link, open it in a private or incognito window while signed out. It must not show the code.
+
+### Pick one method per product
+
+**A. A file link (no manual step per sale).** Zip the kit. Upload the zip to Google Drive, Dropbox, OneDrive, S3 or similar. Set sharing to "anyone with the link can download", not "public on the web". Use that link.
+* Every buyer gets the same link. If it leaks, replace the file, make a new link and update the product. Orders already placed show the new link, because the page reads the product's current link.
+* Check it: in an incognito window the link downloads the zip without asking you to sign in.
+
+**B. A private GitHub repository.** Keep the repository private and use its URL as the link.
+* A signed-out visitor sees a 404. A buyer sees a 404 too until you add them: repository, Settings, Collaborators, add their username with read access.
+* The admin order page shows each buyer's name, email and phone (Admin, Orders, open an order), so you can ask for their GitHub username. This is manual work for every sale, so use it only when orders are few.
+
+### Set the link
+
+1. Sign in as an admin and open Admin, Products.
+2. Open the product and paste the link into **Download link**. Save.
+3. Place a test order for it and pay with the practice gateway. Confirm that **Open download** works from the order page, in an incognito window after signing in as that buyer.
+
+Do this for every product:
+
+- [ ] Quantum-Resistant Secure Communication System
+- [ ] Advanced RAG Knowledge Assistant
+- [ ] Production E-Commerce Platform. This is the source of the store itself. Do not use the repository that hosts it unless that repository is private.
+- [ ] Smart Home SoC on FPGA. Leave the link empty until it ships. While it is empty the order page says "Link coming soon", and no email is sent, so set the link before you put it on sale.
+
+### Seed data and existing databases
+
+`flask seed` only adds a product whose slug is not in the database yet. Changing links in `app/seed.py` does not change a database that already has the products, so edit those in the admin screen. A new database (for example a fresh Docker volume) gets whatever `app/seed.py` holds, so check or replace the links straight after the first start.
 
 ## Layout
 
