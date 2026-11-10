@@ -31,7 +31,7 @@ services:
       RESERVATION_MINUTES: ${RESERVATION_MINUTES:-15}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
-      - "8000:8000"
+      - "${WEB_PORT:-8000}:8000"
 
   # Frees stock held by unpaid orders even when nobody is browsing.
   sweeper:
