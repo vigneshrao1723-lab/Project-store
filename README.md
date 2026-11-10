@@ -154,3 +154,7 @@ app/
 tests/          pytest suite
 docs/           ARCHITECTURE.md
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE). The self-hosted fonts keep their own licences, in `app/static/fonts/LICENSE-*.txt`.
