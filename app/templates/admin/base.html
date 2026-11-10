@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<div class="wrap admin">
+  <nav class="admin-nav" aria-label="Admin">
+    <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>Overview</a>
+    <a href="{{ url_for('admin.orders') }}" {% if request.endpoint and request.endpoint.startswith('admin.order') %}aria-current="page"{% endif %}>Orders</a>
+    <a href="{{ url_for('admin.products') }}" {% if request.endpoint and request.endpoint.startswith('admin.product') %}aria-current="page"{% endif %}>Products</a>
+  </nav>
+  <div>{% block admin %}{% endblock %}</div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: project_store
+      MYSQL_USER: store
+      MYSQL_PASSWORD: ${DB_PASSWORD:-store}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:-store}@db:3306/project_store?charset=utf8mb4
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      RESERVATION_MINUTES: ${RESERVATION_MINUTES:-15}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "8000:8000"
+
+  # Frees stock held by unpaid orders even when nobody is browsing.
+  sweeper:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+    environment:
+      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:-store}@db:3306/project_store?charset=utf8mb4
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do FLASK_APP=wsgi.py flask release-expired; sleep 60; done"]
+
+volumes:
+  dbdata:

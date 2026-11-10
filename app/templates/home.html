@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import tile %}
+{% block title %}Project Store{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1 class="h1">Real engineering projects, ready to run and ready to explain.</h1>
+      <p class="lede">Every kit comes with the working source, a setup guide and the architecture notes, written by the student who built it.</p>
+      <div class="hero-actions">
+        <a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a>
+        <a href="#how">How buying works</a>
+      </div>
+    </div>
+    {% if hero %}
+    <a class="plate-link" href="{{ url_for('shop.product', slug=hero.slug) }}" aria-label="{{ hero.title }}">
+      <div class="plate">
+        {{ cover(hero) }}
+        <dl class="spec">
+          <div><dt>Featured</dt><dd>{{ hero.title }}</dd></div>
+          <div><dt>Built with</dt><dd>{{ hero.tech_list[:3] | join(', ') }}</dd></div>
+          <div><dt>Price</dt><dd class="num">{{ hero.price_paise | inr }}</dd></div>
+          <div><dt>Copies left</dt><dd class="num">{{ hero.stock }}</dd></div>
+        </dl>
+      </div>
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2 class="h2">Browse by field</h2></div>
+    <div class="index">
+      {% for cat, n in categories %}
+        <a href="{{ url_for('shop.catalogue', category=cat.slug) }}">{{ cat.name }}<span class="n">{{ n }} {{ 'project' if n == 1 else 'projects' }}</span></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2 class="h2">On the shelf</h2><a href="{{ url_for('shop.catalogue') }}">See all projects</a></div>
+    <div class="grid">{% for p in latest %}{{ tile(p) }}{% endfor %}</div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head"><h2 class="h2">How buying works</h2></div>
+    <ol class="plain steps">
+      <li><h3>Pick a project</h3><p>Open its page to see the stack, what's in the kit and how many copies are left.</p></li>
+      <li><h3>Pay at checkout</h3><p>Your copy is held for {{ reservation_minutes }} minutes while you pay with Razorpay, so nobody can take it from under you.</p></li>
+      <li><h3>Download from your orders</h3><p>The link appears on your order page the moment the payment is confirmed.</p></li>
+    </ol>
+  </div>
+</section>
+{% endblock %}

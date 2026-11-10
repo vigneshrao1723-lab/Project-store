@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1 class="h2">Your cart</h1></div>
+  {% if cart.lines %}
+  <div class="two-col" data-cart>
+    <div class="lines">
+      {% for l in cart.lines %}
+      <div class="line" data-line="{{ l.product_id }}" data-unit="{{ l.unit_paise }}">
+        <div>
+          <h3><a href="{{ url_for('shop.product', slug=l.slug) }}">{{ l.title }}</a></h3>
+          <p class="sub num">{{ l.unit_paise | inr }} each</p>
+          {% if not l.available %}<p class="sub warn">Sold out. Remove it to check out.</p>
+          {% elif l.qty > l.stock %}<p class="sub warn">Only {{ l.stock }} left. Lower the quantity.</p>{% endif %}
+        </div>
+        <div class="qty-cell stepper" role="group" aria-label="Quantity for {{ l.title }}">
+          <button type="button" data-cart-step="-1" aria-label="One fewer">−</button>
+          <input type="number" value="{{ l.qty }}" min="1" max="{{ [l.stock, 5] | min if l.stock else 1 }}" aria-label="Quantity">
+          <button type="button" data-cart-step="1" aria-label="One more">+</button>
+        </div>
+        <div class="line-total" data-line-total>{{ l.line_paise | inr }}</div>
+        <button type="button" class="linkish remove" data-cart-remove>Remove</button>
+      </div>
+      {% endfor %}
+    </div>
+    <aside class="summary" aria-label="Order summary">
+      <h2>Summary</h2>
+      <div class="sum-row"><span>Items</span><span class="num" data-count>{{ cart.count }}</span></div>
+      <div class="sum-row total"><span>Total</span><span class="num" data-total>{{ cart.total_paise | inr }}</span></div>
+      <a class="btn block" href="{{ url_for('checkout.start') }}">Go to checkout</a>
+      <small>Your copies are held for {{ reservation_minutes }} minutes once you reach payment.</small>
+    </aside>
+  </div>
+  {% else %}
+  <div class="wrap narrow" style="padding:0 0 4rem;margin:0">
+    <div class="empty">
+      <h2>Nothing in your cart yet.</h2>
+      <p>Pick a project and it will wait for you here.</p>
+      <a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

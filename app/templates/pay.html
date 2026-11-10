@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Pay for {{ order.public_id }}{% endblock %}
+{% block content %}
+<div class="wrap page-pad">
+  <div class="pay-box">
+    <p class="ui" style="margin:0;font-weight:700">Order {{ order.public_id }}</p>
+    <div class="amount">{{ order.total_paise | inr }}</div>
+    <ul class="plain ui" style="margin-bottom:1.2rem">
+      {% for i in order.items %}<li style="padding:.2rem 0">{{ i.title }}{% if i.qty > 1 %} × {{ i.qty }}{% endif %}</li>{% endfor %}
+    </ul>
+    <div class="hold" data-expires="{{ order.expires_at.isoformat() }}Z">Your copies are held for <span class="timer" data-timer>--:--</span></div>
+
+    {% if mode == 'razorpay' %}
+      <div id="rzp" data-key="{{ key_id }}" data-order="{{ order.gateway_order_id }}" data-amount="{{ order.total_paise }}"
+           data-name="{{ order.billing_name }}" data-email="{{ order.user.email }}" data-phone="{{ order.phone }}"
+           data-public-id="{{ order.public_id }}"></div>
+      <form id="rzp-verify" method="post" action="{{ url_for('checkout.verify') }}" hidden>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="public_id" value="{{ order.public_id }}">
+        <input type="hidden" name="razorpay_order_id"><input type="hidden" name="razorpay_payment_id"><input type="hidden" name="razorpay_signature">
+      </form>
+      <div class="pay-actions"><button class="btn block" id="rzp-open" type="button">Pay {{ order.total_paise | inr }} with Razorpay</button></div>
+    {% else %}
+      <p class="muted ui" style="font-size:.9rem">This is the practice gateway. Choose what should happen to the payment.</p>
+      <form class="pay-actions" method="post" action="{{ url_for('checkout.test_pay', public_id=order.public_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn block" name="outcome" value="pay" type="submit">Pay {{ order.total_paise | inr }} (test)</button>
+        <button class="btn ghost block" name="outcome" value="fail" type="submit">Simulate a declined card</button>
+      </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('checkout.cancel', public_id=order.public_id) }}" style="margin-top:1rem">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="linkish ui" type="submit">Cancel this order and return to cart</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% if mode == 'razorpay' %}<script src="https://checkout.razorpay.com/v1/checkout.js"></script><script src="{{ url_for('static', filename='js/razorpay.js') }}" defer></script>{% endif %}{% endblock %}

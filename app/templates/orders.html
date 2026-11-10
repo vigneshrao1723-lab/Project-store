@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status %}
+{% block title %}Your orders{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1 class="h2">Your orders</h1></div>
+  {% if orders %}
+  <div class="table-wrap" style="padding-bottom:4rem">
+    <table class="table">
+      <thead><tr><th>Order</th><th>Placed</th><th>Items</th><th class="r">Total</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for o in orders %}
+        <tr>
+          <td><a class="num" href="{{ url_for('account.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
+          <td class="num">{{ o.created_at.strftime('%d %b %Y, %H:%M') }} UTC</td>
+          <td>{{ o.items | map(attribute='title') | join(', ') }}</td>
+          <td class="num r">{{ o.total_paise | inr }}</td>
+          <td>{{ status(o) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty" style="margin-bottom:4rem"><h2>No orders yet.</h2><p>When you buy a project it shows up here, with its download link.</p><a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a></div>
+  {% endif %}
+</div>
+{% endblock %}

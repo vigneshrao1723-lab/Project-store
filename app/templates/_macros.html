@@ -1,0 +1,36 @@
+{% macro tile(p) %}
+<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}">
+  <div class="tile-cover">{{ cover(p) }}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
+  <div class="tile-body">
+    <h3>{{ p.title }}</h3>
+    <p class="tagline">{{ p.tagline }}</p>
+    <p class="tile-meta"><span class="price">{{ p.price_paise | inr }}</span>
+      <span class="stock {% if p.stock <= 5 %}low{% endif %}">{% if p.stock == 0 %}Unavailable{% elif p.stock <= 5 %}{{ p.stock }} left{% else %}In stock{% endif %}</span></p>
+  </div>
+</a>
+{% endmacro %}
+
+{% macro status(order) %}
+{% set labels = {'pending': 'Awaiting payment', 'paid': 'Paid', 'cancelled': 'Cancelled', 'expired': 'Hold expired',
+                 'failed': 'Payment failed', 'refund_due': 'Refund due', 'refunded': 'Refunded'} %}
+<span class="status s-{{ order.status }}">{{ labels.get(order.status, order.status) }}</span>
+{% endmacro %}
+
+{% macro field(name, label, value='', error=None, type='text', autocomplete=None, hint=None, required=True) %}
+<div class="field{% if error %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}</label>
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value }}" {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+         {% if required %}required{% endif %} {% if error %}aria-invalid="true" aria-describedby="{{ name }}-msg"{% elif hint %}aria-describedby="{{ name }}-msg"{% endif %}>
+  {% if error %}<p class="msg" id="{{ name }}-msg">{{ error }}</p>{% elif hint %}<p class="hint" id="{{ name }}-msg">{{ hint }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro pager(result, endpoint) %}
+{% if result.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if result.has_prev %}<a href="{{ url_for(endpoint, page=result.prev_num, **kwargs) }}">Previous</a>{% endif %}
+  <span>Page {{ result.page }} of {{ result.pages }}</span>
+  {% if result.has_next %}<a href="{{ url_for(endpoint, page=result.next_num, **kwargs) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

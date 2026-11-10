@@ -1,0 +1,105 @@
+"""Line-drawn cover art, generated per product so every project looks like its own drawing."""
+import hashlib
+import random
+
+INK = "#1B2A41"
+YELLOW = "#F5D90A"
+W, H = 400, 300
+
+
+def _rng(slug):
+    return random.Random(int(hashlib.sha256(slug.encode()).hexdigest()[:12], 16))
+
+
+def _lattice(r):
+    cols, rows = 7, 5
+    pts = {}
+    for i in range(cols):
+        for j in range(rows):
+            pts[(i, j)] = (40 + i * 53 + r.randint(-14, 14), 38 + j * 56 + r.randint(-14, 14))
+    out = []
+    bx, by = r.randint(1, 3), r.randint(0, 2)
+    out.append(f'<rect x="{40+bx*53-6}" y="{38+by*56-6}" width="{r.randint(110,150)}" height="{r.randint(90,120)}" fill="{YELLOW}"/>')
+    for (i, j), (x, y) in pts.items():
+        for di, dj in ((1, 0), (0, 1), (1, 1)):
+            q = pts.get((i + di, j + dj))
+            if q and r.random() < 0.62:
+                out.append(f'<line x1="{x}" y1="{y}" x2="{q[0]}" y2="{q[1]}" stroke="{INK}" stroke-width="1.4"/>')
+    for (x, y) in pts.values():
+        rad = r.choice((3, 3, 3, 5, 7))
+        fill = INK if rad < 6 else "none"
+        out.append(f'<circle cx="{x}" cy="{y}" r="{rad}" fill="{fill}" stroke="{INK}" stroke-width="1.4"/>')
+    return "".join(out)
+
+
+def _network(r):
+    layers = [r.randint(3, 4), r.randint(4, 6), r.randint(4, 6), r.randint(2, 3)]
+    xs = [60, 158, 256, 346]
+    nodes = []
+    for x, n in zip(xs, layers):
+        gap = 232 / n
+        nodes.append([(x, 34 + gap * (k + 0.5)) for k in range(n)])
+    out = [f'<circle cx="{r.randint(150,260)}" cy="{r.randint(100,200)}" r="{r.randint(62,86)}" fill="{YELLOW}"/>']
+    for a, b in zip(nodes, nodes[1:]):
+        for (x1, y1) in a:
+            for (x2, y2) in b:
+                if r.random() < 0.7:
+                    out.append(f'<line x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" stroke="{INK}" stroke-width=".9" opacity=".55"/>')
+    path = [r.choice(layer) for layer in nodes]
+    out.append('<polyline points="' + " ".join(f"{x:.0f},{y:.0f}" for x, y in path) + f'" fill="none" stroke="{INK}" stroke-width="2.6" stroke-linejoin="round"/>')
+    for layer in nodes:
+        for (x, y) in layer:
+            out.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="5.5" fill="#E8EDE7" stroke="{INK}" stroke-width="1.6"/>')
+    return "".join(out)
+
+
+def _web(r):
+    out = []
+    for k in range(3):
+        x, y = 34 + k * 30 + r.randint(-6, 6), 36 + k * 36
+        w, h = 250 + r.randint(-20, 20), 170
+        fill = YELLOW if k == 1 else "#E8EDE7"
+        out.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" stroke="{INK}" stroke-width="1.8"/>')
+        out.append(f'<line x1="{x}" y1="{y+22}" x2="{x+w}" y2="{y+22}" stroke="{INK}" stroke-width="1.4"/>')
+        for d in range(3):
+            out.append(f'<circle cx="{x+12+d*13}" cy="{y+11}" r="3" fill="{INK}"/>')
+        for ln in range(4):
+            lw = r.randint(60, w - 40)
+            out.append(f'<line x1="{x+14}" y1="{y+46+ln*22}" x2="{x+14+lw}" y2="{y+46+ln*22}" stroke="{INK}" stroke-width="2.2" stroke-linecap="round" opacity="{0.9 if ln==0 else 0.4}"/>')
+    return "".join(out)
+
+
+def _circuit(r):
+    out = [f'<rect x="150" y="100" width="104" height="96" fill="{YELLOW}" stroke="{INK}" stroke-width="2"/>']
+    for k in range(5):
+        px = 162 + k * 20
+        out.append(f'<line x1="{px}" y1="100" x2="{px}" y2="84" stroke="{INK}" stroke-width="2"/>')
+        out.append(f'<line x1="{px}" y1="196" x2="{px}" y2="212" stroke="{INK}" stroke-width="2"/>')
+    for k in range(4):
+        py = 114 + k * 22
+        out.append(f'<line x1="150" y1="{py}" x2="134" y2="{py}" stroke="{INK}" stroke-width="2"/>')
+        out.append(f'<line x1="254" y1="{py}" x2="270" y2="{py}" stroke="{INK}" stroke-width="2"/>')
+    out.append(f'<circle cx="164" cy="114" r="3.5" fill="{INK}"/>')
+    for side in range(4):
+        for t in range(r.randint(3, 4)):
+            y = 38 + r.randint(0, 5) * 44 + t * 5
+            x0, x1 = (134, r.randint(24, 80)) if side % 2 == 0 else (270, r.randint(320, 376))
+            ym = y + r.choice((-30, 0, 30)) * (1 if side < 2 else -1)
+            ym = max(24, min(276, ym))
+            out.append(f'<polyline points="{x0},{114+(t*22)%88} {(x0+x1)//2},{114+(t*22)%88} {(x0+x1)//2},{ym} {x1},{ym}" fill="none" stroke="{INK}" stroke-width="1.5"/>')
+            out.append(f'<circle cx="{x1}" cy="{ym}" r="5" fill="#E8EDE7" stroke="{INK}" stroke-width="1.6"/>')
+    return "".join(out)
+
+
+_KINDS = {"crypto": _lattice, "ai": _network, "web": _web, "hardware": _circuit}
+
+
+def cover_svg(slug, kind, title=""):
+    body = _KINDS.get(kind, _web)(_rng(slug))
+    label = f'<title>{title}</title>' if title else ""
+    return (
+        f'<svg class="cover" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" '
+        f'aria-label="{title or "Project cover drawing"}" preserveAspectRatio="xMidYMid slice">{label}'
+        f'<rect width="{W}" height="{H}" fill="#DCE4DD"/>'
+        f'<path d="M0 .5H{W}M0 {H/2}H{W}M0 {H-.5}H{W}" stroke="{INK}" stroke-opacity=".08"/>{body}</svg>'
+    )

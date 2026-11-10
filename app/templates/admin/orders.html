@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import status %}
+{% block title %}Admin orders{% endblock %}
+{% block admin %}
+<h1>Orders</h1>
+<div class="tabs">
+  <a href="{{ url_for('admin.orders') }}" {% if not active_status %}aria-current="true"{% endif %}>All</a>
+  {% for s in statuses %}<a href="{{ url_for('admin.orders', status=s) }}" {% if active_status == s %}aria-current="true"{% endif %}>{{ s | replace('_', ' ') | capitalize }} ({{ counts.get(s, 0) }})</a>{% endfor %}
+</div>
+{% if orders %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Order</th><th>Customer</th><th>Placed</th><th class="r">Total</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr><td><a class="num" href="{{ url_for('admin.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
+      <td>{{ o.billing_name }}<br><span class="muted" style="font-size:.85rem">{{ o.user.email }}</span></td>
+      <td class="num">{{ o.created_at.strftime('%d %b, %H:%M') }}</td><td class="num r">{{ o.total_paise | inr }}</td><td>{{ status(o) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="muted">No orders with this status.</p>{% endif %}
+{% endblock %}

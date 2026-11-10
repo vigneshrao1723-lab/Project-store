@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Project Store{% endblock %}{% if self.title() | trim != 'Project Store' %} | Project Store{% endif %}</title>
+  <meta name="description" content="{% block description %}Finished engineering projects with working source, a setup guide and architecture notes.{% endblock %}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231B2A41'/%3E%3Cpath d='M6 6h13l7 7v13H6z' fill='%23F5D90A'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  {% if gateway_mode == 'test' %}
+    <div class="testbar">Test mode: payments here use a practice gateway and no real money moves.</div>
+  {% endif %}
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="wordmark" href="{{ url_for('shop.home') }}" aria-label="Project Store home">
+        <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="#1B2A41"/><path d="M6 6h13l7 7v13H6z" fill="#F5D90A"/></svg>
+        <span>Project Store</span>
+      </a>
+      <form class="search" action="{{ url_for('shop.catalogue') }}" role="search">
+        <label class="sr" for="q">Search projects</label>
+        <input id="q" name="q" type="search" placeholder="Search by name or technology" value="{{ request.args.get('q', '') if request.endpoint == 'shop.catalogue' else '' }}">
+      </form>
+      <nav class="nav" aria-label="Main">
+        <a href="{{ url_for('shop.catalogue') }}" {% if request.endpoint == 'shop.catalogue' %}aria-current="page"{% endif %}>Catalogue</a>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('account.orders') }}" {% if request.endpoint and request.endpoint.startswith('account.') %}aria-current="page"{% endif %}>Orders</a>
+          {% if current_user.is_admin %}<a href="{{ url_for('admin.dashboard') }}">Admin</a>{% endif %}
+        {% endif %}
+        <a class="cart-link" href="{{ url_for('cart.view') }}">Cart <span class="count" data-cart-count {% if not cart_count %}hidden{% endif %}>{{ cart_count }}</span></a>
+        {% if current_user.is_authenticated %}
+          <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="linkish" type="submit">Sign out</button></form>
+        {% else %}
+          <a href="{{ url_for('auth.login', next=current_path) }}">Sign in</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="wrap flashes" role="status">
+      {% for cat, msg in messages %}<p class="flash flash-{{ cat }}">{{ msg }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="main">{% block content %}{% endblock %}</main>
+
+  <footer class="site-footer">
+    <div class="wrap foot">
+      <div>
+        <p class="wordmark small"><span>Project Store</span></p>
+        <p class="muted">Engineering projects built, tested and sold by Vignesh T, a computer science student in Bengaluru.</p>
+      </div>
+      <div>
+        <p class="foot-h">Shop</p>
+        <ul class="plain">
+          <li><a href="{{ url_for('shop.catalogue') }}">Catalogue</a></li>
+          <li><a href="{{ url_for('account.orders') }}">Your orders</a></li>
+          <li><a href="{{ url_for('cart.view') }}">Cart</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="foot-h">The maker</p>
+        <ul class="plain">
+          <li><a href="https://vignesh-t-23-portfolio.vercel.app/" rel="noopener">Portfolio</a></li>
+          <li><a href="https://github.com/vigneshrao1723-lab" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/vignesh-t-33651b397/" rel="noopener">LinkedIn</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

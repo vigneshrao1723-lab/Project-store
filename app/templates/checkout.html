@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="page-head"><h1 class="h2">Checkout</h1></div>
+  <div class="two-col">
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="muted">Your copies are held for {{ reservation_minutes }} minutes after you continue, while you pay.</p>
+      {{ field('billing_name', 'Name on the order', name, autocomplete='name') }}
+      {{ field('phone', 'Phone number', phone, type='tel', autocomplete='tel', hint='Optional. Razorpay can use it to prefill the payment form.', required=False) }}
+      <button class="btn" type="submit">Continue to payment</button>
+    </form>
+    <aside class="summary" aria-label="Order summary">
+      <h2>Your order</h2>
+      {% for l in cart.lines %}
+      <div class="sum-row"><span>{{ l.title }}{% if l.qty > 1 %} × {{ l.qty }}{% endif %}</span><span class="num">{{ l.line_paise | inr }}</span></div>
+      {% endfor %}
+      <div class="sum-row total"><span>Total</span><span class="num">{{ cart.total_paise | inr }}</span></div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

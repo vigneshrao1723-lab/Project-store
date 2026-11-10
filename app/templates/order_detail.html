@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status %}
+{% block title %}Order {{ order.public_id }}{% endblock %}
+{% block content %}
+<div class="wrap" style="max-width:820px">
+  <div class="page-head">
+    <p class="crumbs" style="padding:0 0 .8rem"><a href="{{ url_for('account.orders') }}">Your orders</a></p>
+    <h1 class="h2">Order <span class="num">{{ order.public_id }}</span></h1>
+    <p style="margin-top:.8rem">{{ status(order) }}</p>
+  </div>
+
+  {% if order.status == 'pending' %}
+    <div class="hold" data-expires="{{ order.expires_at.isoformat() }}Z">Payment is still due. Your copies are held for <span class="timer" data-timer>--:--</span></div>
+    <p><a class="btn" href="{{ url_for('checkout.pay', public_id=order.public_id) }}">Pay {{ order.total_paise | inr }}</a></p>
+  {% elif order.status == 'paid' %}
+    <section class="delivery">
+      <h2>Your downloads</h2>
+      <ul class="plain">
+        {% for i in order.items %}
+        <li><span>{{ i.title }}</span>{% if i.product.delivery_url %}<a href="{{ i.product.delivery_url }}" rel="noopener">Open download</a>{% else %}<span class="muted">Link coming soon. You'll be emailed.</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% elif order.status == 'refund_due' %}
+    <div class="flash flash-error">Your payment arrived after the hold had expired and the project sold out. It will be refunded in full to the original payment method.</div>
+  {% elif order.status == 'expired' %}
+    <p>The hold on this order ran out before payment arrived, so the copies went back on the shelf. You can add them to your cart again.</p>
+  {% endif %}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Project</th><th class="num">Price</th><th class="num">Qty</th><th class="r">Line total</th></tr></thead>
+      <tbody>
+        {% for i in order.items %}
+        <tr><td>{{ i.title }}</td><td class="num">{{ i.unit_price_paise | inr }}</td><td class="num">{{ i.qty }}</td><td class="num r">{{ i.line_paise | inr }}</td></tr>
+        {% endfor %}
+        <tr><td colspan="3" class="r"><strong>Total</strong></td><td class="num r"><strong>{{ order.total_paise | inr }}</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted ui" style="margin:1.2rem 0 4rem;font-size:.9rem">Placed {{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC for {{ order.billing_name }}{% if order.paid_at %}. Paid {{ order.paid_at.strftime('%d %b %Y, %H:%M') }} UTC{% endif %}.</p>
+</div>
+{% endblock %}

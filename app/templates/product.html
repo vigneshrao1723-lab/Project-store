@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import tile %}
+{% block title %}{{ p.title }}{% endblock %}
+{% block description %}{{ p.tagline }}{% endblock %}
+{% block content %}
+<div class="wrap">
+  <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
+  <article class="product">
+    <div class="plate">{{ cover(p) }}
+      <dl class="spec">
+        <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
+        <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
+      </dl>
+    </div>
+    <div>
+      <h1>{{ p.title }}</h1>
+      <p class="lede">{{ p.tagline }}</p>
+
+      <div class="buy" data-product="{{ p.id }}">
+        <div class="price-big">{{ p.price_paise | inr }}</div>
+        <p class="ui" style="margin:.4rem 0 0;font-weight:600">
+          {% if p.stock == 0 %}<span class="stock low">Not available right now</span>
+          {% elif p.stock <= 5 %}<span class="stock low">Only {{ p.stock }} left</span>
+          {% else %}<span class="stock">In stock, {{ p.stock }} copies</span>{% endif %}
+        </p>
+        {% if p.available %}
+          {% if current_user.is_authenticated %}
+          <form class="buy-row" data-add-to-cart data-product-id="{{ p.id }}" data-max="{{ [p.stock, 5] | min }}">
+            <div class="stepper" role="group" aria-label="Quantity">
+              <button type="button" data-step="-1" aria-label="One fewer">−</button>
+              <input type="number" name="qty" value="1" min="1" max="{{ [p.stock, 5] | min }}" aria-label="Quantity">
+              <button type="button" data-step="1" aria-label="One more">+</button>
+            </div>
+            <button class="btn" type="submit">Add to cart</button>
+          </form>
+          {% else %}
+          <div class="buy-row"><a class="btn" href="{{ url_for('auth.login', next=current_path) }}">Sign in to buy</a></div>
+          {% endif %}
+        {% else %}
+          <div class="buy-row"><a class="btn ghost" href="{{ url_for('shop.catalogue', category=p.category.slug) }}" >See other {{ p.category.name | lower }} projects</a></div>
+        {% endif %}
+        <p class="buy-note" data-note role="status" aria-live="polite"></p>
+      </div>
+
+      <dl class="def">
+        <div><dt>Built with</dt><dd><span class="chips">{% for t in p.tech_list %}<span class="chip">{{ t }}</span>{% endfor %}</span></dd></div>
+        {% if p.includes_list %}<div><dt>In the kit</dt><dd><ul>{% for i in p.includes_list %}<li>{{ i }}</li>{% endfor %}</ul></dd></div>{% endif %}
+        <div><dt>Delivery</dt><dd>A download link on your order page as soon as payment is confirmed.</dd></div>
+      </dl>
+
+      <div class="prose">{% for para in p.paragraphs %}<p>{{ para }}</p>{% endfor %}</div>
+    </div>
+  </article>
+
+  {% if related %}
+  <section class="section" style="padding-top:0;border:0">
+    <div class="section-head"><h2 class="h2">More in {{ p.category.name }}</h2></div>
+    <div class="grid">{% for r in related %}{{ tile(r) }}{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

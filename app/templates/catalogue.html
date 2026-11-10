@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import tile, pager %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<div class="wrap cat-layout">
+  <aside class="filters" aria-label="Filters">
+    <h2>Field</h2>
+    <ul class="plain">
+      <li><a href="{{ url_for('shop.catalogue', q=q or None, sort=sort if sort != 'new' else None) }}" {% if not category %}aria-current="true"{% endif %}>All projects</a></li>
+      {% for cat, n in categories %}
+      <li><a href="{{ url_for('shop.catalogue', category=cat.slug, q=q or None, sort=sort if sort != 'new' else None) }}" {% if category == cat.slug %}aria-current="true"{% endif %}>{{ cat.name }} <span class="num">{{ n }}</span></a></li>
+      {% endfor %}
+    </ul>
+  </aside>
+  <section>
+    <div class="result-bar">
+      <div>
+        <h1 class="h2">{% if q %}Results for “{{ q }}”{% else %}Catalogue{% endif %}</h1>
+        <p class="muted ui" style="margin:.3rem 0 0">{{ result.total }} {{ 'project' if result.total == 1 else 'projects' }}</p>
+      </div>
+      <form method="get">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+        <label for="sort">Sort by</label>
+        <select id="sort" name="sort" data-autosubmit>
+          <option value="new" {{ 'selected' if sort == 'new' }}>Newest</option>
+          <option value="price_asc" {{ 'selected' if sort == 'price_asc' }}>Price, low to high</option>
+          <option value="price_desc" {{ 'selected' if sort == 'price_desc' }}>Price, high to low</option>
+          <option value="title" {{ 'selected' if sort == 'title' }}>Name</option>
+        </select>
+        <noscript><button class="btn small" type="submit">Apply</button></noscript>
+      </form>
+    </div>
+    {% if result.items %}
+      <div class="grid">{% for p in result.items %}{{ tile(p) }}{% endfor %}</div>
+      {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
+    {% else %}
+      <div class="empty">
+        <h2>No projects match that.</h2>
+        <p>Try a different word, such as a language or a framework, or clear the filters.</p>
+        <a class="btn ghost" href="{{ url_for('shop.catalogue') }}">Show all projects</a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

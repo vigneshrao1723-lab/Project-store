@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Admin products{% endblock %}
+{% block admin %}
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap"><h1>Products</h1><a class="btn small" href="{{ url_for('admin.product_new') }}">Add a product</a></div>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Kit</th><th>Title</th><th class="r">Price</th><th class="r">Stock</th><th>Adjust stock</th><th>Visible</th></tr></thead>
+  <tbody>
+  {% for p in products %}
+    <tr>
+      <td class="num">{{ p.code }}</td>
+      <td><a href="{{ url_for('admin.product_edit', product_id=p.id) }}">{{ p.title }}</a></td>
+      <td class="num r">{{ p.price_paise | inr }}</td>
+      <td class="num r">{{ p.stock }}</td>
+      <td>
+        <form class="stock-form" method="post" action="{{ url_for('admin.product_stock', product_id=p.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="sr" for="d{{ p.id }}">Add or remove copies of {{ p.title }}</label>
+          <input id="d{{ p.id }}" type="number" name="delta" placeholder="+5" required>
+          <button class="btn small ghost" type="submit">Apply</button>
+        </form>
+      </td>
+      <td>{{ 'Yes' if p.is_active else 'Hidden' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

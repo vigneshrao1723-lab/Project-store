@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}{{ 'Edit ' ~ p.title if p else 'New product' }}{% endblock %}
+{% block admin %}
+<h1>{{ 'Edit product' if p else 'New product' }}</h1>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <div class="wide">{{ field('title', 'Title', data.title, errors.title) }}</div>
+    {{ field('slug', 'URL name', data.slug, errors.slug, hint='Leave empty to build it from the title.', required=False) }}
+    <div class="field{% if errors.category_id %} has-error{% endif %}">
+      <label for="category_id">Field</label>
+      <select id="category_id" name="category_id" required>
+        <option value="">Choose…</option>
+        {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if data.category_id|string == c.id|string }}>{{ c.name }}</option>{% endfor %}
+      </select>
+      {% if errors.category_id %}<p class="msg">{{ errors.category_id }}</p>{% endif %}
+    </div>
+    {{ field('price_rupees', 'Price in rupees', data.price_rupees, errors.price_rupees, type='text', hint='For example 2499 or 1999.50.') }}
+    {% if not p %}{{ field('stock', 'Copies in stock', data.stock, errors.stock, type='number') }}{% else %}
+      <div class="field"><span class="label">Copies in stock</span><p class="num" style="margin:0;font-weight:700">{{ p.stock }}</p><p class="hint">Change stock from the products list so it is recorded in the ledger.</p></div>
+    {% endif %}
+    <div class="wide">{{ field('tagline', 'Tagline', data.tagline, errors.tagline, required=False) }}</div>
+    <div class="wide field"><label for="description">Description</label><textarea id="description" name="description" rows="8">{{ data.description }}</textarea><p class="hint">Separate paragraphs with a blank line.</p></div>
+    <div class="wide">{{ field('tech', 'Built with', data.tech, hint='Comma separated, for example Python, Flask, MySQL.', required=False) }}</div>
+    <div class="wide field"><label for="includes">In the kit</label><textarea id="includes" name="includes" rows="4">{{ data.includes }}</textarea><p class="hint">One item per line.</p></div>
+    <div class="wide">{{ field('delivery_url', 'Download link', data.delivery_url, errors.delivery_url, type='url', hint='Shown to buyers only after payment. Use a private link, not a public repository, if the code is for sale.', required=False) }}</div>
+    <div class="wide">
+      <label class="check"><input type="checkbox" name="is_active" {{ 'checked' if data.is_active }}> Visible in the store</label>
+      <label class="check"><input type="checkbox" name="featured" {{ 'checked' if data.featured }}> Feature on the home page</label>
+    </div>
+  </div>
+  <button class="btn" type="submit">Save product</button>
+  <a class="btn ghost" href="{{ url_for('admin.products') }}">Cancel</a>
+</form>
+
+{% if p and log %}
+<h2 style="margin-top:2.4rem">Stock history</h2>
+<table class="table"><thead><tr><th>When</th><th>Reason</th><th class="r">Change</th></tr></thead><tbody>
+{% for l in log %}<tr><td class="num">{{ l.created_at.strftime('%d %b %Y, %H:%M') }}</td><td>{{ l.reason }}{% if l.note %}: {{ l.note }}{% endif %}</td><td class="num r">{{ '%+d' % l.delta }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+{% endblock %}
