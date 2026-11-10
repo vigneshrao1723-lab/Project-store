@@ -6,7 +6,8 @@ Flask + SQLAlchemy + MySQL store selling the owner's engineering projects. Razor
 - Tests (SQLite, ~15s): `pytest`
 - Tests with coverage: `pytest --cov=app --cov-report=term-missing`
 - Concurrency tests need MySQL/MariaDB: set TEST_DATABASE_URL (see README)
-- Run locally: `set FLASK_APP=wsgi.py` then `flask seed` then `flask run` (Windows) 
+- Run locally: `set FLASK_APP=wsgi.py` then `flask db upgrade` then `flask seed` then `flask run` (Windows)
+- Schema changes go through Alembic: edit the model, `flask db migrate -m "..."` (against MySQL), read the generated file in migrations/versions, commit both. Never use `create_all` outside tests. `tests/test_migrations.py` fails if models and migrations disagree.
 - Docker: `docker compose up --build` (needs .env with SECRET_KEY)
 
 ## Rules that must not be broken

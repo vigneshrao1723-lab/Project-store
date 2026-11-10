@@ -25,6 +25,8 @@ Pages are rendered with Jinja and hand-written CSS. The cart and the quantity co
 | `orders`, `order_items` | An order snapshots title and unit price at purchase, so later price edits never rewrite history. |
 | `inventory_log` | Append-only ledger of every stock change (`seed`, `reserve`, `release`, `adjust`). Current stock must always equal the sum of the ledger; a test asserts this. |
 
+The schema is created and changed only by the Alembic migrations in `migrations/`. `docker-entrypoint.sh` runs `flask db upgrade` before the app starts; `create_all` is used only by the tests. A test fails if the models and the migrations ever disagree. Databases built by the old `create_all` start-up are adopted at revision `0001` by `flask adopt-legacy-db` and then upgraded, so they keep their data.
+
 ## The checkout transaction
 
 This is the part that has to be right. Reserving stock happens in one transaction in `services/orders.create_order_from_cart`:
@@ -76,12 +78,13 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 | Razorpay-mode tests | Real client code path with the HTTP call mocked, outage handling |
 | CSRF tests | Writes are refused without a token |
 | Concurrency tests (MySQL) | 10 buyers racing for 3 copies produce exactly 3 winners; mixed baskets neither deadlock nor oversell |
+| Migration tests (SQLite, and MySQL in CI) | Migrations build exactly the schema the models describe; every one can be undone; an old `create_all` database is adopted with its data intact |
 
 The concurrency tests need real row locks, so they skip on SQLite and run in CI against a MySQL service. Removing the `FOR UPDATE` makes them fail, which is how we know they test the right thing.
 
 ## Known limits and next steps
 
-* Schema is created with `create_all`. Add Alembic migrations before the first schema change in production.
+* Migrations run when the web container starts. Two web containers starting at once would race; run `flask db upgrade` as a separate step if you scale out.
 * No email. Download links are shown on the order page only.
 * Refunds are tracked, not issued: an admin refunds in the Razorpay dashboard and then marks the order refunded.
 * Login has no rate limiting. Put the app behind a reverse proxy that limits `/login`, or add Flask-Limiter.

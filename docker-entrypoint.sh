@@ -2,7 +2,7 @@
 set -e
 export FLASK_APP=wsgi.py
 
-# Wait for the database, create tables, load the catalogue on first run.
+# Wait for the database, bring the schema up to date with migrations, load the catalogue on first run.
 python - <<'PY'
 import time
 from app import create_app
@@ -19,6 +19,9 @@ with app.app_context():
     else:
         raise SystemExit("database never became ready")
 PY
-flask init-db
+# A database created before migrations existed has the tables but no version record. Mark it as being at
+# the first migration so the upgrade below only applies what is new. Does nothing on any other database.
+flask adopt-legacy-db
+flask db upgrade
 flask seed --if-empty
 exec "$@"

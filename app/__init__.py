@@ -5,9 +5,9 @@ import click
 from flask import Flask, render_template
 from markupsafe import Markup
 
-from .config import Config
+from .config import BASE_DIR, Config
 from .covers import cover_svg
-from .extensions import csrf, db, login_manager
+from .extensions import csrf, db, login_manager, migrate
 
 
 def inr(paise):
@@ -39,6 +39,9 @@ def create_app(config=None):
         raise RuntimeError("Set SECRET_KEY before running in production.")
 
     db.init_app(app)
+    # Absolute path, so `flask db ...` works from any directory. render_as_batch lets later migrations
+    # alter tables on SQLite (local dev, CI smoke test); on MySQL it emits ordinary ALTER statements.
+    migrate.init_app(app, db, directory=str(BASE_DIR / "migrations"), compare_type=True, render_as_batch=True)
     login_manager.init_app(app)
     csrf.init_app(app)
 
@@ -90,17 +93,22 @@ def register_cli(app):
     from .models import User
     from .services.orders import release_expired
 
-    @app.cli.command("init-db")
-    def init_db():
-        """Create all tables."""
-        db.create_all()
-        click.echo("Tables created.")
+    @app.cli.command("adopt-legacy-db")
+    def adopt_legacy_db():
+        """Mark a database built before migrations existed as being at the baseline revision."""
+        from .schema import adopt_legacy_database
+        if adopt_legacy_database():
+            click.echo("Existing database adopted: marked as migration 0001. Run `flask db upgrade` next.")
+        else:
+            click.echo("Nothing to adopt.")
 
     @app.cli.command("seed")
     @click.option("--if-empty", is_flag=True, help="Only seed when there are no products.")
     def seed(if_empty):
-        """Load the catalogue and a demo admin account."""
-        db.create_all()
+        """Load the catalogue and a demo admin account. Run `flask db upgrade` first."""
+        from .schema import schema_is_present
+        if not schema_is_present():
+            raise click.ClickException("The database has no tables yet. Run `flask db upgrade` first.")
         created = seed_catalogue(only_if_empty=if_empty)
         click.echo("Seeded." if created else "Catalogue already present, skipped.")
 
