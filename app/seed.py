@@ -1,4 +1,5 @@
 import os
+import secrets
 
 from .extensions import db
 from .models import Category, InventoryLog, Product, User
@@ -96,12 +97,27 @@ def seed_catalogue(only_if_empty=False):
         if p.stock:
             db.session.add(InventoryLog(product_id=p.id, delta=p.stock, reason="seed"))
 
-    if not db.session.scalar(db.select(User).where(User.role == "admin")):
-        # Demo credentials for local use. Set ADMIN_EMAIL and ADMIN_PASSWORD (or run
-        # `flask create-admin`) for anything reachable from the internet.
-        admin = User(name="Store admin", email=os.getenv("ADMIN_EMAIL", "admin@projectstore.local").lower(),
-                     role="admin")
-        admin.set_password(os.getenv("ADMIN_PASSWORD", "admin12345"))
-        db.session.add(admin)
     db.session.commit()
     return True
+
+
+def seed_admin():
+    """Create the first admin account if there is no admin yet.
+
+    There is no built-in password. It comes from ADMIN_PASSWORD, and when that is not set a random one is
+    generated. Returns None if an admin already exists, otherwise (email, generated_password) where
+    generated_password is None when it came from ADMIN_PASSWORD. The caller shows a generated password once;
+    it is stored only as a hash.
+    """
+    if db.session.scalar(db.select(User).where(User.role == "admin")):
+        return None
+    email = (os.getenv("ADMIN_EMAIL") or "admin@projectstore.local").strip().lower()
+    password = os.getenv("ADMIN_PASSWORD") or ""
+    generated = None
+    if not password:
+        password = generated = secrets.token_urlsafe(12)
+    admin = User(name="Store admin", email=email, role="admin")
+    admin.set_password(password)
+    db.session.add(admin)
+    db.session.commit()
+    return email, generated

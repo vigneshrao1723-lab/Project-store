@@ -31,7 +31,9 @@ With no `DATABASE_URL` it uses a SQLite file in `instance/`. `flask seed` no lon
 
 **Already have an `instance/store.db` from before migrations existed?** Run `flask adopt-legacy-db` once, then `flask db upgrade`. Your data is kept.
 
-**Demo admin:** `admin@projectstore.local` / `admin12345`. Change it before putting the app anywhere public: set `ADMIN_EMAIL` and `ADMIN_PASSWORD` before the first `flask seed`, or run `flask create-admin you@example.com`.
+**Admin account:** `flask seed` creates one admin when there is none, with email `ADMIN_EMAIL` (default `admin@projectstore.local`). There is no built-in password. Set `ADMIN_PASSWORD` before the first seed to choose one, or leave it empty and a random password is generated and printed **once** in the seed output ("Generated admin password ..."). Under Docker the seed runs when the web container first starts, so read it with `docker compose logs web`. It is stored only as a hash and cannot be recovered; to set a new one run `flask create-admin you@example.com` (`docker compose exec web flask create-admin you@example.com` under Docker). Container logs keep the generated password, so change it before the app is reachable by anyone else.
+
+**Seeded earlier?** A database seeded by an older version has an admin whose password was published in this repository. Set a new one with `flask create-admin` before exposing that database.
 
 ## Payments
 
@@ -82,7 +84,7 @@ What it does not do:
 ## Tests
 
 ```bash
-pytest                                   # 98 tests (2 skip without MySQL), about 40 seconds
+pytest                                   # 106 tests (2 skip without MySQL), about 40 seconds
 pytest --cov=app --cov-report=term-missing
 
 # Concurrency tests need MySQL or MariaDB row locks. The migration and sign-in limit tests also run there:

@@ -89,7 +89,7 @@ def create_app(config=None):
 
 
 def register_cli(app):
-    from .seed import seed_catalogue
+    from .seed import seed_admin, seed_catalogue
     from .models import User
     from .services.orders import release_expired
 
@@ -105,12 +105,20 @@ def register_cli(app):
     @app.cli.command("seed")
     @click.option("--if-empty", is_flag=True, help="Only seed when there are no products.")
     def seed(if_empty):
-        """Load the catalogue and a demo admin account. Run `flask db upgrade` first."""
+        """Load the catalogue and, if there is none, an admin account. Run `flask db upgrade` first."""
         from .schema import schema_is_present
         if not schema_is_present():
             raise click.ClickException("The database has no tables yet. Run `flask db upgrade` first.")
         created = seed_catalogue(only_if_empty=if_empty)
         click.echo("Seeded." if created else "Catalogue already present, skipped.")
+        admin = seed_admin() if created else None
+        if admin:
+            email, generated = admin
+            click.echo(f"Admin account created: {email}")
+            if generated:
+                click.echo(f"Generated admin password (shown only this once, so copy it now): {generated}")
+            else:
+                click.echo("Its password is the ADMIN_PASSWORD you set.")
 
     @app.cli.command("create-admin")
     @click.argument("email")
