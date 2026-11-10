@@ -39,10 +39,14 @@ services:
     restart: unless-stopped
     depends_on:
       web:
-        condition: service_started
+        # Healthy means the entrypoint has created the tables, so the first sweep cannot fail.
+        condition: service_healthy
     environment:
       DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:-store}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+    # This container runs no web server, so the image's HTTP healthcheck would always fail.
+    healthcheck:
+      disable: true
     entrypoint: ["/bin/sh", "-c"]
     command: ["while true; do FLASK_APP=wsgi.py flask release-expired; sleep 60; done"]
 
