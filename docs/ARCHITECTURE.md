@@ -24,6 +24,7 @@ Pages are rendered with Jinja and hand-written CSS. The cart and the quantity co
 | `cart_items` | One row per user and product, unique together. |
 | `orders`, `order_items` | An order snapshots title and unit price at purchase, so later price edits never rewrite history. |
 | `inventory_log` | Append-only ledger of every stock change (`seed`, `reserve`, `release`, `adjust`). Current stock must always equal the sum of the ledger; a test asserts this. |
+| `login_throttle` | One row per (email, IP) with its recent failed sign-ins and, once blocked, `locked_until`. See "Sign-in limit" below. |
 
 The schema is created and changed only by the Alembic migrations in `migrations/`. `docker-entrypoint.sh` runs `flask db upgrade` before the app starts; `create_all` is used only by the tests. A test fails if the models and the migrations ever disagree. Databases built by the old `create_all` start-up are adopted at revision `0001` by `flask adopt-legacy-db` and then upgraded, so they keep their data.
 
@@ -63,6 +64,7 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 ## Security notes
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).
+* Sign-in limit: 5 failures for one email and IP block that pair for 10 minutes (HTTP 429). The state is a database table, not process memory, because gunicorn runs 3 workers and an in-memory counter would let through 5 attempts per worker. While blocked the password is not even checked, and unknown emails are counted like real ones so the block does not reveal which accounts exist. The IP is the connection's address; `X-Forwarded-For` is not trusted because clients can forge it.
 * Post-login redirects accept same-site relative paths only.
 * Users can read only their own orders; admin routes return 403 to everyone else.
 * Content-Security-Policy, `X-Frame-Options`, `nosniff`, `Referrer-Policy` on every response. No inline scripts.
@@ -79,6 +81,7 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 | CSRF tests | Writes are refused without a token |
 | Concurrency tests (MySQL) | 10 buyers racing for 3 copies produce exactly 3 winners; mixed baskets neither deadlock nor oversell |
 | Migration tests (SQLite, and MySQL in CI) | Migrations build exactly the schema the models describe; every one can be undone; an old `create_all` database is adopted with its data intact |
+| Sign-in limit tests | Block on the 5th failure for 10 minutes, per email and per IP, even for the right password; counts reset on success and after quiet periods; unknown emails block identically |
 
 The concurrency tests need real row locks, so they skip on SQLite and run in CI against a MySQL service. Removing the `FOR UPDATE` makes them fail, which is how we know they test the right thing.
 
@@ -87,5 +90,5 @@ The concurrency tests need real row locks, so they skip on SQLite and run in CI 
 * Migrations run when the web container starts. Two web containers starting at once would race; run `flask db upgrade` as a separate step if you scale out.
 * No email. Download links are shown on the order page only.
 * Refunds are tracked, not issued: an admin refunds in the Razorpay dashboard and then marks the order refunded.
-* Login has no rate limiting. Put the app behind a reverse proxy that limits `/login`, or add Flask-Limiter.
+* The sign-in limit is per email and IP. Behind a reverse proxy all visitors share the proxy's address until `ProxyFix` is configured for it, and one address trying many emails is not slowed. Registration has no limit.
 * Cart is for signed-in users only.

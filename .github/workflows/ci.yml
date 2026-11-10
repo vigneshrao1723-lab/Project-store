@@ -30,11 +30,11 @@ jobs:
       # Fast suite on SQLite, then the concurrency tests against real MySQL row locks.
       - name: Unit and API tests (SQLite)
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=85
-      # Also runs the migrations on MySQL, where they are used for real.
+      # Also runs the migrations and the sign-in limiter on MySQL, where they are used for real.
       - name: Concurrency and migration tests (MySQL)
         env:
           TEST_DATABASE_URL: mysql+pymysql://store:store@127.0.0.1:3306/project_store_test?charset=utf8mb4
-        run: pytest tests/test_concurrency.py tests/test_migrations.py -v
+        run: pytest tests/test_concurrency.py tests/test_migrations.py tests/test_login_throttle.py -v
 
   build:
     needs: test

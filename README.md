@@ -62,13 +62,28 @@ Things to know when running it for real:
 * Run one web container at a time during an upgrade. Two starting together would both try to migrate. With several containers, run `flask db upgrade` once as its own step first.
 * `migrations/versions/0001_initial_schema.py` is the schema as it was when migrations began. Databases created by the old `create_all` start-up are adopted at that revision, so it must keep describing that schema.
 
+## Sign-in limit
+
+After **5 failed sign-ins** for the same email from the same IP address, that pair is blocked for **10 minutes**. The page answers with status 429, a `Retry-After` header, and "Too many failed sign-in attempts. Try again in 10 minutes."
+
+* While blocked, even the correct password is refused, and further tries do not extend the block.
+* Failures that are more than 10 minutes apart do not add up. A successful sign-in resets the count.
+* Emails with no account are blocked in the same way, so the block does not reveal which emails have accounts.
+* The counts live in the `login_throttle` table, so the limit is shared by all web workers and survives restarts. (Flask-Limiter's built-in storage is per process; with 3 gunicorn workers a limit of 5 would really be 15.)
+* Change it with `LOGIN_MAX_ATTEMPTS` and `LOGIN_LOCKOUT_MINUTES` in `.env`. To unblock someone early, delete their row: `DELETE FROM login_throttle WHERE email = 'them@example.com';`
+
+What it does not do:
+
+* **The IP is the address of the connection.** Behind a reverse proxy, every visitor arrives from the proxy's address, and on Docker Desktop for Windows we saw every request arrive from the Docker gateway (`172.x.0.1`). The limit then works per email only, and someone failing five times against an email locks out everyone who shares that address. The app deliberately does not trust `X-Forwarded-For`, because any client can forge it and walk around the limit. If you run behind a proxy you control, configure Werkzeug's `ProxyFix` for exactly that one proxy.
+* One address trying many different emails is not slowed, and registration is not limited. Put a rate limit on `/login` and `/register` at the proxy if you expect that.
+
 ## Tests
 
 ```bash
-pytest                                   # 75 tests (2 skip without MySQL), about 20 seconds
+pytest                                   # 93 tests (2 skip without MySQL), about 35 seconds
 pytest --cov=app --cov-report=term-missing
 
-# Concurrency tests need MySQL or MariaDB row locks. The migration tests also run there:
+# Concurrency tests need MySQL or MariaDB row locks. The migration and sign-in limit tests also run there:
 TEST_DATABASE_URL="mysql+pymysql://store:store@127.0.0.1:3306/project_store_test?charset=utf8mb4" pytest
 ```
 

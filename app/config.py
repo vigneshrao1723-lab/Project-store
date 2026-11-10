@@ -30,6 +30,10 @@ class Config:
     MAX_QTY_PER_LINE = 5
     PAGE_SIZE = 9
 
+    # Sign-in is blocked for LOGIN_LOCKOUT_MINUTES after LOGIN_MAX_ATTEMPTS failures from one email + IP.
+    LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
+    LOGIN_LOCKOUT_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "10"))
+
     WTF_CSRF_TIME_LIMIT = None
 
 

@@ -85,8 +85,9 @@ def test_every_migration_can_be_undone(fresh):
 
 
 def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
-    """Databases made by create_all() before migrations existed have no alembic_version table."""
+    """Databases made by create_all() before migrations existed have no alembic_version and no login_throttle."""
     db.create_all()
+    db.metadata.tables["login_throttle"].drop(db.engine)
     user = User(name="Early Buyer", email="early@example.com")
     user.set_password("correct-horse")
     db.session.add(user)
@@ -98,6 +99,7 @@ def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
     assert version() == BASELINE_REVISION
 
     upgrade()                      # would fail with "table already exists" if it were not adopted first
+    assert "login_throttle" in tables()
     assert drift() == []
     assert db.session.scalar(db.select(User.email).where(User.email == "early@example.com")) == "early@example.com"
 

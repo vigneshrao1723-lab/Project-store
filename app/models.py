@@ -42,6 +42,20 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+class LoginThrottle(db.Model):
+    """Failed sign-in attempts for one email from one IP address; see services/login_throttle.py."""
+
+    __tablename__ = "login_throttle"
+    __table_args__ = (UniqueConstraint("email", "ip", name="uq_login_throttle_email_ip"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(190), nullable=False)
+    ip = db.Column(db.String(45), nullable=False)          # 45 characters fits any IPv6 address
+    failures = db.Column(db.Integer, nullable=False, default=0)
+    last_failure_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+    locked_until = db.Column(db.DateTime)
+
+
 class Category(db.Model):
     __tablename__ = "categories"
 

@@ -1,11 +1,12 @@
 import re
 from urllib.parse import urlparse
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from ..extensions import db
 from ..models import User
+from ..services import login_throttle
 
 bp = Blueprint("auth", __name__)
 
@@ -59,10 +60,20 @@ def login():
     email = ""
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
-        user = db.session.scalar(db.select(User).where(User.email == email))
-        if user and user.check_password(request.form.get("password", "")):
-            login_user(user, remember=bool(request.form.get("remember")))
-            return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
+        ip = request.remote_addr
+        wait = login_throttle.seconds_locked(email, ip)
+        if not wait:   # while locked the password is not even checked, so a right guess gets no signal
+            user = db.session.scalar(db.select(User).where(User.email == email))
+            if user and user.check_password(request.form.get("password", "")):
+                login_throttle.clear(email, ip)
+                login_user(user, remember=bool(request.form.get("remember")))
+                return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
+            wait = login_throttle.record_failure(email, ip)
+        if wait:
+            resp = make_response(render_template("login.html", error=login_throttle.lock_message(wait),
+                                                 email=email), 429)
+            resp.headers["Retry-After"] = str(wait)
+            return resp
         error = "That email and password don't match."
     return render_template("login.html", error=error, email=email)
 
