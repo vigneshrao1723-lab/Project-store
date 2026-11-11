@@ -6,16 +6,16 @@
   <div class="page-head"><h1 class="h2">Your orders</h1></div>
   {% if orders %}
   <div class="table-wrap end-gap">
-    <table class="table">
+    <table class="table table-stack">
       <thead><tr><th>Order</th><th>Placed</th><th>Items</th><th class="r">Total</th><th>Status</th></tr></thead>
       <tbody>
       {% for o in orders %}
         <tr>
-          <td><a class="num" href="{{ url_for('account.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
-          <td class="num">{{ o.created_at.strftime('%d %b %Y, %H:%M') }} UTC</td>
-          <td>{{ o.items | map(attribute='title') | join(', ') }}</td>
-          <td class="num r">{{ o.total_paise | inr }}</td>
-          <td>{{ status(o) }}</td>
+          <td data-label="Order"><a class="num" href="{{ url_for('account.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
+          <td data-label="Placed" class="num">{{ o.created_at.strftime('%d %b %Y, %H:%M') }} UTC</td>
+          <td data-label="Items">{{ o.items | map(attribute='title') | join(', ') }}</td>
+          <td data-label="Total" class="num r">{{ o.total_paise | inr }}</td>
+          <td data-label="Status">{{ status(o) }}</td>
         </tr>
       {% endfor %}
       </tbody>

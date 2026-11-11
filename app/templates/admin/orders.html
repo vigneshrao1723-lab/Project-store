@@ -8,13 +8,13 @@
   {% for s in statuses %}<a href="{{ url_for('admin.orders', status=s) }}" {% if active_status == s %}aria-current="true"{% endif %}>{{ s | replace('_', ' ') | capitalize }} ({{ counts.get(s, 0) }})</a>{% endfor %}
 </div>
 {% if orders %}
-<div class="table-wrap"><table class="table">
+<div class="table-wrap"><table class="table table-stack">
   <thead><tr><th>Order</th><th>Customer</th><th>Placed</th><th class="r">Total</th><th>Status</th></tr></thead>
   <tbody>
   {% for o in orders %}
-    <tr><td><a class="num" href="{{ url_for('admin.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
-      <td>{{ o.billing_name }}<br><span class="muted fs-sm">{{ o.user.email }}</span></td>
-      <td class="num">{{ o.created_at.strftime('%d %b, %H:%M') }}</td><td class="num r">{{ o.total_paise | inr }}</td><td>{{ status(o) }}</td></tr>
+    <tr><td data-label="Order"><a class="num" href="{{ url_for('admin.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>
+      <td data-label="Customer">{{ o.billing_name }}<br><span class="muted fs-sm">{{ o.user.email }}</span></td>
+      <td data-label="Placed" class="num">{{ o.created_at.strftime('%d %b, %H:%M') }}</td><td data-label="Total" class="num r">{{ o.total_paise | inr }}</td><td data-label="Status">{{ status(o) }}</td></tr>
   {% endfor %}
   </tbody>
 </table></div>
