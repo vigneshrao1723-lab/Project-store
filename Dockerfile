@@ -7,8 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv/app
 
 # Dependencies first so this layer is cached until requirements change.
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# The lock pins every package with a hash, so the build is reproducible and a tampered download is refused.
+COPY requirements.lock .
+RUN pip install --require-hashes -r requirements.lock
 
 COPY . .
 

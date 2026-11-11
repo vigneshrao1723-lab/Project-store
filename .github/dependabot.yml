@@ -1,0 +1,20 @@
+# Weekly pull requests for out-of-date dependencies. A pip update changes requirements.txt only: run
+# scripts/relock.sh (see README) and commit the lock files before merging; CI fails if the lock is stale.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker-compose
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

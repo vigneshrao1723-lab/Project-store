@@ -46,6 +46,19 @@ With no `DATABASE_URL` it uses a SQLite file in `instance/`. `flask seed` no lon
 
 **Seeded earlier?** A database seeded by an older version has an admin whose password was published in this repository. Set a new one with `flask create-admin` before exposing that database.
 
+## Dependencies
+
+* `requirements.txt` lists the direct runtime packages, pinned exactly. `requirements-dev.txt` adds the test and security tools.
+* `requirements.lock` and `requirements-dev.lock` pin **every** package, transitive ones included, with hashes. The Docker image and CI install from them with `pip install --require-hashes`, so a build gets the same bytes every time and a tampered download is refused. For local work `pip install -r requirements-dev.txt` is enough.
+* **Changing a version:** edit the pin in `requirements.txt` (or `requirements-dev.txt`), then regenerate both locks under Python 3.12 and commit all three files:
+
+  ```bash
+  docker run --rm -v "$PWD:/work" -w /work python:3.12-slim sh scripts/relock.sh
+  ```
+
+  CI fails if the locks do not match the pins, so a Dependabot pull request (weekly, for pip, Docker, Compose and GitHub Actions) needs this step before it can merge.
+* CI also runs `pip-audit` (known vulnerabilities in the locked packages) and `bandit` (medium severity and above) and fails on any finding. `bandit-baseline.json` records the one known finding being fixed in the cover-art change; remove it once that is done.
+
 ## Payments
 
 * **No keys, `ALLOW_PRACTICE_GATEWAY=true`:** a practice gateway runs the same signing and confirmation code as Razorpay. Good for demos and local development. A yellow banner on every page and a notice on the pay page say that no real money moves. **Anyone who is signed in can mark their own order paid for free in this mode, so never switch it on for a store that sells for real.**

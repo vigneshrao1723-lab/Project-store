@@ -26,7 +26,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements-dev.txt
+          cache-dependency-path: requirements-dev.lock
+      # Every package, pinned with hashes: the same versions locally, in CI and in the image.
+      - run: pip install --require-hashes -r requirements-dev.lock
       # Fast suite on SQLite, then the concurrency tests against real MySQL row locks.
       - name: Unit and API tests (SQLite)
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=85
@@ -36,8 +38,28 @@ jobs:
           TEST_DATABASE_URL: mysql+pymysql://store:store@127.0.0.1:3306/project_store_test?charset=utf8mb4
         run: pytest tests/test_concurrency.py tests/test_migrations.py tests/test_login_throttle.py -v
 
+  # Failing gates: a known-vulnerable dependency, a stale lock file or a medium-severity code finding stops the build.
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - run: pip install --require-hashes -r requirements-dev.lock
+      - name: Known vulnerabilities in dependencies (pip-audit)
+        run: pip-audit -r requirements-dev.lock --disable-pip
+      - name: Static analysis, medium severity and above (bandit)
+        run: bandit -r app wsgi.py -ll -b bandit-baseline.json
+      - name: Lock files match the direct pins
+        run: |
+          sh scripts/relock.sh
+          git diff --exit-code -- requirements.lock requirements-dev.lock
+
   build:
-    needs: test
+    needs: [test, security]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

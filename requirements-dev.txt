@@ -1,3 +1,7 @@
+# Everything needed to develop and test. requirements-dev.lock pins all of it (with hashes) for CI.
 -r requirements.txt
-pytest==8.3.3
-pytest-cov==5.0.0
+pytest==9.0.3
+pytest-cov==7.1.0
+# Security gates that CI runs (see .github/workflows/ci.yml).
+pip-audit==2.10.1
+bandit==1.9.4
