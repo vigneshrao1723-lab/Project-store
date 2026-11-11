@@ -58,9 +58,9 @@ def create_gateway_order(order):
 
 
 def verify_payment(gateway_order_id, payment_id, signature):
-    if mode() == "off" or not (gateway_order_id and payment_id and signature):
+    if mode() == "off" or not all(isinstance(v, str) and v for v in (gateway_order_id, payment_id, signature)):
         return False
-    return hmac.compare_digest(sign(gateway_order_id, payment_id), signature)
+    return hmac.compare_digest(sign(gateway_order_id, payment_id).encode(), signature.encode())
 
 
 def verify_webhook(raw_body, signature):
@@ -68,4 +68,4 @@ def verify_webhook(raw_body, signature):
     if not (secret and signature):
         return False
     expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    return hmac.compare_digest(expected.encode(), signature.encode())

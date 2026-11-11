@@ -66,7 +66,10 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).
 * Sign-in limit: 5 failures for one email and IP block that pair for 10 minutes (HTTP 429). The state is a database table, not process memory, because gunicorn runs 3 workers and an in-memory counter would let through 5 attempts per worker. While blocked the password is not even checked, and unknown emails are counted like real ones so the block does not reveal which accounts exist. The IP is the connection's address; `X-Forwarded-For` is not trusted because clients can forge it.
-* Post-login redirects accept same-site relative paths only.
+* Post-login redirects accept same-site relative paths only; control characters in the `next` value make it fall back to the home page.
+* Input is parsed in `app/validation.py`: every number has explicit bounds (quantity, product id, price, stock, page), prices go from rupees to integer paise through `Decimal` (never a float), every text field has a length cap that matches its column, and passwords are limited to 8-128 characters so a huge value is never fed to scrypt. A bad value is a 400 or 422, never a 500. JSON bodies must be objects (`json_body()`).
+* Request bodies over 1 MB get HTTP 413 before any route reads them. Anything under `/api/` answers errors as `{"error": ...}` JSON, including 404, 405, 413, CSRF failures and 500.
+* The payment routes under `/checkout` serve only the order's owner. An admin reads and cancels customer orders from `/admin`, never pays for them.
 * Users can read only their own orders; admin routes return 403 to everyone else.
 * Content-Security-Policy, `X-Frame-Options`, `nosniff`, `Referrer-Policy` on every response. No inline scripts.
 * Fonts are self-hosted, so the page makes no third-party requests apart from Razorpay on the payment page.

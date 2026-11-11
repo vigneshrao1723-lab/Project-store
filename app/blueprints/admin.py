@@ -10,6 +10,7 @@ from ..extensions import db
 from ..models import Category, InventoryLog, Order, ORDER_STATUSES, Product, utcnow
 from ..services import orders as order_svc
 from ..services.products import validate_product
+from ..validation import MAX_NOTE, MAX_STOCK_DELTA, InputError, text, whole_number
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -112,11 +113,12 @@ def product_edit(product_id):
 @admin_required
 def product_stock(product_id):
     try:
-        delta = int(request.form.get("delta", ""))
-        p = order_svc.adjust_stock(product_id, delta, request.form.get("note", ""))
+        delta = whole_number(request.form.get("delta", ""), -MAX_STOCK_DELTA, MAX_STOCK_DELTA, "The change")
+        p = order_svc.adjust_stock(product_id, delta, text(request.form.get("note", ""), MAX_NOTE, "The note"))
         flash(f"{p.title}: stock is now {p.stock}.", "success")
-    except ValueError:
-        flash("Enter a whole number to add or remove (for example 5 or -2).", "error")
+    except InputError:
+        flash(f"Enter a whole number from -{MAX_STOCK_DELTA:,} to {MAX_STOCK_DELTA:,} (for example 5 or -2), "
+              f"and a note of at most {MAX_NOTE} characters.", "error")
     except order_svc.CheckoutError as exc:
         flash(exc.messages[0], "error")
     return redirect(request.referrer or url_for("admin.products"))

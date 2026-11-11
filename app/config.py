@@ -39,6 +39,9 @@ class Config:
 
     WTF_CSRF_TIME_LIMIT = None
 
+    # Every form and JSON body here is a few hundred bytes. Larger requests get HTTP 413 before they are read.
+    MAX_CONTENT_LENGTH = 1024 * 1024
+
 
 class TestConfig(Config):
     TESTING = True

@@ -3,6 +3,7 @@ from flask import Blueprint, abort, render_template, request
 from ..extensions import db
 from ..models import Product
 from ..services.catalog import SORTS, category_counts, search_products
+from ..validation import MAX_CATEGORY_SLUG, clean_query, page_number
 
 bp = Blueprint("shop", __name__)
 
@@ -21,12 +22,12 @@ def home():
 
 @bp.get("/catalogue")
 def catalogue():
-    q = request.args.get("q", "")
-    category = request.args.get("category", "")
+    q = clean_query(request.args.get("q", ""))
+    category = request.args.get("category", "")[:MAX_CATEGORY_SLUG]
     sort = request.args.get("sort", "new")
     if sort not in SORTS:
         sort = "new"
-    page = request.args.get("page", 1, type=int)
+    page = page_number(request.args.get("page", 1))
     result = search_products(q, category or None, sort, page)
     return render_template("catalogue.html", result=result, q=q, category=category, sort=sort,
                            categories=category_counts())

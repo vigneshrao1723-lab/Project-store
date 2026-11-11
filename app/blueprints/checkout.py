@@ -6,14 +6,17 @@ from ..models import Order
 from ..services import cart as cart_svc
 from ..services import orders as order_svc
 from ..services import payments
+from ..validation import MAX_NAME, MAX_PHONE
 
 bp = Blueprint("checkout", __name__, url_prefix="/checkout")
 
 
 def own_order_or_404(public_id):
+    """The signed-in user's own order. These routes pay, verify and cancel, so an admin gets no exception here:
+    admins read any order from the admin pages and cancel from there, but never pay for a customer."""
     order_svc.release_expired()
-    order = db.session.scalar(db.select(Order).where(Order.public_id == public_id))
-    if order is None or (order.user_id != current_user.id and not current_user.is_admin):
+    order = db.session.scalar(db.select(Order).where(Order.public_id == public_id, Order.user_id == current_user.id))
+    if order is None:
         abort(404)
     return order
 
@@ -23,7 +26,8 @@ def confirm_payment(order, gateway_order_id, payment_id, signature):
 
     Returns the order's new status ("paid", "refund_due"), or None if the payment didn't verify.
     """
-    if not order.gateway_order_id or gateway_order_id != order.gateway_order_id             or not payments.verify_payment(gateway_order_id, payment_id, signature):
+    if (not order.gateway_order_id or gateway_order_id != order.gateway_order_id
+            or not payments.verify_payment(gateway_order_id, payment_id, signature)):
         return None
     return order_svc.mark_paid(order.id, payment_id)
 
@@ -48,9 +52,16 @@ def start():
 
     name = request.form.get("billing_name", "").strip()
     phone = request.form.get("phone", "").strip()
+    problem = None
     if not name:
-        flash("Enter the name for this order.", "error")
-        return render_template("checkout.html", cart=cart, name=name, phone=phone), 400
+        problem = "Enter the name for this order."
+    elif len(name) > MAX_NAME:
+        problem = f"Use at most {MAX_NAME} characters for the name."
+    elif len(phone) > MAX_PHONE:
+        problem = f"Use at most {MAX_PHONE} characters for the phone number."
+    if problem:
+        flash(problem, "error")
+        return render_template("checkout.html", cart=cart, name=name[:MAX_NAME], phone=phone[:MAX_PHONE]), 400
 
     try:
         order = order_svc.create_order_from_cart(current_user, name, phone)

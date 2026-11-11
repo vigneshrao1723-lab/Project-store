@@ -2,6 +2,7 @@ from flask import current_app
 
 from ..extensions import db
 from ..models import CartItem, Product
+from ..validation import INT32_MAX, MAX_REQUEST_QTY, InputError, whole_number
 
 
 class CartError(Exception):
@@ -17,11 +18,10 @@ def _clamp(qty):
 
 def set_qty(user, product_id, qty, add=False):
     try:
-        qty = int(qty)
-    except (TypeError, ValueError):
-        raise CartError("Quantity must be a whole number.")
-    if qty < 1:
-        raise CartError("Quantity must be at least 1.")
+        product_id = whole_number(product_id, 1, INT32_MAX, "The project")
+        qty = whole_number(qty, 1, MAX_REQUEST_QTY, "Quantity")
+    except InputError as exc:
+        raise CartError(exc.message)
     product = db.session.get(Product, product_id)
     if product is None or not product.is_active:
         raise CartError("That project isn't available.", 404)
@@ -43,6 +43,8 @@ def set_qty(user, product_id, qty, add=False):
 
 
 def remove(user, product_id):
+    if not 1 <= product_id <= INT32_MAX:        # nothing that large can be in a cart
+        return
     item = db.session.scalar(db.select(CartItem).where(CartItem.user_id == user.id,
                                                        CartItem.product_id == product_id))
     if item:

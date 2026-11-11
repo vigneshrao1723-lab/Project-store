@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import click
-from flask import Flask, render_template
+from flask import Flask, abort, request
 from markupsafe import Markup
 
 from .config import BASE_DIR, Config
@@ -73,6 +73,13 @@ def create_app(config=None):
     from .context import register_context
     register_context(app)
 
+    @app.before_request
+    def reject_oversized_body():
+        """Refuse a large upload before any route (or the sign-in check) touches it."""
+        limit = app.config.get("MAX_CONTENT_LENGTH")
+        if limit and request.content_length and request.content_length > limit:
+            abort(413)
+
     @app.after_request
     def security_headers(resp):
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -89,16 +96,8 @@ def create_app(config=None):
         )
         return resp
 
-    @app.errorhandler(404)
-    def not_found(_):
-        return render_template("error.html", code=404, title="Page not found",
-                               message="That page doesn't exist, or the project has been retired."), 404
-
-    @app.errorhandler(500)
-    def server_error(_):
-        db.session.rollback()
-        return render_template("error.html", code=500, title="Something broke on our side",
-                               message="The error has been logged. Try again in a moment."), 500
+    from .errors import register_error_handlers
+    register_error_handlers(app)
 
     register_cli(app)
     return app

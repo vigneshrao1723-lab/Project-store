@@ -16,6 +16,7 @@ from ..services import orders as order_svc
 from ..services import payments
 from ..services.catalog import search_products
 from ..services.products import validate_product
+from ..validation import MAX_NAME, MAX_NOTE, MAX_PHONE, MAX_STOCK_DELTA, InputError, json_body, text, whole_number
 
 bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -76,7 +77,7 @@ def order_json(o, with_delivery=True):
 @bp.get("/products")
 def products():
     res = search_products(request.args.get("q", ""), request.args.get("category") or None,
-                          request.args.get("sort", "new"), request.args.get("page", 1, type=int))
+                          request.args.get("sort", "new"), request.args.get("page", 1))
     return jsonify({"items": [product_json(p) for p in res.items], "page": res.page,
                     "pages": res.pages, "total": res.total})
 
@@ -102,7 +103,7 @@ def cart():
 @bp.post("/cart/items")
 @login_required_json
 def cart_add():
-    body = request.get_json(silent=True) or {}
+    body = json_body()
     try:
         cart_svc.set_qty(current_user, body.get("product_id"), body.get("qty", 1), add=True)
     except cart_svc.CartError as exc:
@@ -113,7 +114,7 @@ def cart_add():
 @bp.patch("/cart/items/<int:product_id>")
 @login_required_json
 def cart_update(product_id):
-    body = request.get_json(silent=True) or {}
+    body = json_body()
     try:
         cart_svc.set_qty(current_user, product_id, body.get("qty"))
     except cart_svc.CartError as exc:
@@ -134,10 +135,11 @@ def cart_remove(product_id):
 @login_required_json
 def checkout():
     """Hold stock and create a pending order. The client then pays and calls /checkout/verify."""
-    body = request.get_json(silent=True) or {}
-    name = str(body.get("billing_name") or current_user.name).strip()
+    body = json_body()
+    name = text(body.get("billing_name"), MAX_NAME, "The billing name") or current_user.name
+    phone = text(body.get("phone"), MAX_PHONE, "The phone number")
     try:
-        order = order_svc.create_order_from_cart(current_user, name, str(body.get("phone", "")))
+        order = order_svc.create_order_from_cart(current_user, name, phone)
     except order_svc.CheckoutError as exc:
         return error(exc.messages[0], 409, {"items": exc.messages})
     try:
@@ -155,15 +157,19 @@ def checkout():
 @bp.post("/checkout/verify")
 @login_required_json
 def verify():
-    body = request.get_json(silent=True) or {}
-    order = db.session.scalar(db.select(Order).where(Order.public_id == body.get("order_id", ""),
-                                                     Order.user_id == current_user.id))
+    body = json_body()
+    public_id = body.get("order_id")
+    order = None
+    if isinstance(public_id, str):
+        order = db.session.scalar(db.select(Order).where(Order.public_id == public_id,
+                                                         Order.user_id == current_user.id))
     if order is None:
         return error("Order not found.", 404)
-    if not order.gateway_order_id or body.get("gateway_order_id") != order.gateway_order_id             or not payments.verify_payment(body.get("gateway_order_id"), body.get("payment_id"),
-                                           body.get("signature")):
+    gateway_order_id, payment_id = body.get("gateway_order_id"), body.get("payment_id")
+    if (not order.gateway_order_id or gateway_order_id != order.gateway_order_id
+            or not payments.verify_payment(gateway_order_id, payment_id, body.get("signature"))):
         return error("Payment signature did not verify.", 400)
-    order_svc.mark_paid(order.id, body["payment_id"])
+    order_svc.mark_paid(order.id, payment_id)
     db.session.refresh(order)
     return jsonify(order_json(order))
 
@@ -211,7 +217,7 @@ def admin_orders():
 @bp.post("/admin/products")
 @admin_required_json
 def admin_create_product():
-    body = request.get_json(silent=True) or {}
+    body = json_body()
     body.setdefault("is_active", True)
     clean, errors = validate_product(body)
     if errors:
@@ -228,7 +234,7 @@ def admin_update_product(product_id):
     p = db.session.get(Product, product_id)
     if p is None:
         return error("Project not found.", 404)
-    body = request.get_json(silent=True) or {}
+    body = json_body()
     merged = {"title": p.title, "slug": p.slug, "category_id": p.category_id, "price_paise": p.price_paise,
               "tagline": p.tagline, "description": p.description, "tech": p.tech, "includes": p.includes,
               "delivery_url": p.delivery_url, "is_active": p.is_active, "featured": p.featured, **body}
@@ -245,12 +251,12 @@ def admin_update_product(product_id):
 @bp.post("/admin/products/<int:product_id>/stock")
 @admin_required_json
 def admin_stock(product_id):
-    body = request.get_json(silent=True) or {}
+    body = json_body()
     try:
-        delta = int(body.get("delta"))
-        p = order_svc.adjust_stock(product_id, delta, str(body.get("note", "")))
-    except (TypeError, ValueError):
-        return error("delta must be a whole number.", 422)
+        delta = whole_number(body.get("delta"), -MAX_STOCK_DELTA, MAX_STOCK_DELTA, "delta")
+        p = order_svc.adjust_stock(product_id, delta, text(body.get("note"), MAX_NOTE, "The note"))
+    except InputError as exc:
+        return error(exc.message, 422)
     except order_svc.CheckoutError as exc:
         return error(exc.messages[0], 409)
     return jsonify(product_json(p, admin=True))

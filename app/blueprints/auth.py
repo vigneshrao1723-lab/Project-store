@@ -7,15 +7,18 @@ from flask_login import current_user, login_required, login_user, logout_user
 from ..extensions import db
 from ..models import User
 from ..services import login_throttle
+from ..validation import MAX_EMAIL, MAX_NAME, MAX_PASSWORD, MIN_PASSWORD
 
 bp = Blueprint("auth", __name__)
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_NEXT_LENGTH = 2000
 
 
 def safe_next(target):
-    """Only allow same-site relative redirects."""
-    if not target:
+    """Only allow same-site relative redirects. Control characters (a line break would split the Location
+    header, a NUL or tab confuses URL parsers) and very long values fall back to the default page."""
+    if not target or len(target) > MAX_NEXT_LENGTH or any(ord(c) < 32 or ord(c) == 127 for c in target):
         return None
     u = urlparse(target)
     if u.scheme or u.netloc or not target.startswith("/") or target.startswith("//"):
@@ -35,12 +38,16 @@ def register():
         password = request.form.get("password", "")
         if not form["name"]:
             errors["name"] = "Enter your name."
-        if not EMAIL_RE.match(form["email"]):
+        elif len(form["name"]) > MAX_NAME:
+            errors["name"] = f"Use at most {MAX_NAME} characters."
+        if len(form["email"]) > MAX_EMAIL or not EMAIL_RE.match(form["email"]):
             errors["email"] = "Enter a valid email address."
         elif db.session.scalar(db.select(User.id).where(User.email == form["email"])):
             errors["email"] = "An account with this email already exists. Sign in instead."
-        if len(password) < 8:
-            errors["password"] = "Use at least 8 characters."
+        if len(password) < MIN_PASSWORD:
+            errors["password"] = f"Use at least {MIN_PASSWORD} characters."
+        elif len(password) > MAX_PASSWORD:
+            errors["password"] = f"Use at most {MAX_PASSWORD} characters."
         if not errors:
             user = User(name=form["name"], email=form["email"])
             user.set_password(password)
@@ -59,12 +66,17 @@ def login():
     error = None
     email = ""
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        typed = request.form.get("email", "").strip().lower()
+        email = typed[:MAX_EMAIL]       # the throttle table's column holds no more
+        password = request.form.get("password", "")
         ip = request.remote_addr
         wait = login_throttle.seconds_locked(email, ip)
         if not wait:   # while locked the password is not even checked, so a right guess gets no signal
-            user = db.session.scalar(db.select(User).where(User.email == email))
-            if user and user.check_password(request.form.get("password", "")):
+            # No account has an address or a password longer than the limits, so those are never hashed.
+            user = None
+            if len(typed) <= MAX_EMAIL and len(password) <= MAX_PASSWORD:
+                user = db.session.scalar(db.select(User).where(User.email == email))
+            if user and user.check_password(password):
                 login_throttle.clear(email, ip)
                 login_user(user, remember=bool(request.form.get("remember")))
                 return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
