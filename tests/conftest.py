@@ -16,7 +16,8 @@ def pytest_runtest_logreport(report):
     if os.getenv("GITHUB_ACTIONS") and report.failed:
         lines = [l for l in report.longreprtext.strip().splitlines() if l.strip()][-4:] or ["failed"]
         detail = "%0A".join(l.replace("%", "%25").replace("\r", "") for l in lines)
-        print(f"\n::error title=pytest {report.when} failed: {report.nodeid}::{detail}")
+        name = report.nodeid.replace("::", " > ").replace(",", ";")      # "::" and "," would end the title early
+        print(f"\n::error title=pytest {report.when} failed: {name}::{detail}")
 
 
 @pytest.fixture()
