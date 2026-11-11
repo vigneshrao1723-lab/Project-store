@@ -44,6 +44,16 @@ class Config:
     MAX_QTY_PER_LINE = 5
     PAGE_SIZE = 9
 
+    # Per client and window: (allowed hits, window in seconds). Past the limit the answer is HTTP 429 with a
+    # Retry-After header until the window ends. "login_ip" counts failed sign-ins from one address across all
+    # emails (the per-email limit below is separate). See services/rate_limit.py.
+    RATE_LIMITS = {
+        "register": (10, 3600),
+        "checkout": (10, 600),
+        "verify": (20, 600),
+        "login_ip": (20, 600),
+    }
+
     # Sign-in is blocked for LOGIN_LOCKOUT_MINUTES after LOGIN_MAX_ATTEMPTS failures from one email + IP.
     LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
     LOGIN_LOCKOUT_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "10"))

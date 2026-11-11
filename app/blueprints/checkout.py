@@ -5,7 +5,7 @@ from ..extensions import db
 from ..models import Order
 from ..services import cart as cart_svc
 from ..services import orders as order_svc
-from ..services import payments
+from ..services import payments, rate_limit
 from ..validation import MAX_NAME, MAX_PHONE
 
 bp = Blueprint("checkout", __name__, url_prefix="/checkout")
@@ -27,7 +27,8 @@ def confirm_payment(order, gateway_order_id, payment_id, signature):
     Returns the order's new status ("paid", "refund_due"), or None if the payment didn't verify.
     """
     if (not order.gateway_order_id or gateway_order_id != order.gateway_order_id
-            or not payments.verify_payment(gateway_order_id, payment_id, signature)):
+            or not payments.verify_payment(gateway_order_id, payment_id, signature)
+            or not payments.payment_matches_order(order, payment_id)):
         return None
     return order_svc.mark_paid(order.id, payment_id)
 
@@ -50,6 +51,7 @@ def start():
             return redirect(url_for("cart.view"))
         return render_template("checkout.html", cart=cart, name=current_user.name, phone="")
 
+    rate_limit.enforce("checkout")
     name = request.form.get("billing_name", "").strip()
     phone = request.form.get("phone", "").strip()
     problem = None
@@ -102,6 +104,7 @@ def pay(public_id):
 @bp.post("/verify")
 @login_required
 def verify():
+    rate_limit.enforce("verify")
     order = own_order_or_404(request.form.get("public_id", ""))
     status = confirm_payment(order, request.form.get("razorpay_order_id"),
                              request.form.get("razorpay_payment_id"), request.form.get("razorpay_signature"))

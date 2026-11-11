@@ -48,6 +48,20 @@ def register_error_handlers(app):
             return _json_error(API_MESSAGES.get(exc.code, exc.name), exc.code)
         return exc
 
+    @app.errorhandler(429)
+    def too_many(exc):
+        wait = getattr(exc, "retry_after", None) or 60
+        minutes = max(1, -(-wait // 60))
+        if _wants_json():
+            resp = _json_error(API_MESSAGES[429] + f" Try again in {wait} seconds.", 429)
+        else:
+            resp = (render_template("error.html", code=429, title="Too many requests",
+                                    message=f"Slow down. Try again in {minutes} minute{'s' if minutes != 1 else ''}."),
+                    429)
+        response = app.make_response(resp)
+        response.headers["Retry-After"] = str(wait)
+        return response
+
     @app.errorhandler(404)
     def not_found(exc):
         if _wants_json():

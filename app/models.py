@@ -107,6 +107,19 @@ class LoginThrottle(db.Model):
     locked_until = db.Column(db.DateTime)
 
 
+class RateLimit(db.Model):
+    """Hits on one rate-limited action by one client in the current window; see services/rate_limit.py."""
+
+    __tablename__ = "rate_limits"
+    __table_args__ = (UniqueConstraint("scope", "key", name="uq_rate_limits_scope_key"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    scope = db.Column(db.String(32), nullable=False)       # "register", "checkout", "verify", "login_ip"
+    key = db.Column(db.String(190), nullable=False)        # "user:7" or "ip:203.0.113.9"
+    hits = db.Column(db.Integer, nullable=False, default=0)
+    window_start = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+
+
 class Category(db.Model):
     __tablename__ = "categories"
 

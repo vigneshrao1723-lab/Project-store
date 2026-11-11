@@ -13,7 +13,7 @@ from ..extensions import db
 from ..models import Order, ORDER_STATUSES, Product, utcnow
 from ..services import cart as cart_svc
 from ..services import orders as order_svc
-from ..services import payments
+from ..services import payments, rate_limit
 from ..services.catalog import search_products
 from ..services.products import validate_product
 from ..validation import MAX_NAME, MAX_NOTE, MAX_PHONE, MAX_STOCK_DELTA, InputError, json_body, text, whole_number
@@ -135,6 +135,7 @@ def cart_remove(product_id):
 @login_required_json
 def checkout():
     """Hold stock and create a pending order. The client then pays and calls /checkout/verify."""
+    rate_limit.enforce("checkout")
     body = json_body()
     name = text(body.get("billing_name"), MAX_NAME, "The billing name") or current_user.name
     phone = text(body.get("phone"), MAX_PHONE, "The phone number")
@@ -157,6 +158,7 @@ def checkout():
 @bp.post("/checkout/verify")
 @login_required_json
 def verify():
+    rate_limit.enforce("verify")
     body = json_body()
     public_id = body.get("order_id")
     order = None
@@ -167,7 +169,8 @@ def verify():
         return error("Order not found.", 404)
     gateway_order_id, payment_id = body.get("gateway_order_id"), body.get("payment_id")
     if (not order.gateway_order_id or gateway_order_id != order.gateway_order_id
-            or not payments.verify_payment(gateway_order_id, payment_id, body.get("signature"))):
+            or not payments.verify_payment(gateway_order_id, payment_id, body.get("signature"))
+            or not payments.payment_matches_order(order, payment_id)):
         return error("Payment signature did not verify.", 400)
     order_svc.mark_paid(order.id, payment_id)
     db.session.refresh(order)

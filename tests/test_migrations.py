@@ -85,10 +85,11 @@ def test_every_migration_can_be_undone(fresh):
 
 
 def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
-    """Databases made by create_all() before migrations existed have no alembic_version, no login_throttle table
-    and no users.session_token column."""
+    """Databases made by create_all() before migrations existed have no alembic_version, no login_throttle or
+    rate_limits table and no users.session_token column."""
     db.create_all()
     db.metadata.tables["login_throttle"].drop(db.engine)
+    db.metadata.tables["rate_limits"].drop(db.engine)
     user = User(name="Early Buyer", email="early@example.com")
     user.set_password("correct-horse")
     db.session.add(user)
@@ -102,7 +103,7 @@ def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
     assert version() == BASELINE_REVISION
 
     upgrade()                      # would fail with "table already exists" if it were not adopted first
-    assert "login_throttle" in tables()
+    assert {"login_throttle", "rate_limits"} <= tables()
     assert drift() == []
     db.session.remove()            # MySQL refuses to read a table whose definition changed under an open transaction
     assert db.session.scalar(db.select(User.email).where(User.email == "early@example.com")) == "early@example.com"

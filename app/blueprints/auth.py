@@ -6,7 +6,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from ..extensions import db
 from ..models import User
-from ..services import login_throttle
+from ..services import login_throttle, rate_limit
 from ..validation import MAX_EMAIL, MAX_NAME, MAX_PASSWORD, MIN_PASSWORD
 
 bp = Blueprint("auth", __name__)
@@ -40,6 +40,7 @@ def register():
     errors = {}
     form = {"name": "", "email": ""}
     if request.method == "POST":
+        rate_limit.enforce("register", rate_limit.ip_key())
         form["name"] = request.form.get("name", "").strip()
         form["email"] = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -77,7 +78,8 @@ def login():
         email = typed[:MAX_EMAIL]       # the throttle table's column holds no more
         password = request.form.get("password", "")
         ip = request.remote_addr
-        wait = login_throttle.seconds_locked(email, ip)
+        # One address is limited across all emails too, so it cannot try a different account every time.
+        wait = rate_limit.seconds_blocked("login_ip", rate_limit.ip_key()) or login_throttle.seconds_locked(email, ip)
         if not wait:   # while locked the password is not even checked, so a right guess gets no signal
             # No account has an address or a password longer than the limits, so those are never hashed.
             # An unknown address still pays for one hash, so the response time does not reveal which exist.
@@ -96,6 +98,7 @@ def login():
                 start_session(user, remember=bool(request.form.get("remember")))
                 return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
             wait = login_throttle.record_failure(email, ip)
+            rate_limit.hit("login_ip", rate_limit.ip_key())      # a failure from this address, whatever the email
         if wait:
             resp = make_response(render_template("login.html", error=login_throttle.lock_message(wait),
                                                  email=email), 429)

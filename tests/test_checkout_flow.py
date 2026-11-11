@@ -217,7 +217,8 @@ def test_webhook_marks_paid_and_rejects_bad_signature(app, buyer, rag):
     add(buyer, rag)
     order = checkout(buyer).get_json()
     body = json.dumps({"event": "payment.captured", "payload": {"payment": {"entity": {
-        "id": "pay_web1", "order_id": order["payment"]["gateway_order_id"]}}}}).encode()
+        "id": "pay_web1", "order_id": order["payment"]["gateway_order_id"], "amount": order["total_paise"],
+        "currency": "INR", "status": "captured"}}}}).encode()
     anon = app.test_client()
     assert anon.post("/webhooks/razorpay", data=body, headers={"X-Razorpay-Signature": "bad"}).status_code == 400
     sig = hmac.new(b"whsec_test", body, hashlib.sha256).hexdigest()

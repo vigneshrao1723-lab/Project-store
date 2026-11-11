@@ -65,7 +65,7 @@ With no `DATABASE_URL` it uses a SQLite file in `instance/`. `flask seed` no lon
 
 * **No keys, `ALLOW_PRACTICE_GATEWAY=true`:** a practice gateway runs the same signing and confirmation code as Razorpay. Good for demos and local development. A yellow banner on every page and a notice on the pay page say that no real money moves. **Anyone who is signed in can mark their own order paid for free in this mode, so never switch it on for a store that sells for real.**
 * **No keys, `ALLOW_PRACTICE_GATEWAY` off (the default):** the store takes no payments. The pay page says "Payment is not available", the practice route returns 404, no signature verifies and nothing can be marked paid. A deployment that forgets its Razorpay keys therefore cannot give the downloads away.
-* **Razorpay test mode:** put your test `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `.env`. Use Razorpay's test card numbers from their docs. For the webhook, add `https://<your-host>/webhooks/razorpay` in the Razorpay dashboard for `payment.captured` and set `RAZORPAY_WEBHOOK_SECRET`. Locally, expose the port with a tunnel.
+* **Razorpay test mode:** set payment capture to **automatic** in the dashboard (the server marks an order paid only for a *captured* payment of the exact amount, in INR). Put your test `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `.env`. Use Razorpay's test card numbers from their docs. For the webhook, add `https://<your-host>/webhooks/razorpay` in the Razorpay dashboard for `payment.captured` and set `RAZORPAY_WEBHOOK_SECRET`. Locally, expose the port with a tunnel.
 
 ## Database migrations
 
