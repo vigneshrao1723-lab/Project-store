@@ -18,7 +18,7 @@
     </div>
     {{ field('price_rupees', 'Price in rupees', data.price_rupees, errors.price_rupees, type='text', hint='For example 2499 or 1999.50.') }}
     {% if not p %}{{ field('stock', 'Copies in stock', data.stock, errors.stock, type='number') }}{% else %}
-      <div class="field"><span class="label">Copies in stock</span><p class="num" style="margin:0;font-weight:700">{{ p.stock }}</p><p class="hint">Change stock from the products list so it is recorded in the ledger.</p></div>
+      <div class="field"><span class="label">Copies in stock</span><p class="num stat-value">{{ p.stock }}</p><p class="hint">Change stock from the products list so it is recorded in the ledger.</p></div>
     {% endif %}
     <div class="wide">{{ field('tagline', 'Tagline', data.tagline, errors.tagline, required=False) }}</div>
     <div class="wide field"><label for="description">Description</label><textarea id="description" name="description" rows="8">{{ data.description }}</textarea><p class="hint">Separate paragraphs with a blank line.</p></div>
@@ -35,7 +35,7 @@
 </form>
 
 {% if p and log %}
-<h2 style="margin-top:2.4rem">Stock history</h2>
+<h2 class="mt-24">Stock history</h2>
 <table class="table"><thead><tr><th>When</th><th>Reason</th><th class="r">Change</th></tr></thead><tbody>
 {% for l in log %}<tr><td class="num">{{ l.created_at.strftime('%d %b %Y, %H:%M') }}</td><td>{{ l.reason }}{% if l.note %}: {{ l.note }}{% endif %}</td><td class="num r">{{ '%+d' % l.delta }}</td></tr>{% endfor %}
 </tbody></table>

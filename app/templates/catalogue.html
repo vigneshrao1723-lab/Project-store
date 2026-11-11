@@ -16,7 +16,7 @@
     <div class="result-bar">
       <div>
         <h1 class="h2">{% if q %}Results for “{{ q }}”{% else %}Catalogue{% endif %}</h1>
-        <p class="muted ui" style="margin:.3rem 0 0">{{ result.total }} {{ 'project' if result.total == 1 else 'projects' }}</p>
+        <p class="muted ui count-line">{{ result.total }} {{ 'project' if result.total == 1 else 'projects' }}</p>
       </div>
       <form method="get">
         {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}

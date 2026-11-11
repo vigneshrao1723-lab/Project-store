@@ -3,18 +3,18 @@
 {% block title %}Order {{ order.public_id }}{% endblock %}
 {% block admin %}
 <h1>Order <span class="num">{{ order.public_id }}</span> {{ status(order) }}</h1>
-<dl class="def" style="max-width:640px">
+<dl class="def mw-640">
   <div><dt>Customer</dt><dd>{{ order.billing_name }}, {{ order.user.email }}{% if order.phone %}, {{ order.phone }}{% endif %}</dd></div>
   <div><dt>Placed</dt><dd class="num">{{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC</dd></div>
   {% if order.paid_at %}<div><dt>Paid</dt><dd class="num">{{ order.paid_at.strftime('%d %b %Y, %H:%M') }} UTC</dd></div>{% endif %}
   <div><dt>Gateway order</dt><dd class="num">{{ order.gateway_order_id or 'none' }}</dd></div>
   <div><dt>Payment</dt><dd class="num">{{ order.gateway_payment_id or 'none' }}</dd></div>
 </dl>
-<table class="table" style="max-width:640px"><thead><tr><th>Project</th><th class="num">Qty</th><th class="r">Line total</th></tr></thead><tbody>
+<table class="table mw-640"><thead><tr><th>Project</th><th class="num">Qty</th><th class="r">Line total</th></tr></thead><tbody>
 {% for i in order.items %}<tr><td>{{ i.title }}</td><td class="num">{{ i.qty }}</td><td class="num r">{{ i.line_paise | inr }}</td></tr>{% endfor %}
 <tr><td colspan="2" class="r"><strong>Total</strong></td><td class="num r"><strong>{{ order.total_paise | inr }}</strong></td></tr>
 </tbody></table>
-<div style="margin-top:1.6rem;display:flex;gap:.8rem;flex-wrap:wrap">
+<div class="actions-row">
   {% if order.status == 'pending' %}
   <form method="post" action="{{ url_for('admin.order_cancel', public_id=order.public_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger" type="submit">Cancel order and release stock</button></form>
   {% elif order.status == 'refund_due' %}

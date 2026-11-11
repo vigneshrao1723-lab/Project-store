@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% block title %}Admin products{% endblock %}
 {% block admin %}
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap"><h1>Products</h1><a class="btn small" href="{{ url_for('admin.product_new') }}">Add a product</a></div>
+<div class="title-row"><h1>Products</h1><a class="btn small" href="{{ url_for('admin.product_new') }}">Add a product</a></div>
 <div class="table-wrap">
 <table class="table">
   <thead><tr><th>Kit</th><th>Title</th><th class="r">Price</th><th class="r">Stock</th><th>Adjust stock</th><th>Visible</th></tr></thead>

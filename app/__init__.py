@@ -91,7 +91,7 @@ def create_app(config=None):
         h.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; script-src 'self' https://checkout.razorpay.com; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self'; "
             "font-src 'self'; img-src 'self' data:; "
             "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
             "connect-src 'self' https://lumberjack.razorpay.com https://api.razorpay.com; "

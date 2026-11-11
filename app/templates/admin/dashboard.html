@@ -13,7 +13,7 @@
 
 <h2>Revenue, last 14 days</h2>
 <div class="bars" role="img" aria-label="Daily revenue for the last 14 days">
-  {% for d, v in series %}<div class="bar-col {% if v == peak and v > 0 %}top{% endif %}" title="{{ d.strftime('%d %b') }}: {{ v | inr }}"><i style="height: {{ (v / peak * 100) | round(1) }}%"></i></div>{% endfor %}
+  {% for d, v in series %}<div class="bar-col {% if v == peak and v > 0 %}top{% endif %}" title="{{ d.strftime('%d %b') }}: {{ v | inr }}"><svg width="100%" height="{{ (v / peak * 100) | round(1) }}%" aria-hidden="true"></svg></div>{% endfor %}
 </div>
 <div class="bar-axis" aria-hidden="true">{% for d, v in series %}<span>{{ d.day if loop.index0 % 2 == 1 else '' }}</span>{% endfor %}</div>
 

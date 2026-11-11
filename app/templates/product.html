@@ -18,7 +18,7 @@
 
       <div class="buy" data-product="{{ p.id }}">
         <div class="price-big">{{ p.price_paise | inr }}</div>
-        <p class="ui" style="margin:.4rem 0 0;font-weight:600">
+        <p class="ui byline">
           {% if p.stock == 0 %}<span class="stock low">Not available right now</span>
           {% elif p.stock <= 5 %}<span class="stock low">Only {{ p.stock }} left</span>
           {% else %}<span class="stock">In stock, {{ p.stock }} copies</span>{% endif %}
@@ -53,7 +53,7 @@
   </article>
 
   {% if related %}
-  <section class="section" style="padding-top:0;border:0">
+  <section class="section flush-top">
     <div class="section-head"><h2 class="h2">More in {{ p.category.name }}</h2></div>
     <div class="grid">{% for r in related %}{{ tile(r) }}{% endfor %}</div>
   </section>

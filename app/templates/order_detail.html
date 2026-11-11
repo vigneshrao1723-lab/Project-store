@@ -2,11 +2,11 @@
 {% from "_macros.html" import status %}
 {% block title %}Order {{ order.public_id }}{% endblock %}
 {% block content %}
-<div class="wrap" style="max-width:820px">
+<div class="wrap w-820">
   <div class="page-head">
-    <p class="crumbs" style="padding:0 0 .8rem"><a href="{{ url_for('account.orders') }}">Your orders</a></p>
+    <p class="crumbs flush"><a href="{{ url_for('account.orders') }}">Your orders</a></p>
     <h1 class="h2">Order <span class="num">{{ order.public_id }}</span></h1>
-    <p style="margin-top:.8rem">{{ status(order) }}</p>
+    <p class="mt-08">{{ status(order) }}</p>
   </div>
 
   {% if order.status == 'pending' %}
@@ -38,6 +38,6 @@
       </tbody>
     </table>
   </div>
-  <p class="muted ui" style="margin:1.2rem 0 4rem;font-size:.9rem">Placed {{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC for {{ order.billing_name }}{% if order.paid_at %}. Paid {{ order.paid_at.strftime('%d %b %Y, %H:%M') }} UTC{% endif %}.</p>
+  <p class="muted ui placed-note">Placed {{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC for {{ order.billing_name }}{% if order.paid_at %}. Paid {{ order.paid_at.strftime('%d %b %Y, %H:%M') }} UTC{% endif %}.</p>
 </div>
 {% endblock %}
