@@ -24,7 +24,9 @@ def register(client, i):
 def test_hits_up_to_the_limit_pass_and_the_next_is_refused_with_the_seconds_left(tight):
     assert [rate_limit.hit("register", "ip:1") for _ in range(3)] == [0, 0, 0]
     wait = rate_limit.hit("register", "ip:1")
-    assert 1 <= wait <= 60
+    # MySQL rounds a DATETIME to whole seconds, which can put the window start up to half a second ahead of the
+    # clock, so the wait can come out as 61 for a 60 second window.
+    assert 1 <= wait <= 61
     assert rate_limit.hit("register", "ip:1") > 0
 
 
