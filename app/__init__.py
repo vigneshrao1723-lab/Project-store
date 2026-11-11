@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import click
-from flask import Flask, abort, request
+from flask import Flask, abort, request, session
 from markupsafe import Markup
 
 from .config import BASE_DIR, Config
@@ -63,7 +63,8 @@ def create_app(config=None):
     csrf.init_app(app)
 
     app.jinja_env.filters["inr"] = inr
-    app.jinja_env.globals["cover"] = lambda p: Markup(cover_svg(p.slug, p.category.cover_kind, p.title))
+    # cover_svg() escapes everything it was given, so the finished drawing is safe to mark as HTML.
+    app.jinja_env.globals["cover"] = lambda p: Markup(cover_svg(p.slug, p.category.cover_kind, p.title))  # nosec B704
 
     from .blueprints import account, admin, api, auth, cart, checkout, shop, webhooks
 
@@ -83,18 +84,33 @@ def create_app(config=None):
 
     @app.after_request
     def security_headers(resp):
-        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
-        resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
-        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        resp.headers.setdefault(
+        h = resp.headers
+        h.setdefault("X-Content-Type-Options", "nosniff")
+        h.setdefault("X-Frame-Options", "SAMEORIGIN")
+        h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        h.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; script-src 'self' https://checkout.razorpay.com; "
             "style-src 'self' 'unsafe-inline'; "
             "font-src 'self'; img-src 'self' data:; "
             "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
             "connect-src 'self' https://lumberjack.razorpay.com https://api.razorpay.com; "
-            "form-action 'self'; base-uri 'self'",
+            "form-action 'self'; base-uri 'self'; frame-ancestors 'self'",
         )
+        # Nothing here needs the camera, microphone, location or USB. Razorpay Checkout runs in an iframe and
+        # may use the browser's payment sheet, so only it (and this site) get "payment".
+        h.setdefault("Permissions-Policy",
+                     'camera=(), microphone=(), geolocation=(), usb=(), '
+                     'payment=(self "https://checkout.razorpay.com" "https://api.razorpay.com")')
+        # allow-popups keeps the windows our own page opens (Razorpay's bank pages) working; it still cuts the
+        # link to any cross-origin page that opens this one.
+        h.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
+        if app.config["SESSION_COOKIE_SECURE"]:          # COOKIE_SECURE=true means the site is served over HTTPS
+            h.setdefault("Strict-Transport-Security", "max-age=31536000")
+        # Pages for a signed-in visitor (orders, cart, download links) must not be kept by the browser's
+        # history cache or a shared proxy. The check reads the session cookie only; it never touches the database.
+        if request.endpoint != "static" and "_user_id" in session:
+            h["Cache-Control"] = "no-store"
         return resp
 
     from .errors import register_error_handlers

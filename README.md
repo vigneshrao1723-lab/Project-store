@@ -15,12 +15,13 @@ Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. See [docs/ARCHI
   ```
 
   Paste the output after `SECRET_KEY=` in `.env`. Changing it signs everyone out.
+* **`DB_PASSWORD` and `DB_ROOT_PASSWORD`** (Docker): `docker compose` refuses to start without them, because MySQL's accounts are created from them. Use two different long random values (`python -c "import secrets; print(secrets.token_urlsafe(24))"`). They are applied **only when the database volume is first created**. If you already have a volume made with the old defaults (`store` / `root`), either put those same values in `.env`, or change the passwords inside MySQL and then `.env`, or start over with `docker compose down -v` (this deletes the data).
 * **Payments:** set both Razorpay keys, or set `ALLOW_PRACTICE_GATEWAY=true` for demos and local development. With neither, the store takes no orders (see [Payments](#payments)).
 
 ## Run it with Docker (MySQL)
 
 ```bash
-cp .env.example .env          # then set SECRET_KEY (see "Required settings"); Razorpay keys are optional
+cp .env.example .env          # then set SECRET_KEY, DB_PASSWORD and DB_ROOT_PASSWORD (see "Required settings")
 docker compose up --build
 ```
 
@@ -59,7 +60,7 @@ With no `DATABASE_URL` it uses a SQLite file in `instance/`. `flask seed` no lon
   ```
 
   CI fails if the locks do not match the pins, so a Dependabot pull request (weekly, for pip, Docker, Compose and GitHub Actions) needs this step before it can merge.
-* CI also runs `pip-audit` (known vulnerabilities in the locked packages) and `bandit` (medium severity and above) and fails on any finding. `bandit-baseline.json` records the one known finding being fixed in the cover-art change; remove it once that is done.
+* CI also runs `pip-audit` (known vulnerabilities in the locked packages) and `bandit` (medium severity and above) and fails on any finding. The one intentional `Markup` (the cover art, whose title is escaped inside `cover_svg`) carries a `# nosec` with the reason.
 
 ## Payments
 

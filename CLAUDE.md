@@ -8,7 +8,7 @@ Flask + SQLAlchemy + MySQL store selling the owner's engineering projects. Razor
 - Concurrency tests need MySQL/MariaDB: set TEST_DATABASE_URL (see README)
 - Run locally: `set FLASK_APP=wsgi.py` then `flask db upgrade` then `flask seed` then `flask run` (Windows)
 - Schema changes go through Alembic: edit the model, `flask db migrate -m "..."` (against MySQL), read the generated file in migrations/versions, commit both. Never use `create_all` outside tests. `tests/test_migrations.py` fails if models and migrations disagree.
-- Docker: `docker compose up --build` (needs .env with SECRET_KEY)
+- Docker: `docker compose up --build` (needs .env with SECRET_KEY, DB_PASSWORD and DB_ROOT_PASSWORD)
 
 ## Rules that must not be broken
 1. Money is integer paise. Never use floats for prices or totals.

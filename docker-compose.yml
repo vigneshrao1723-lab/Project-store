@@ -5,13 +5,16 @@ services:
     environment:
       MYSQL_DATABASE: project_store
       MYSQL_USER: store
-      MYSQL_PASSWORD: ${DB_PASSWORD:-store}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     volumes:
       - dbdata:/var/lib/mysql
+    # No password on the command line, where `docker inspect` and `ps` would show it. mysqladmin ping exits 0
+    # whenever the server answers, even when it refuses the login, and -h 127.0.0.1 only answers once the real
+    # server (not MySQL's temporary start-up server, which has no network port) is up.
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -23,7 +26,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:-store}@db:3306/project_store?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
@@ -47,7 +50,7 @@ services:
         # Healthy means the entrypoint has created the tables, so the first sweep cannot fail.
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:-store}@db:3306/project_store?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
     # This container runs no web server, so the image's HTTP healthcheck would always fail.
     healthcheck:

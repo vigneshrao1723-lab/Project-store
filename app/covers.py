@@ -2,6 +2,8 @@
 import hashlib
 import random
 
+from markupsafe import escape
+
 INK = "#1B2A41"
 YELLOW = "#F5D90A"
 W, H = 400, 300
@@ -96,10 +98,11 @@ _KINDS = {"crypto": _lattice, "ai": _network, "web": _web, "hardware": _circuit}
 
 def cover_svg(slug, kind, title=""):
     body = _KINDS.get(kind, _web)(_rng(slug))
-    label = f'<title>{title}</title>' if title else ""
+    safe_title = f"{escape(title)}"          # < > & ' " become entities, so a title cannot break out of the SVG
+    label = f'<title>{safe_title}</title>' if safe_title else ""
     return (
         f'<svg class="cover" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" '
-        f'aria-label="{title or "Project cover drawing"}" preserveAspectRatio="xMidYMid slice">{label}'
+        f'aria-label="{safe_title or "Project cover drawing"}" preserveAspectRatio="xMidYMid slice">{label}'
         f'<rect width="{W}" height="{H}" fill="#DCE4DD"/>'
         f'<path d="M0 .5H{W}M0 {H/2}H{W}M0 {H-.5}H{W}" stroke="{INK}" stroke-opacity=".08"/>{body}</svg>'
     )

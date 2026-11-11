@@ -18,7 +18,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
         ports: ["3306:3306"]
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
           --health-interval=5s --health-timeout=3s --health-retries=20
     steps:
       - uses: actions/checkout@v7
@@ -52,7 +52,7 @@ jobs:
       - name: Known vulnerabilities in dependencies (pip-audit)
         run: pip-audit -r requirements-dev.lock --disable-pip
       - name: Static analysis, medium severity and above (bandit)
-        run: bandit -r app wsgi.py -ll -b bandit-baseline.json
+        run: bandit -r app wsgi.py -ll
       - name: Lock files match the direct pins
         run: |
           sh scripts/relock.sh

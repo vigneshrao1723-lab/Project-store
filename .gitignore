@@ -1,10 +1,13 @@
 .env
+.env.*
+!.env.example
 instance/
 venv/
 .venv/
-__pycache__/
-*.pyc
+**/__pycache__/
+**/*.pyc
 .pytest_cache/
 .coverage
 htmlcov/
 .vscode/
+*.db

@@ -76,7 +76,9 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 * Request bodies over 1 MB get HTTP 413 before any route reads them. Anything under `/api/` answers errors as `{"error": ...}` JSON, including 404, 405, 413, CSRF failures and 500.
 * The payment routes under `/checkout` serve only the order's owner. An admin reads and cancels customer orders from `/admin`, never pays for them.
 * Users can read only their own orders; admin routes return 403 to everyone else.
-* Content-Security-Policy, `X-Frame-Options`, `nosniff`, `Referrer-Policy` on every response. No inline scripts.
+* On every response: Content-Security-Policy (with `frame-ancestors 'self'`, `form-action 'self'`, `base-uri 'self'`), `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (camera, microphone, geolocation and USB off; `payment` only for this site and Razorpay) and `Cross-Origin-Opener-Policy: same-origin-allow-popups` (not `same-origin`, which would sever the windows Razorpay opens). `Strict-Transport-Security` (one year, no `includeSubDomains`) is sent only when `COOKIE_SECURE=true`, i.e. when the site is served over HTTPS. Pages for a signed-in visitor carry `Cache-Control: no-store`. No inline scripts.
+* Cover art is built from the product title in `covers.py`, which escapes it with `markupsafe.escape`; `Markup` is applied once, in `app/__init__.py`, to the finished drawing (and carries the bandit `# nosec` with that reason). A test fails if `|safe`, `Markup(` or `render_template_string` appears anywhere else.
+* Docker: MySQL's passwords have no defaults (`${DB_PASSWORD:?}`), the database port is not published, the app connects as the `store` user (never root), the MySQL health check carries no password, and `.dockerignore` keeps `.env*`, bytecode, `.venv`, `.vscode`, `*.db` and source maps out of the image.
 * Fonts are self-hosted, so the page makes no third-party requests apart from Razorpay on the payment page.
 * Secrets come from the environment. `.env` is git-ignored.
 
