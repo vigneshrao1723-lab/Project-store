@@ -135,9 +135,10 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 .index a > .n { order: 2; font-stretch: 100%; font-weight: 600; font-size: 1rem; color: var(--ink-2); }
 .index a:hover { background: var(--mark); }
 
-/* grid and tiles: cells share hairlines */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1px; background: var(--ink); border: 1px solid var(--ink); }
-.tile { background: var(--paper); text-decoration: none; display: flex; flex-direction: column; }
+/* grid and tiles: every tile draws its own 1px border and overlaps its neighbours' by 1px, so cells share
+   hairlines. The container paints nothing, so empty cells in a short last row show the page, not a navy block. */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); padding: 0 1px 1px 0; }
+.tile { background: var(--paper); border: 1px solid var(--ink); margin: 0 -1px -1px 0; text-decoration: none; display: flex; flex-direction: column; }
 .tile:hover { background: var(--paper-2); }
 .tile-cover { position: relative; border-bottom: 1px solid var(--ink); overflow: hidden; }
 .tile-cover .cover { aspect-ratio: 4/3; width: 100%; height: auto; transition: transform .4s; }
