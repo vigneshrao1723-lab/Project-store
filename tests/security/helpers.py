@@ -29,6 +29,7 @@ def build_app(**overrides):
     @application.before_request
     def _fresh_login_cache():           # same reason as in conftest.py
         g.pop("_login_user", None)
+        g.pop("csrf_token", None)     # the CSRF token is cached on g too; a real request starts with a fresh one
 
     return application
 

@@ -15,7 +15,7 @@ from flask_migrate import downgrade, upgrade
 from app import create_app
 from app.config import BASE_DIR, TestConfig
 from app.extensions import db
-from app.models import User
+from app.models import User, load_user
 from app.schema import BASELINE_REVISION, adopt_legacy_database
 
 
@@ -85,12 +85,15 @@ def test_every_migration_can_be_undone(fresh):
 
 
 def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
-    """Databases made by create_all() before migrations existed have no alembic_version and no login_throttle."""
+    """Databases made by create_all() before migrations existed have no alembic_version, no login_throttle table
+    and no users.session_token column."""
     db.create_all()
     db.metadata.tables["login_throttle"].drop(db.engine)
     user = User(name="Early Buyer", email="early@example.com")
     user.set_password("correct-horse")
     db.session.add(user)
+    db.session.commit()
+    db.session.execute(db.text("ALTER TABLE users DROP COLUMN session_token"))
     db.session.commit()
     assert "alembic_version" not in tables()
 
@@ -101,7 +104,12 @@ def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
     upgrade()                      # would fail with "table already exists" if it were not adopted first
     assert "login_throttle" in tables()
     assert drift() == []
+    db.session.remove()            # MySQL refuses to read a table whose definition changed under an open transaction
     assert db.session.scalar(db.select(User.email).where(User.email == "early@example.com")) == "early@example.com"
+    # The new column arrives empty, which no cookie can match; the first sign-in gives the account a token.
+    early = db.session.scalar(db.select(User).where(User.email == "early@example.com"))
+    assert early.session_token == "" and load_user(f"{early.id}:") is None
+    assert early.get_id().startswith(f"{early.id}:") and early.session_token
 
 
 def test_adopting_twice_is_harmless(fresh):

@@ -4,7 +4,7 @@ import pytest
 
 from app.extensions import db
 from app.models import Product
-from ..conftest import login, make_user
+from ..conftest import force_login, login, make_user
 from .helpers import _with_db, build_app, start_order
 
 
@@ -22,17 +22,17 @@ def live_client(live_app):
 
 @pytest.fixture()
 def live_buyer(live_app):
-    make_user()
+    user = make_user()
     c = live_app.test_client()
-    login(c, "buyer@example.com")
+    force_login(c, user)
     return c
 
 
 @pytest.fixture()
 def live_admin(live_app):
-    make_user("boss@example.com", role="admin", name="Boss")
+    admin = make_user("boss@example.com", role="admin", name="Boss")
     c = live_app.test_client()
-    login(c, "boss@example.com")
+    force_login(c, admin)
     return c
 
 

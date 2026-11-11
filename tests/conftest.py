@@ -1,5 +1,5 @@
 import pytest
-from flask import g
+from flask import current_app, g
 
 from app import create_app
 from app.config import TestConfig
@@ -18,6 +18,7 @@ def app():
         # `g` would otherwise outlive a request and leak the logged-in user between test clients.
         # A real request always gets its own context.
         g.pop("_login_user", None)
+        g.pop("csrf_token", None)     # the CSRF token is cached on g too; a real request starts with a fresh one
 
     with app.app_context():
         db.create_all()
@@ -32,9 +33,21 @@ def client(app):
     return app.test_client()
 
 
-def make_user(email="buyer@example.com", password="correct-horse", role="customer", name="Buyer"):
+_DEFAULT_PASSWORD = "correct-horse"
+_default_hashes = {}        # hashing method -> hash; production-cost scrypt takes ~0.4 s, so make it once per run
+
+
+def make_user(email="buyer@example.com", password=_DEFAULT_PASSWORD, role="customer", name="Buyer"):
     u = User(name=name, email=email, role=role)
-    u.set_password(password)
+    if password == _DEFAULT_PASSWORD:
+        method = current_app.config["PASSWORD_HASH_METHOD"]
+        if method not in _default_hashes:
+            u.set_password(password)
+            _default_hashes[method] = u.password_hash
+        else:
+            u.password_hash = _default_hashes[method]
+    else:
+        u.set_password(password)
     db.session.add(u)
     db.session.commit()
     return u
@@ -54,16 +67,25 @@ def login(client, email="buyer@example.com", password="correct-horse"):
     return client.post("/login", data={"email": email, "password": password})
 
 
+def force_login(client, user):
+    """Start a signed-in session without the password check, as Django's force_login does. Fixtures use it so a
+    test that is not about signing in does not pay for a full-cost password hash; tests of the sign-in flow
+    itself still go through login()."""
+    with client.session_transaction() as s:
+        s["_user_id"] = user.get_id()
+        s["_fresh"] = True
+
+
 @pytest.fixture()
 def buyer(client, user):
-    login(client)
+    force_login(client, user)
     return client
 
 
 @pytest.fixture()
 def admin_client(app, admin):
     c = app.test_client()
-    login(c, "boss@example.com")
+    force_login(c, admin)
     return c
 
 

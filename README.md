@@ -44,6 +44,8 @@ With no `DATABASE_URL` it uses a SQLite file in `instance/`. `flask seed` no lon
 
 **Admin account:** `flask seed` creates one admin when there is none, with email `ADMIN_EMAIL` (default `admin@projectstore.local`). There is no built-in password. Set `ADMIN_PASSWORD` before the first seed to choose one, or leave it empty and a random password is generated and printed **once** in the seed output ("Generated admin password ..."). Under Docker the seed runs when the web container first starts, so read it with `docker compose logs web`. It is stored only as a hash and cannot be recovered; to set a new one run `flask create-admin you@example.com` (`docker compose exec web flask create-admin you@example.com` under Docker). Container logs keep the generated password, so change it before the app is reachable by anyone else.
 
+**Upgrading from an earlier version?** The sign-in cookies now carry a per-account token, so everyone is signed out once when this version first runs (`flask db upgrade` adds `users.session_token`). Password hashes made at the old, cheaper scrypt cost are upgraded the next time each user signs in.
+
 **Seeded earlier?** A database seeded by an older version has an admin whose password was published in this repository. Set a new one with `flask create-admin` before exposing that database.
 
 ## Dependencies

@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urlparse
 
-from flask import Blueprint, flash, make_response, redirect, render_template, request, url_for
+from flask import Blueprint, flash, make_response, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from ..extensions import db
@@ -24,6 +24,13 @@ def safe_next(target):
     if u.scheme or u.netloc or not target.startswith("/") or target.startswith("//"):
         return None
     return target
+
+
+def start_session(user, remember=False):
+    """Sign the user in on a brand-new session. Clearing first drops anything a visitor (or an attacker who
+    planted a cookie) had in the old session, including its CSRF token, so the next page issues a fresh one."""
+    session.clear()
+    login_user(user, remember=remember)
 
 
 @bp.route("/register", methods=["GET", "POST"])
@@ -53,7 +60,7 @@ def register():
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
-            login_user(user)
+            start_session(user)
             flash("Account created. You're signed in.", "success")
             return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
     return render_template("register.html", errors=errors, form=form)
@@ -73,12 +80,20 @@ def login():
         wait = login_throttle.seconds_locked(email, ip)
         if not wait:   # while locked the password is not even checked, so a right guess gets no signal
             # No account has an address or a password longer than the limits, so those are never hashed.
-            user = None
+            # An unknown address still pays for one hash, so the response time does not reveal which exist.
+            user, ok = None, False
             if len(typed) <= MAX_EMAIL and len(password) <= MAX_PASSWORD:
                 user = db.session.scalar(db.select(User).where(User.email == email))
-            if user and user.check_password(password):
+                if user is None:
+                    User.spend_password_check_time(password)
+                else:
+                    ok = user.check_password(password)
+            if ok:
                 login_throttle.clear(email, ip)
-                login_user(user, remember=bool(request.form.get("remember")))
+                if user.password_needs_rehash():        # the cost was raised since this hash was made
+                    user.set_password(password, end_sessions=False)
+                    db.session.commit()
+                start_session(user, remember=bool(request.form.get("remember")))
                 return redirect(safe_next(request.args.get("next")) or url_for("shop.home"))
             wait = login_throttle.record_failure(email, ip)
         if wait:
@@ -93,6 +108,11 @@ def login():
 @bp.post("/logout")
 @login_required
 def logout():
+    # Rotating the token is what makes a cookie copied before now useless; signing out ends every session of
+    # the account, on every device.
+    current_user.end_all_sessions()
+    db.session.commit()
+    session.clear()
     logout_user()
     flash("You're signed out.", "info")
     return redirect(url_for("shop.home"))

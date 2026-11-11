@@ -43,6 +43,7 @@ def secret_key_problem(key):
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_object(config or Config)
+    app.config.setdefault("REMEMBER_COOKIE_SECURE", app.config["SESSION_COOKIE_SECURE"])
 
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite:///") and not app.testing:
         Path(app.instance_path).mkdir(parents=True, exist_ok=True)

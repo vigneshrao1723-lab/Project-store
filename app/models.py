@@ -1,6 +1,8 @@
+import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
 
+from flask import current_app
 from flask_login import UserMixin
 from sqlalchemy import CheckConstraint, UniqueConstraint
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -13,6 +15,17 @@ def utcnow():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+# A real scrypt hash of a random password nobody knows, at the production cost. Sign-in checks an unknown email
+# against it so "no such account" takes as long as "wrong password" and the response time reveals nothing.
+# It is a literal, not computed, so no extra hash runs at start-up or on first use.
+DUMMY_PASSWORD_HASH = ("scrypt:131072:8:1$OUajOQZmaEew8r9T$64285e6a83ab9f8a6cd13d3262e40f08660bc87b272b4ee56750ae34"
+                       "ecd0291a743cd97b92dd4bc6758794ac24eac6443312bfd4ea6ece5b09e872e3b15271d1")
+
+
+def new_session_token():
+    return secrets.token_hex(16)
+
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -22,6 +35,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(16), nullable=False, default="customer")
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    # Part of the id stored in the session and remember cookies. Changing it (sign-out, new password) makes
+    # every cookie issued before the change worthless; see get_id() and load_user().
+    session_token = db.Column(db.String(32), nullable=False, default=new_session_token, server_default="")
 
     cart_items = db.relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
     orders = db.relationship("Order", back_populates="user", order_by="Order.id.desc()")
@@ -30,16 +46,51 @@ class User(UserMixin, db.Model):
     def is_admin(self):
         return self.role == "admin"
 
-    def set_password(self, raw):
-        self.password_hash = generate_password_hash(raw)
+    def get_id(self):
+        if not self.session_token:          # an account from before session tokens existed
+            self.session_token = new_session_token()
+            db.session.commit()
+        return f"{self.id}:{self.session_token}"
+
+    def end_all_sessions(self):
+        """Invalidate every session and remember-me cookie issued so far for this account."""
+        self.session_token = new_session_token()
+
+    def set_password(self, raw, end_sessions=True):
+        self.password_hash = generate_password_hash(raw, method=current_app.config["PASSWORD_HASH_METHOD"])
+        if end_sessions:                    # a new password signs the account out everywhere
+            self.end_all_sessions()
 
     def check_password(self, raw):
         return check_password_hash(self.password_hash, raw)
 
+    def password_needs_rehash(self):
+        """True if the stored hash is weaker than the configured method (cost raised since it was made)."""
+        wanted = current_app.config["PASSWORD_HASH_METHOD"].split(":")
+        have = self.password_hash.split("$", 1)[0].split(":")
+        try:
+            return [int(x) for x in have[1:]] < [int(x) for x in wanted[1:]] or have[0] != wanted[0]
+        except ValueError:
+            return True
+
+    @staticmethod
+    def spend_password_check_time(raw):
+        """Do the work of checking a password for an account that does not exist."""
+        check_password_hash(DUMMY_PASSWORD_HASH, raw)
+
 
 @login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
+def load_user(session_id):
+    """Resolve the id in a session cookie, which is "<user id>:<session token>". A cookie whose token no longer
+    matches (the user signed out or changed password) or that has no token (issued before this existed) is
+    not signed in."""
+    user_id, _, token = str(session_id).partition(":")
+    if not (user_id.isdigit() and token) or int(user_id) > 2**31 - 1:
+        return None
+    user = db.session.get(User, int(user_id))
+    if user is None or not user.session_token or not hmac.compare_digest(user.session_token.encode(), token.encode()):
+        return None
+    return user
 
 
 class LoginThrottle(db.Model):

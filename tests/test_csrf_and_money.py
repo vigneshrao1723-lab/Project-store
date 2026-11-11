@@ -1,4 +1,5 @@
 import pytest
+from flask import g
 
 from app import create_app, inr
 from app.config import TestConfig
@@ -18,6 +19,12 @@ def test_csrf_blocks_api_writes_without_token():
     class Csrf(TestConfig):
         WTF_CSRF_ENABLED = True
     app = create_app(Csrf)
+
+    @app.before_request
+    def _fresh_request_state():      # this test keeps one app context open; a real request gets its own g
+        g.pop("_login_user", None)
+        g.pop("csrf_token", None)
+
     with app.app_context():
         db.create_all(); seed_catalogue(); make_user()
         c = app.test_client()

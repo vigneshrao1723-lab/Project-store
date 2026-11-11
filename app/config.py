@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,6 +20,16 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _bool("COOKIE_SECURE", False)
     REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    # REMEMBER_COOKIE_SECURE follows SESSION_COOKIE_SECURE (see create_app), so one setting covers both cookies.
+
+    # Both the session cookie and the remember-me cookie stop working after two weeks.
+    PERMANENT_SESSION_LIFETIME = timedelta(days=14)
+    REMEMBER_COOKIE_DURATION = timedelta(days=14)
+
+    # scrypt N, r, p at the OWASP minimum (N=2**17, r=8, p=1: 128 MiB and about 0.4 s a hash). Hashes made with
+    # a lower cost are upgraded the next time that user signs in.
+    PASSWORD_HASH_METHOD = "scrypt:131072:8:1"
 
     # Razorpay. With no key pair the store takes no payments, unless ALLOW_PRACTICE_GATEWAY is on.
     RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
