@@ -134,4 +134,11 @@
 
   document.querySelectorAll("[data-autosubmit]").forEach((el) =>
     el.addEventListener("change", () => el.form.submit()));
+
+  // A page restored from the back/forward cache is a frozen copy of how it looked when the user left it, for
+  // example still signed in after they signed out. Reload it so it shows the current state. (Chrome skips the
+  // cache for no-store pages; Safari and Firefox may not.)
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) window.location.reload();
+  });
 })();

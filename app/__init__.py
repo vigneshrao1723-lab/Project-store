@@ -109,8 +109,10 @@ def create_app(config=None):
             h.setdefault("Strict-Transport-Security", "max-age=31536000")
         # Pages for a signed-in visitor (orders, cart, download links) must not be kept by the browser's
         # history cache or a shared proxy. The check reads the session cookie only; it never touches the database.
-        if request.endpoint != "static" and "_user_id" in session:
-            h["Cache-Control"] = "no-store"
+        if request.endpoint != "static":
+            resp.vary.add("Cookie")         # what a page shows depends on the cookie, whoever stores it
+            if "_user_id" in session:
+                h["Cache-Control"] = "no-store"
         return resp
 
     from .errors import register_error_handlers

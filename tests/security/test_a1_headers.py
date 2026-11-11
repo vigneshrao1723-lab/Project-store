@@ -59,7 +59,37 @@ def test_a1_hsts_is_not_sent_when_cookies_are_not_secure(client):
     assert "Strict-Transport-Security" not in client.get("/").headers
 
 
-def test_a1_signed_in_pages_are_not_cached(buyer):
-    for path in ("/orders", "/cart", "/api/v1/cart", "/api/v1/orders"):
-        cc = buyer.get(path).headers.get("Cache-Control", "")
-        assert "no-store" in cc, f"{path} can be cached by browsers and shared proxies (Cache-Control: {cc!r})"
+def _page_types(order_id, slug):
+    """One request for every kind of page and response a signed-in visitor can get."""
+    return [("get", "/"), ("get", "/catalogue"), ("get", "/catalogue?q=zzz"), ("get", f"/p/{slug}"), ("get", "/cart"),
+            ("get", "/checkout"), ("get", f"/checkout/pay/{order_id}"), ("get", "/orders"), ("get", f"/orders/{order_id}"),
+            ("get", "/login"), ("get", "/register"), ("get", "/healthz"), ("get", "/no-such-page"),
+            ("get", "/api/v1/cart"), ("get", "/api/v1/orders"), ("get", f"/api/v1/orders/{order_id}"),
+            ("get", "/api/v1/products"), ("get", "/api/v1/nope"), ("delete", "/api/v1/products"), ("delete", "/")]
+
+
+def test_a1_signed_in_pages_are_not_cached(buyer, rag):
+    """Every response for a signed-in visitor, whatever the page type, status or method, must not be stored by the
+    browser or a proxy (so Back after sign-out cannot show it) and must say it varies with the cookie."""
+    buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
+    order_id = buyer.post("/api/v1/checkout", json={}).get_json()["id"]
+    buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
+    for method, path in _page_types(order_id, rag.slug):
+        resp = getattr(buyer, method)(path)
+        cc = resp.headers.get("Cache-Control", "")
+        assert "no-store" in cc, f"{method.upper()} {path} -> {resp.status_code} can be cached (Cache-Control: {cc!r})"
+        assert "Cookie" in resp.headers.get("Vary", ""), f"{method.upper()} {path} lacks Vary: Cookie"
+
+
+def test_a1_signed_in_admin_pages_are_not_cached(admin_client, rag):
+    for path in ("/admin", "/admin/orders", "/admin/products", "/admin/products/new", f"/admin/products/{rag.id}",
+                 "/admin/orders/PS-NOPE", "/api/v1/admin/stats", "/api/v1/admin/orders"):
+        resp = admin_client.get(path)
+        assert "no-store" in resp.headers.get("Cache-Control", ""), f"{path} -> {resp.status_code}"
+        assert "Cookie" in resp.headers.get("Vary", ""), path
+
+
+def test_a1_signed_out_responses_after_logout_are_not_marked_private(buyer, app):
+    """The sign-out redirect and the pages after it are anonymous again; they may be cached like any public page."""
+    buyer.post("/logout")
+    assert "no-store" not in app.test_client().get("/catalogue").headers.get("Cache-Control", "")
