@@ -14,6 +14,7 @@ from ..models import (
     Order,
     OrderItem,
     Product,
+    User,
     utcnow,
 )
 
@@ -24,6 +25,21 @@ class CheckoutError(Exception):
             messages = [messages]
         self.messages = messages
         super().__init__("; ".join(messages))
+
+
+class PendingOrderExists(CheckoutError):
+    """The user already has an unpaid order. ``order`` is that order, so the caller can send them to it."""
+
+    def __init__(self, order):
+        super().__init__("You already have an unpaid order. Finish paying for it or cancel it before checking out again.")
+        self.order = order
+
+
+def open_order_for(user):
+    """The user's unpaid order whose hold is still running, or None. Orders past their hold are released first."""
+    release_expired()
+    return db.session.scalar(
+        select(Order).where(Order.user_id == user.id, Order.status == "pending").order_by(Order.id.desc()))
 
 
 def _lock_products(product_ids):
@@ -46,7 +62,20 @@ def _log(product, delta, reason, order=None, note=""):
 def create_order_from_cart(user, billing_name, phone=""):
     """Turn the user's cart into a pending order and hold the stock. All or nothing."""
     release_expired()
+    user_id = user.id       # read it now: after the commit below the user object is expired, and touching it would reload it
+    # Under MySQL's default isolation a transaction reads from the snapshot taken at its first plain SELECT, and
+    # release_expired() has just made one. End it, so that the first read after the user lock below sees what
+    # the checkout that held the lock has committed.
+    db.session.commit()
     try:
+        # One unpaid order per user. Locking the user's row first makes two simultaneous checkouts (a double
+        # click, two tabs) take turns, so the second one sees the first one's order instead of creating another.
+        db.session.scalar(select(User.id).where(User.id == user_id).with_for_update())
+        existing = db.session.scalar(
+            select(Order).where(Order.user_id == user_id, Order.status == "pending").order_by(Order.id.desc()))
+        if existing is not None:
+            raise PendingOrderExists(existing)
+
         items = db.session.scalars(
             select(CartItem).where(CartItem.user_id == user.id).order_by(CartItem.product_id)
         ).all()

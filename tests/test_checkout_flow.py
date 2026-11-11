@@ -74,8 +74,9 @@ def test_tampered_signature_is_rejected(buyer, rag):
 def test_signature_for_another_order_cannot_pay_this_one(buyer, rag, soc):
     add(buyer, rag)
     first = checkout(buyer).get_json()
-    add(buyer, rag)
+    buyer.post(f"/checkout/cancel/{first['id']}")      # one unpaid order at a time: cancel it, which refills the cart
     second = checkout(buyer).get_json()
+    assert second["id"] != first["id"]
     sig = payments.sign(first["payment"]["gateway_order_id"], "pay_1")
     r = buyer.post("/api/v1/checkout/verify", json={
         "order_id": second["id"], "gateway_order_id": first["payment"]["gateway_order_id"],

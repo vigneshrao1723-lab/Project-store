@@ -52,7 +52,7 @@ expired/cancelled ──late payment──► paid        if stock can be re-tak
                                 └─► refund_due  if it sold out meanwhile ──admin──► refunded
 ```
 
-Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in `services/orders.py` and is idempotent, because the browser redirect and the Razorpay webhook can both report the same payment.
+A user has **at most one unpaid order**: `create_order_from_cart` takes a lock on the user's row, then refuses with `PendingOrderExists` (which carries the existing order) if one is still pending. The web checkout redirects to that order's pay page, and `POST /api/v1/checkout` answers 409 with the order and how to pay it. Cancelling it, paying it or letting its hold run out lets the user check out again. Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in `services/orders.py` and is idempotent, because the browser redirect and the Razorpay webhook can both report the same payment.
 
 ## Payments
 

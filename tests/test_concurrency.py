@@ -107,3 +107,30 @@ def test_mixed_baskets_never_deadlock_or_oversell(app):
                                    .where(InventoryLog.product_id == pid))
         # Stock started at 5; every change since then must be recorded in the ledger.
         assert ledger - ledger_before[pid] == stock - 5
+
+
+def test_a_double_click_on_checkout_makes_one_order_not_two(app):
+    """Two simultaneous checkouts by the same user take turns on the user's row lock: one creates the order and the
+    other is told about it (PendingOrderExists), so stock is held once, not twice."""
+    products = db.session.scalars(db.select(Product).where(Product.stock > 0).limit(2)).all()
+    for p in products:
+        p.stock = 5
+    ids = _buyers(1)
+    for p in products:
+        db.session.add(CartItem(user_id=ids[0], product_id=p.id, qty=1))
+    db.session.commit()
+
+    def run():
+        try:
+            return svc.create_order_from_cart(db.session.get(User, ids[0]), "Double Clicker").public_id
+        except svc.PendingOrderExists as exc:
+            return "existing:" + exc.order.public_id
+
+    first, second = _run_threads(app, [run, run])
+    assert not isinstance(first, Exception) and not isinstance(second, Exception), (first, second)
+    created = [r for r in (first, second) if not r.startswith("existing:")]
+    told = [r for r in (first, second) if r.startswith("existing:")]
+    assert len(created) == 1 and told == ["existing:" + created[0]]
+    db.session.expire_all()
+    assert db.session.scalar(db.select(db.func.count()).select_from(db.select(svc.Order).where(svc.Order.status == "pending").subquery())) == 1
+    assert [db.session.get(Product, p.id).stock for p in products] == [4, 4]

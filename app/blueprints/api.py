@@ -59,6 +59,12 @@ def product_json(p, admin=False):
     return data
 
 
+def payment_json(order):
+    """What a client needs to pay an order: the provider and the gateway order, the amount and the currency."""
+    return {"provider": payments.mode(), "gateway_order_id": order.gateway_order_id,
+            "amount_paise": order.total_paise, "currency": "INR"}
+
+
 def order_json(o, with_delivery=True):
     return {
         "id": o.public_id, "status": o.status, "total_paise": o.total_paise,
@@ -141,6 +147,9 @@ def checkout():
     phone = text(body.get("phone"), MAX_PHONE, "The phone number")
     try:
         order = order_svc.create_order_from_cart(current_user, name, phone)
+    except order_svc.PendingOrderExists as exc:
+        body = {"error": exc.messages[0], "order": {**order_json(exc.order), "payment": payment_json(exc.order)}}
+        return jsonify(body), 409
     except order_svc.CheckoutError as exc:
         return error(exc.messages[0], 409, {"items": exc.messages})
     try:
@@ -150,8 +159,7 @@ def checkout():
         order_svc.cancel_order(order.id, "failed")
         return error(str(exc), 502)
     data = order_json(order)
-    data["payment"] = {"provider": payments.mode(), "gateway_order_id": order.gateway_order_id,
-                       "amount_paise": order.total_paise, "currency": "INR"}
+    data["payment"] = payment_json(order)
     return jsonify(data), 201
 
 

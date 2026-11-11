@@ -41,11 +41,19 @@ def _announce(status):
               "It will be refunded in full.", "error")
 
 
+def _to_unpaid_order(order):
+    flash("You already have an unpaid order. Finish paying for it, or cancel it, before checking out again.", "info")
+    return redirect(url_for("checkout.pay", public_id=order.public_id))
+
+
 @bp.route("", methods=["GET", "POST"])
 @login_required
 def start():
     cart = cart_svc.contents(current_user)
     if request.method == "GET":
+        unpaid = order_svc.open_order_for(current_user)
+        if unpaid is not None:
+            return _to_unpaid_order(unpaid)
         if not cart["lines"]:
             flash("Your cart is empty.", "info")
             return redirect(url_for("cart.view"))
@@ -67,6 +75,8 @@ def start():
 
     try:
         order = order_svc.create_order_from_cart(current_user, name, phone)
+    except order_svc.PendingOrderExists as exc:
+        return _to_unpaid_order(exc.order)
     except order_svc.CheckoutError as exc:
         for m in exc.messages:
             flash(m, "error")

@@ -128,7 +128,7 @@ Base path `/api/v1`. It uses the signed-in session cookie, and writes need an `X
 | `GET /products?q=&category=&sort=&page=` | Search and list |
 | `GET /products/<slug>` | One product |
 | `GET /cart` · `POST /cart/items` · `PATCH`/`DELETE /cart/items/<product_id>` | Cart |
-| `POST /checkout` | Reserve stock, create a pending order and gateway order |
+| `POST /checkout` | Reserve stock, create a pending order and gateway order. With an unpaid order already open it redirects to that order's pay page instead |
 | `POST /checkout/verify` | Confirm a payment by signature |
 | `GET /orders` · `GET /orders/<id>` | Your orders (download links only once paid) |
 | `GET /admin/stats` · `GET /admin/orders` | Admin |
