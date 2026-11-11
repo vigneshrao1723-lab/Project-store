@@ -237,6 +237,7 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 .delivery h2 { font-size: 1.05rem; font-stretch: 100%; margin-bottom: .6rem; }
 .delivery li { padding: .45rem 0; border-bottom: 1px solid var(--rule); font: 600 .98rem var(--font-display); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .delivery li:last-child { border-bottom: 0; }
+.practice-note { border: 2px solid var(--ink); background: var(--mark); padding: .7rem .9rem; margin: 0 0 1rem; font-size: .9rem; }
 .hold { border: 2px solid var(--ink); background: var(--mark); padding: 1rem 1.2rem; margin-block: 1.4rem; font: 600 .98rem var(--font-display); }
 .hold .timer { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 

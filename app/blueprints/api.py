@@ -160,8 +160,8 @@ def verify():
                                                      Order.user_id == current_user.id))
     if order is None:
         return error("Order not found.", 404)
-    if body.get("gateway_order_id") != order.gateway_order_id or not payments.verify_payment(
-            body.get("gateway_order_id"), body.get("payment_id"), body.get("signature")):
+    if not order.gateway_order_id or body.get("gateway_order_id") != order.gateway_order_id             or not payments.verify_payment(body.get("gateway_order_id"), body.get("payment_id"),
+                                           body.get("signature")):
         return error("Payment signature did not verify.", 400)
     order_svc.mark_paid(order.id, body["payment_id"])
     db.session.refresh(order)

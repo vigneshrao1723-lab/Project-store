@@ -23,8 +23,7 @@ def confirm_payment(order, gateway_order_id, payment_id, signature):
 
     Returns the order's new status ("paid", "refund_due"), or None if the payment didn't verify.
     """
-    if gateway_order_id != order.gateway_order_id or not payments.verify_payment(
-            gateway_order_id, payment_id, signature):
+    if not order.gateway_order_id or gateway_order_id != order.gateway_order_id             or not payments.verify_payment(gateway_order_id, payment_id, signature):
         return None
     return order_svc.mark_paid(order.id, payment_id)
 

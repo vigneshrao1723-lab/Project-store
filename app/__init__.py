@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import click
@@ -26,6 +25,21 @@ def inr(paise):
     return f"₹{s}" + (f".{p:02d}" if p else "")
 
 
+MIN_SECRET_KEY_LENGTH = 32
+_PLACEHOLDER_MARKERS = ("dev-only", "change-me", "changeme", "change_me", "your-secret", "your_secret",
+                        "replace-me", "placeholder", "test-secret", "example", "secret-key")
+
+
+def secret_key_problem(key):
+    """Why this SECRET_KEY must not be used outside tests and debug runs, or None if it is acceptable."""
+    key = key or ""
+    if len(key) < MIN_SECRET_KEY_LENGTH:
+        return f"is shorter than {MIN_SECRET_KEY_LENGTH} characters"
+    if any(m in key.lower() for m in _PLACEHOLDER_MARKERS):
+        return "is a placeholder value"
+    return None
+
+
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_object(config or Config)
@@ -34,9 +48,11 @@ def create_app(config=None):
         Path(app.instance_path).mkdir(parents=True, exist_ok=True)
         Path(app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "")).parent.mkdir(parents=True, exist_ok=True)
 
-    if not app.testing and not app.debug and app.config["SECRET_KEY"] == "dev-only-change-me" \
-            and os.getenv("FLASK_ENV") == "production":
-        raise RuntimeError("Set SECRET_KEY before running in production.")
+    if not app.testing and not app.debug:
+        problem = secret_key_problem(app.config["SECRET_KEY"])
+        if problem:
+            raise RuntimeError(f"SECRET_KEY {problem}. Generate one with: "
+                               'python -c "import secrets; print(secrets.token_hex(32))"')
 
     db.init_app(app)
     # Absolute path, so `flask db ...` works from any directory. render_as_batch lets later migrations

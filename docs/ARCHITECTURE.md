@@ -59,7 +59,8 @@ Stock is held for `RESERVATION_MINUTES` (default 15). Every transition lives in 
 * The amount is always computed on the server from the order. The browser never sends a price.
 * Razorpay mode: the server creates a Razorpay order, the browser opens Checkout, and on success the handler posts `order_id|payment_id|signature` back. The server verifies the HMAC-SHA256 with the key secret (constant-time compare) and checks that the gateway order id belongs to *this* order.
 * The webhook (`/webhooks/razorpay`) is the backup for closed tabs. It is CSRF-exempt and authenticated by its own signature header instead.
-* With no Razorpay keys set, a practice gateway runs the same signing and confirmation code, so tests, CI and local demos exercise the real path.
+* With no Razorpay keys and `ALLOW_PRACTICE_GATEWAY` on, a practice gateway runs the same signing and confirmation code, so tests, CI and local demos exercise the real path. The flag defaults to off: with neither keys nor the flag, `payments.mode()` is `"off"`, orders get no gateway id, the pay page says payment is unavailable, and no signature verifies, so a deployment that forgot its keys cannot mark anything paid.
+* `SECRET_KEY` must be at least 32 characters and not a placeholder, or `create_app` raises (unless `TESTING` or debug is on). The check does not depend on `FLASK_ENV`.
 
 ## Security notes
 

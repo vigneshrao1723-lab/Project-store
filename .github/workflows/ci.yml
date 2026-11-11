@@ -52,7 +52,7 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Smoke test the container
         run: |
-          docker run -d --name smoke -e SECRET_KEY=ci -e DATABASE_URL=sqlite:////tmp/smoke.db -p 8000:8000 project-store:ci
+          docker run -d --name smoke -e SECRET_KEY="$(openssl rand -hex 32)" -e DATABASE_URL=sqlite:////tmp/smoke.db -p 8000:8000 project-store:ci
           for i in $(seq 1 30); do curl -fs localhost:8000/healthz && exit 0 || sleep 2; done
           docker logs smoke; exit 1
 

@@ -20,10 +20,13 @@ class Config:
     SESSION_COOKIE_SECURE = _bool("COOKIE_SECURE", False)
     REMEMBER_COOKIE_HTTPONLY = True
 
-    # Razorpay. Leave the key pair empty to run against the built-in test gateway.
+    # Razorpay. With no key pair the store takes no payments, unless ALLOW_PRACTICE_GATEWAY is on.
     RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
     RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
     RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+    # The practice gateway lets any signed-in buyer mark an order paid for nothing. It is for demos, local
+    # development and tests only, so it must be switched on on purpose and never defaults on.
+    ALLOW_PRACTICE_GATEWAY = _bool("ALLOW_PRACTICE_GATEWAY", False)
 
     # How long stock stays held for an unpaid order.
     RESERVATION_MINUTES = int(os.getenv("RESERVATION_MINUTES", "15"))
@@ -46,3 +49,4 @@ class TestConfig(Config):
     RAZORPAY_KEY_ID = ""
     RAZORPAY_KEY_SECRET = ""
     RAZORPAY_WEBHOOK_SECRET = "whsec_test"
+    ALLOW_PRACTICE_GATEWAY = True
