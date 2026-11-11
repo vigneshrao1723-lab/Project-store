@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from flask import current_app, g
 
@@ -6,6 +8,15 @@ from app.config import TestConfig
 from app.extensions import db
 from app.models import Category, Product, User
 from app.seed import seed_catalogue
+
+
+def pytest_runtest_logreport(report):
+    """On GitHub Actions, turn each failing test into an error annotation, so the reason is visible on the run
+    page and through the API without opening the raw log."""
+    if os.getenv("GITHUB_ACTIONS") and report.failed:
+        lines = [l for l in report.longreprtext.strip().splitlines() if l.strip()][-4:] or ["failed"]
+        detail = "%0A".join(l.replace("%", "%25").replace("\r", "") for l in lines)
+        print(f"\n::error title=pytest {report.when} failed: {report.nodeid}::{detail}")
 
 
 @pytest.fixture()
