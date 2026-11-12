@@ -10,7 +10,7 @@ from app.models import Category, Product
 
 ROOT = Path(__file__).resolve().parent.parent
 CSS = (ROOT / "app" / "static" / "css" / "main.css").read_text(encoding="utf-8").replace("\r\n", "\n")
-MOTION_WITH_COMMENTS = CSS[CSS.index("/* ===== Motion (skeleton)"):]
+MOTION_WITH_COMMENTS = CSS[CSS.index("/* ===== Motion (skeleton)"):].split("/* ===== Motion: intro loader")[0]      # later sections have their own tests
 MOTION = re.sub(r"/\*.*?\*/", "", MOTION_WITH_COMMENTS, flags=re.S)       # comments hold braces and words that are not rules
 
 

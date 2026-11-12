@@ -387,3 +387,53 @@ p.stat-value { margin: 0; font-weight: 700; }
   [data-reveal].is-pending, [data-motion].is-pending { opacity: 1; transform: none; animation: none; }
   [data-press].is-pressed, [data-motion="tile"].is-pressed { transform: none; }
 }
+
+/* ===== Motion: intro loader ====================================================================================
+   Hidden unless motion-boot.js put .intro-run on <html> (first page of a session, no reduced motion). It never
+   takes pointer input and holds no focusable element. The CSS timeline alone takes it from first frame to gone at
+   about 1.4s, and a second animation hides it at 2s whatever else happens, so a failed script cannot trap a page. */
+.loader { display: none; }
+.intro-run .loader {
+  display: grid; place-items: center; position: fixed; inset: 0; z-index: 100; background: var(--paper); pointer-events: none;
+  animation: loader-out 220ms var(--motion-ease) 1180ms forwards, loader-failsafe 1ms linear 2s forwards;
+}
+.loader-box { display: grid; justify-items: center; gap: 1rem; width: min(86vw, 420px); }
+.loader-scene { width: 100%; height: auto; overflow: visible; }
+.loader-pct { margin: 0; font: 800 2rem/1 var(--font-display); font-stretch: 125%; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ls-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: miter; stroke-linecap: butt; }
+.ls-line.ls-fill-p { fill: var(--paper-2); }
+.ls-line.ls-fill-y { fill: var(--mark); }
+.ls-ink { fill: var(--ink); }
+.intro-run .ls { animation-duration: 200ms; animation-timing-function: var(--motion-ease); animation-fill-mode: both; }
+.intro-run .ls-inbox { animation-name: ls-from-left; }
+.intro-run .ls-cart { animation-name: ls-from-bottom; animation-delay: 150ms; }
+.intro-run .ls-tv { animation-name: ls-from-top; animation-delay: 300ms; }
+.intro-run .ls-pc { animation-name: ls-from-bottom; animation-delay: 450ms; }
+.intro-run .ls-cpu { animation-name: ls-from-right; animation-delay: 600ms; }
+.intro-run .ls-ram { animation-name: ls-from-bottom; animation-delay: 750ms; }
+.intro-run .ls-packet, .intro-run .ls-tile-a, .intro-run .ls-tile-b, .intro-run .ls-stick { animation: ls-drop 260ms cubic-bezier(.3, 1.6, .5, 1) both; }
+.intro-run .ls-packet { animation-delay: 140ms; }
+.intro-run .ls-tile-a { animation-delay: 330ms; }
+.intro-run .ls-tile-b { animation-delay: 410ms; }
+.intro-run .ls-stick-a { animation-delay: 830ms; }
+.intro-run .ls-stick-b { animation-delay: 920ms; }
+.intro-run .ls-screen { animation: ls-wake 160ms linear 480ms both; }
+.intro-run .ls-sig-a { animation: ls-pulse 360ms linear 560ms 2 both; }
+.intro-run .ls-sig-b { animation: ls-pulse 360ms linear 640ms 2 both; }
+.intro-run .ls-pane { animation: ls-from-right 220ms var(--motion-ease) both; }
+.intro-run .ls-pane-a { animation-delay: 620ms; }
+.intro-run .ls-pane-b { animation-delay: 700ms; }
+.intro-run .ls-pane-c { animation-delay: 780ms; }
+.intro-run .ls-pins { animation: ls-pulse 320ms linear 780ms 2 both; }
+@keyframes ls-from-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+@keyframes ls-from-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes ls-from-top { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+@keyframes ls-from-bottom { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes ls-drop { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: none; } }
+@keyframes ls-wake { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ls-pulse { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
+@keyframes loader-out { to { opacity: 0; } }
+@keyframes loader-failsafe { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro-run .loader { display: none; }
+}

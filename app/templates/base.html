@@ -8,8 +8,46 @@
   <meta name="description" content="{% block description %}Finished engineering projects with working source, a setup guide and architecture notes.{% endblock %}">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231B2A41'/%3E%3Cpath d='M6 6h13l7 7v13H6z' fill='%23F5D90A'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script src="{{ url_for('static', filename='js/motion-boot.js') }}"></script>
 </head>
 <body>
+  <div class="loader" data-loader aria-hidden="true">
+    <div class="loader-box">
+      <svg class="loader-scene" viewBox="0 0 336 72" focusable="false">
+        <g transform="translate(0 0)"><g class="ls ls-inbox">
+          <path class="ls-line ls-fill-p" d="M6 36 H18 L21 43 H35 L38 36 H50 V62 H6 Z"/>
+          <g class="ls-packet"><rect class="ls-line ls-fill-y" x="19" y="22" width="18" height="14"/><rect class="ls-ink" x="25" y="28" width="6" height="5"/><path class="ls-line" d="M26.5 28 V26.5 a1.5 1.5 0 0 1 3 0 V28"/></g>
+        </g></g>
+        <g transform="translate(56 0)"><g class="ls ls-cart">
+          <path class="ls-line" d="M4 14 H10 L15 46 H45 L49 22 H12"/>
+          <path class="ls-line ls-fill-p" d="M12 22 H49 L45 46 H15 Z"/>
+          <circle class="ls-line ls-fill-p" cx="20" cy="54" r="3.5"/><circle class="ls-line ls-fill-p" cx="40" cy="54" r="3.5"/>
+          <rect class="ls-line ls-fill-y ls-tile-a" x="17" y="26" width="11" height="10"/><rect class="ls-line ls-fill-p ls-tile-b" x="31" y="26" width="11" height="10"/>
+        </g></g>
+        <g transform="translate(112 0)"><g class="ls ls-tv">
+          <path class="ls-line ls-sig ls-sig-a" d="M18 8 q10 -8 20 0"/><path class="ls-line ls-sig ls-sig-b" d="M22 4 q6 -5 12 0"/>
+          <path class="ls-line" d="M28 18 L20 10 M28 18 L36 10 M20 46 L17 54 M36 46 L39 54"/>
+          <rect class="ls-line ls-fill-p" x="6" y="18" width="44" height="28"/>
+          <rect class="ls-line ls-fill-y ls-screen" x="10" y="22" width="36" height="20"/>
+        </g></g>
+        <g transform="translate(168 0)"><g class="ls ls-pc">
+          <rect class="ls-line ls-fill-p" x="5" y="10" width="46" height="32"/>
+          <path class="ls-line" d="M24 42 V50 M16 50 H40"/>
+          <rect class="ls-line ls-fill-y ls-pane ls-pane-a" x="9" y="14" width="22" height="9"/><rect class="ls-line ls-fill-p ls-pane ls-pane-b" x="9" y="26" width="14" height="12"/><rect class="ls-line ls-fill-p ls-pane ls-pane-c" x="27" y="26" width="20" height="12"/>
+        </g></g>
+        <g transform="translate(224 0)"><g class="ls ls-cpu">
+          <path class="ls-line ls-pins" d="M21 18 V10 M28 18 V10 M35 18 V10 M21 46 V54 M28 46 V54 M35 46 V54 M12 24 H4 M12 32 H4 M12 40 H4 M44 24 H52 M44 32 H52 M44 40 H52"/>
+          <rect class="ls-line ls-fill-y" x="12" y="18" width="32" height="28"/><rect class="ls-ink" x="21" y="25" width="14" height="14"/>
+        </g></g>
+        <g transform="translate(280 0)"><g class="ls ls-ram">
+          <rect class="ls-line ls-fill-p" x="6" y="52" width="16" height="6"/><rect class="ls-line ls-fill-p" x="32" y="52" width="16" height="6"/>
+          <g class="ls-stick ls-stick-a"><rect class="ls-line ls-fill-y" x="9" y="10" width="10" height="42"/><rect class="ls-ink" x="12" y="15" width="4" height="4"/><rect class="ls-ink" x="12" y="24" width="4" height="4"/><rect class="ls-ink" x="12" y="33" width="4" height="4"/></g>
+          <g class="ls-stick ls-stick-b"><rect class="ls-line ls-fill-p" x="35" y="10" width="10" height="42"/><rect class="ls-ink" x="38" y="15" width="4" height="4"/><rect class="ls-ink" x="38" y="24" width="4" height="4"/><rect class="ls-ink" x="38" y="33" width="4" height="4"/></g>
+        </g></g>
+      </svg>
+      <p class="loader-pct"><span data-loader-pct>0</span>%</p>
+    </div>
+  </div>
   <a class="skip" href="#main">Skip to content</a>
   {% if gateway_mode == 'test' %}
     <div class="testbar">Test mode: payments here use a practice gateway and no real money moves.</div>
@@ -74,6 +112,7 @@
       </div>
     </div>
   </footer>
+  <script src="{{ url_for('static', filename='js/motion.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
