@@ -2,18 +2,18 @@
 {% from "_macros.html" import tile %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero" data-motion="hero">
   <div class="wrap hero-grid">
-    <div>
+    <div data-motion="hero-copy">
       <h1 class="h1">Real engineering projects, ready to run and ready to explain.</h1>
       <p class="lede">Every kit comes with the working source, a setup guide and the architecture notes, written by the student who built it.</p>
       <div class="hero-actions">
-        <a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a>
+        <a class="btn" data-press href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a>
         <a href="#how">How buying works</a>
       </div>
     </div>
     {% if hero %}
-    <a class="plate-link" href="{{ url_for('shop.product', slug=hero.slug) }}" aria-label="{{ hero.title }}">
+    <a class="plate-link" data-motion="hero-plate" href="{{ url_for('shop.product', slug=hero.slug) }}" aria-label="{{ hero.title }}">
       <div class="plate">
         {{ cover(hero) }}
         <dl class="spec">
@@ -28,7 +28,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head"><h2 class="h2">Browse by field</h2></div>
     <div class="index">
@@ -39,14 +39,14 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head"><h2 class="h2">On the shelf</h2><a href="{{ url_for('shop.catalogue') }}">See all projects</a></div>
-    <div class="grid">{% for p in latest %}{{ tile(p) }}{% endfor %}</div>
+    <div class="grid" data-motion-group="tiles">{% for p in latest %}{{ tile(p, loop.index0) }}{% endfor %}</div>
   </div>
 </section>
 
-<section class="section" id="how">
+<section class="section" id="how" data-reveal>
   <div class="wrap">
     <div class="section-head"><h2 class="h2">How buying works</h2></div>
     <ol class="plain steps">

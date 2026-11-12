@@ -1,6 +1,6 @@
-{% macro tile(p) %}
-<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}">
-  <div class="tile-cover">{{ cover(p) }}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
+{% macro tile(p, i=0) %}
+<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}" data-motion="tile" data-motion-index="{{ i }}">
+  <div class="tile-cover" data-motion="tile-cover">{{ cover(p) }}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
   <div class="tile-body">
     <h3>{{ p.title }}</h3>
     <p class="tagline">{{ p.tagline }}</p>

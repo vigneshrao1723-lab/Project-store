@@ -6,17 +6,17 @@
 <div class="wrap">
   <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
   <article class="product">
-    <div class="plate">{{ cover(p) }}
+    <div class="plate" data-motion="plate">{{ cover(p) }}
       <dl class="spec">
         <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
         <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
       </dl>
     </div>
-    <div>
+    <div data-motion="product-info">
       <h1>{{ p.title }}</h1>
       <p class="lede">{{ p.tagline }}</p>
 
-      <div class="buy" data-product="{{ p.id }}">
+      <div class="buy" data-motion="buybox" data-product="{{ p.id }}">
         <div class="price-big">{{ p.price_paise | inr }}</div>
         <p class="ui byline">
           {% if p.stock == 0 %}<span class="stock low">Not available right now</span>
@@ -31,10 +31,10 @@
               <input type="number" name="qty" value="1" min="1" max="{{ [p.stock, 5] | min }}" aria-label="Quantity">
               <button type="button" data-step="1" aria-label="One more">+</button>
             </div>
-            <button class="btn" type="submit">Add to cart</button>
+            <button class="btn" data-press type="submit">Add to cart</button>
           </form>
           {% else %}
-          <div class="buy-row"><a class="btn" href="{{ url_for('auth.login', next=current_path) }}">Sign in to buy</a></div>
+          <div class="buy-row"><a class="btn" data-press href="{{ url_for('auth.login', next=current_path) }}">Sign in to buy</a></div>
           {% endif %}
         {% else %}
           <div class="buy-row"><a class="btn ghost" href="{{ url_for('shop.catalogue', category=p.category.slug) }}" >See other {{ p.category.name | lower }} projects</a></div>
@@ -53,9 +53,9 @@
   </article>
 
   {% if related %}
-  <section class="section flush-top">
+  <section class="section flush-top" data-reveal>
     <div class="section-head"><h2 class="h2">More in {{ p.category.name }}</h2></div>
-    <div class="grid">{% for r in related %}{{ tile(r) }}{% endfor %}</div>
+    <div class="grid" data-motion-group="tiles">{% for r in related %}{{ tile(r, loop.index0) }}{% endfor %}</div>
   </section>
   {% endif %}
 </div>

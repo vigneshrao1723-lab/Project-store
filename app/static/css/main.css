@@ -345,3 +345,45 @@ p.stat-value { margin: 0; font-weight: 700; }
 .pay-items li { padding: .2rem 0; }
 .byline { margin: .4rem 0 0; font-weight: 600; }
 .section.flush-top { padding-top: 0; border: 0; }
+
+/* ===== Motion (skeleton) =====================================================================================
+   Tokens and states only: nothing below changes how a page looks until motion.js puts an element into a state.
+   Rules for everything in this section:
+   * Content is visible by default. Hidden states exist only on elements the script has marked .is-pending, and a
+     CSS animation reveals those after 2s even if every script fails (the failsafe).
+   * Only transform and opacity are ever animated. will-change appears only on .is-animating, which the script
+     sets for the length of one animation.
+   * Hover effects live only inside @media (hover: hover) and (pointer: fine). Touch devices get the
+     pointerdown press (.is-pressed) instead.
+   * Under prefers-reduced-motion nothing moves and nothing stays hidden. */
+:root {
+  --motion-ease: cubic-bezier(.2, .7, .2, 1);
+  --motion-fast: 140ms;
+  --motion-med: 320ms;
+  --motion-slow: 560ms;
+  --motion-distance: 14px;
+  --motion-lift: -3px;
+  --motion-press: .97;
+  --motion-stagger: 60ms;
+}
+/* reveal: pending until the element scrolls into view, then in */
+[data-reveal].is-pending, [data-motion].is-pending { opacity: 0; transform: translateY(var(--motion-distance)); animation: motion-failsafe 1ms linear 2s forwards; }
+[data-reveal].is-in, [data-motion].is-in {
+  opacity: 1; transform: none;
+  transition: opacity var(--motion-med) var(--motion-ease) calc(var(--i, 0) * var(--motion-stagger)),
+              transform var(--motion-med) var(--motion-ease) calc(var(--i, 0) * var(--motion-stagger));
+}
+@keyframes motion-failsafe { to { opacity: 1; transform: none; } }
+.is-animating { will-change: transform, opacity; }
+/* press: the pointerdown micro-animation, for touch and mouse alike */
+[data-motion="tile"] { transition: transform var(--motion-fast) var(--motion-ease); }
+.btn[data-press] { transition: background .12s, color .12s, transform var(--motion-fast) var(--motion-ease); }   /* keeps .btn's own colour transition */
+[data-press].is-pressed, [data-motion="tile"].is-pressed { transform: scale(var(--motion-press)); }
+/* hover: fine pointers only */
+@media (hover: hover) and (pointer: fine) {
+  /* tile and button hover effects arrive in the next checkpoints */
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal].is-pending, [data-motion].is-pending { opacity: 1; transform: none; animation: none; }
+  [data-press].is-pressed, [data-motion="tile"].is-pressed { transform: none; }
+}

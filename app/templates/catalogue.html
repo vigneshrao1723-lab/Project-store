@@ -13,7 +13,7 @@
     </ul>
   </aside>
   <section>
-    <div class="result-bar">
+    <div class="result-bar" data-reveal>
       <div>
         <h1 class="h2">{% if q %}Results for “{{ q }}”{% else %}Catalogue{% endif %}</h1>
         <p class="muted ui count-line">{{ result.total }} {{ 'project' if result.total == 1 else 'projects' }}</p>
@@ -32,7 +32,7 @@
       </form>
     </div>
     {% if result.items %}
-      <div class="grid">{% for p in result.items %}{{ tile(p) }}{% endfor %}</div>
+      <div class="grid" data-motion-group="tiles">{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
       {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
     {% else %}
       <div class="empty">
