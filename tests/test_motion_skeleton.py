@@ -86,7 +86,7 @@ def test_reduced_motion_shows_everything_and_moves_nothing():
     inner = dict(at_rules(MOTION))["(prefers-reduced-motion: reduce)"]
     pending = next(body for sel, body in blocks(inner) if ".is-pending" in sel)
     assert "opacity: 1" in pending and "transform: none" in pending and "animation: none" in pending
-    assert any(".is-pressed" in sel and "transform: none" in body for sel, body in blocks(inner))
+    assert any(".is-pressed" in sel and "opacity: 1" in body for sel, body in blocks(inner))
 
 
 def test_the_skeleton_defines_its_tokens_and_does_not_hide_anything_by_default():

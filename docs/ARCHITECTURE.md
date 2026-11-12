@@ -63,6 +63,28 @@ A user has **at most one unpaid order**: `create_order_from_cart` takes a lock o
 * With no Razorpay keys and `ALLOW_PRACTICE_GATEWAY` on, a practice gateway runs the same signing and confirmation code, so tests, CI and local demos exercise the real path. The flag defaults to off: with neither keys nor the flag, `payments.mode()` is `"off"`, orders get no gateway id, the pay page says payment is unavailable, and no signature verifies, so a deployment that forgot its keys cannot mark anything paid.
 * `SECRET_KEY` must be at least 32 characters and not a placeholder, or `create_app` raises (unless `TESTING` or debug is on). The check does not depend on `FLASK_ENV`.
 
+## Motion
+
+A small, optional motion layer on the home page, the catalogue and the product page. Every page works and reads the same without it, so a failed script, a blocked `sessionStorage` or `prefers-reduced-motion` only means nothing moves.
+
+| Piece | Where | What it does |
+|---|---|---|
+| `static/js/motion-boot.js` | plain script in `<head>` | Adds `.intro-run` to `<html>` on the first page of a browser session (storage works, reduced motion off). Sets its flag at once, so a broken `motion.js` can show the loader at most once. |
+| Loader | `base.html`, CSS "intro loader" | Hidden by default. A pure-CSS timeline plays a six-object line-art scene (inbox, cart, TV, PC, CPU, RAM) and fades out by 1.4 s; a second animation hides it at 2 s whatever else fails. `pointer-events: none`, nothing focusable, only the loader is `aria-hidden`. |
+| `static/js/motion.js` (deferred, about 6 KB) | end of `<body>` | Counts the loader percentage and removes `.intro-run` when the loader's own exit animation ends. Runs the card interactions below. No timers; everything is cleaned up on `pagehide`. |
+| `_macros.html` `fx_back()` / `fx_panel(kind)` | tiles, hero plate, product plate | Two `aria-hidden` layers inside the cover's box: a flat ink/yellow backdrop behind the cover and a small corner panel with the category's motif. Chosen by `p.category.cover_kind` (`data-motion-kind`), never by title or id. |
+
+**One active card at a time.** `motion.js` puts `.is-active` on the card the user is pointing at (fine pointers only), has keyboard focus on (`:focus-visible`; focus in the product's purchase box plays the plate's motif), or is pressing (any pointer; touch rests on `pointerup` or `pointercancel`). The CSS does the rest and returns to rest when the class goes. The cover zooms 1.02-1.035 and tilts 1-2 degrees over the backdrop. Sold-out tiles get no panel.
+
+| Category (`cover_kind`) | Motif |
+|---|---|
+| `crypto` | a packet crosses a tiny lattice and drops into an envelope; the flap closes |
+| `ai` | two document panes and three source cards arrive; a data node pulses once |
+| `web` | three storefront panes stack; two project tiles drop into a cart |
+| `hardware` | the display wakes; CPU pins pulse twice; two RAM sticks drop into their slots |
+
+Rules every change here must keep (tests in `tests/test_motion_*.py` enforce them): only `transform` and `opacity` are animated; `will-change` appears only on the `.is-animating` class the script sets while the cover transitions; hover effects live only under `(hover: hover) and (pointer: fine)`; no gradients, shadows, external assets or inline styles and scripts; content is visible by default; and **pressing never changes the pressed element's own box** (a scale shrinks the hit area, so a press near an edge ends outside the element and the click is lost; tiles dim their text block and buttons dim themselves instead). Navigation is never delayed or cancelled.
+
 ## Security notes
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).

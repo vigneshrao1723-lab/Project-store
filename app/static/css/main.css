@@ -363,7 +363,6 @@ p.stat-value { margin: 0; font-weight: 700; }
   --motion-slow: 560ms;
   --motion-distance: 14px;
   --motion-lift: -3px;
-  --motion-press: .97;
   --motion-stagger: 60ms;
 }
 /* reveal: pending until the element scrolls into view, then in */
@@ -375,17 +374,20 @@ p.stat-value { margin: 0; font-weight: 700; }
 }
 @keyframes motion-failsafe { to { opacity: 1; transform: none; } }
 .is-animating { will-change: transform, opacity; }
-/* press: the pointerdown micro-animation, for touch and mouse alike */
-[data-motion="tile"] { transition: transform var(--motion-fast) var(--motion-ease); }
-.btn[data-press] { transition: background .12s, color .12s, transform var(--motion-fast) var(--motion-ease); }   /* keeps .btn's own colour transition */
-[data-press].is-pressed, [data-motion="tile"].is-pressed { transform: scale(var(--motion-press)); }
+/* press: the pointerdown micro-animation, for touch and mouse alike. It never changes the pressed element's own
+   box: a scale would shrink its hit area, so a press near the edge would end outside the element and the click
+   would be lost. Tiles dim their text block and buttons dim themselves instead (opacity only). */
+.tile .tile-body { transition: opacity var(--motion-fast) linear; }
+.tile.is-pressed .tile-body { opacity: .78; }
+.btn[data-press] { transition: background .12s, color .12s, opacity var(--motion-fast) linear; }   /* keeps .btn's own colour transition */
+.btn[data-press].is-pressed { opacity: .82; }
 /* hover: fine pointers only */
 @media (hover: hover) and (pointer: fine) {
   /* tile and button hover effects arrive in the next checkpoints */
 }
 @media (prefers-reduced-motion: reduce) {
   [data-reveal].is-pending, [data-motion].is-pending { opacity: 1; transform: none; animation: none; }
-  [data-press].is-pressed, [data-motion="tile"].is-pressed { transform: none; }
+  .tile.is-pressed .tile-body, .btn[data-press].is-pressed { opacity: 1; }
 }
 
 /* ===== Motion: intro loader ====================================================================================

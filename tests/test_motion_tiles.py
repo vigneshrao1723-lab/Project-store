@@ -134,6 +134,16 @@ def test_the_sold_out_flag_stays_above_the_cover_and_the_motif_panel():
     assert z(".tile-cover .out-flag") > z(".tile-cover .cover, .plate-cover .cover") and z(".tile-cover .out-flag") > z(".fx-panel")
 
 
+def test_pressing_never_changes_the_pressed_elements_own_box():
+    """A scale on the pressed link shrinks its hit area: press 2px inside a tile's edge and the pointer is outside it
+    by the time the button is released, so the click lands on the grid and navigation is lost. Found in a browser."""
+    pressed = [(m.group(1), m.group(2)) for m in re.finditer(r"(?m)^([^{}/@]*\.is-pressed[^{}]*)\{([^}]*)\}", re.sub(r"/\*.*?\*/", "", CSS, flags=re.S))]
+    assert pressed
+    for selector, body in pressed:
+        assert not re.search(r"transform|scale|width|height|padding|margin|border|top:|left:|display", body), (selector, body)
+        assert "opacity" in body
+
+
 def test_every_rest_state_is_hidden_by_default_and_shown_only_under_is_active():
     for sel in (".fx-back", ".fx-panel", ".mk-up, .mk-left, .mk-right, .mk-drop, .mk-screen", ".mk-ring"):
         assert re.search(r"(?m)^" + re.escape(sel) + r"\s*\{[^}]*opacity:\s*0", SECTION), sel
