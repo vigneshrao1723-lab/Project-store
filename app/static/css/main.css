@@ -142,7 +142,7 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 .tile:hover { background: var(--paper-2); }
 .tile-cover { position: relative; border-bottom: 1px solid var(--ink); overflow: hidden; }
 .tile-cover .cover { aspect-ratio: 4/3; width: 100%; height: auto; transition: transform .4s; }
-.tile:hover .tile-cover .cover { transform: scale(1.03); }
+@media (hover: hover) and (pointer: fine) { .tile:hover .tile-cover .cover { transform: scale(1.03); } }
 .tile.is-out .cover { filter: grayscale(1) contrast(.9); opacity: .75; }
 .out-flag { position: absolute; left: 0; bottom: 0; background: var(--ink); color: var(--paper); font: 700 .8rem var(--font-display); padding: .35rem .7rem; }
 .tile-body { padding: 1rem 1.1rem 1.2rem; display: flex; flex-direction: column; flex: 1; }
@@ -436,4 +436,69 @@ p.stat-value { margin: 0; font-weight: 700; }
 @keyframes loader-failsafe { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .intro-run .loader { display: none; }
+}
+
+/* ===== Motion: category interactions ===========================================================================
+   One card at a time gets .is-active from motion.js (pointer over it with a fine pointer, keyboard focus on it, or
+   a pointer pressed on it). The cover zooms and tilts a little over a flat two-tone backdrop, and a small panel
+   plays that category's motif once. Removing .is-active returns everything to rest. All of it lives inside the
+   cover's own box (overflow hidden, absolutely placed layers), so no text, link or form ever moves. */
+[data-motion-kind="crypto"]   { --fx-a: var(--mark); --fx-b: var(--ink);  --zoom: 1.025; --tilt: -1.5deg; }
+[data-motion-kind="ai"]       { --fx-a: var(--ink);  --fx-b: var(--mark); --zoom: 1.02;  --tilt: -1deg; }
+[data-motion-kind="web"]      { --fx-a: var(--mark); --fx-b: var(--ink);  --zoom: 1.03;  --tilt: -2deg; }
+[data-motion-kind="hardware"] { --fx-a: var(--ink);  --fx-b: var(--mark); --zoom: 1.035; --tilt: -1.5deg; }
+.plate-cover { position: relative; overflow: hidden; }
+.tile-cover .out-flag { z-index: 3; }      /* the sold-out flag stays above the cover and the motif panel */
+.tile-cover .cover, .plate-cover .cover { position: relative; z-index: 1; transform-origin: 0 0; transition: transform var(--motion-med) var(--motion-ease); }
+/* four classes deep, to win over the fine-pointer hover zoom above */
+.tile.is-active .tile-cover .cover, .plate.is-active .plate-cover .cover, .plate-link.is-active .plate-cover .cover { transform: scale(var(--zoom)) rotate(var(--tilt)); }
+.fx-back { position: absolute; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transition: opacity var(--motion-fast) linear; }
+.fx-back i { position: absolute; top: 0; bottom: 0; width: 50%; }
+.fx-b1 { left: 0; background: var(--fx-a); }
+.fx-b2 { right: 0; background: var(--fx-b); }
+.is-active .fx-back { opacity: 1; }
+.fx-panel {
+  position: absolute; z-index: 2; right: 8px; bottom: 8px; width: 36%; max-width: 124px; pointer-events: none;
+  background: var(--paper-2); border: 1.5px solid var(--ink); opacity: 0; transform: translate(8px, 8px);
+  transition: opacity var(--motion-fast) linear, transform var(--motion-fast) var(--motion-ease);
+}
+.is-active .fx-panel { opacity: 1; transform: none; transition: opacity var(--motion-fast) linear 80ms, transform var(--motion-med) var(--motion-ease) 80ms; }
+.plate .fx-panel { right: 12px; bottom: 12px; width: 40%; max-width: 176px; }
+.fx-art { display: block; width: 100%; height: auto; }
+/* the artwork's flat colours: ink lines, paper and highlighter fills */
+.mk-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: miter; }
+.mk-line.mk-paper { fill: var(--paper); }
+.mk-line.mk-yellow, .mk-yellow { fill: var(--mark); }
+.mk-line.mk-faint { stroke: var(--rule); }
+.mk-ink, .mk-node { fill: var(--ink); }
+/* arrival pieces: hidden in the rest state, they come in from an edge or drop in when the card is active */
+.mk-up, .mk-left, .mk-right, .mk-drop, .mk-screen { opacity: 0; transition: transform var(--motion-fast) var(--motion-ease), opacity var(--motion-fast) linear; }
+.mk-up { transform: translateY(12px); }
+.mk-left { transform: translateX(-14px); }
+.mk-right { transform: translateX(14px); }
+.mk-drop { transform: translateY(-16px); }
+.is-active .mk-up, .is-active .mk-left, .is-active .mk-right, .is-active .mk-screen { opacity: 1; transform: none; transition: transform 260ms var(--motion-ease), opacity 120ms linear; }
+.is-active .mk-drop { opacity: 1; transform: none; transition: transform 300ms cubic-bezier(.3, 1.6, .5, 1), opacity 120ms linear; }
+.is-active .d1 { transition-delay: 120ms; }
+.is-active .d2 { transition-delay: 200ms; }
+.is-active .d3 { transition-delay: 280ms; }
+.is-active .d4 { transition-delay: 360ms; }
+.is-active .d5 { transition-delay: 440ms; }
+.is-active .d6 { transition-delay: 520ms; }
+.is-active .mk-screen { transition-delay: 100ms; }
+/* crypto: the packet crosses the lattice and drops into the envelope, whose flap then closes */
+.mk-flap { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(-1); transition: transform var(--motion-fast) var(--motion-ease); }
+.is-active .mk-flap { transform: none; transition: transform 200ms var(--motion-ease) 640ms; }
+.is-active .mk-packet { animation: mk-packet 760ms var(--motion-ease) 160ms both; }
+/* ai: a restrained pulse ring on the data node */
+.mk-ring { opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
+.is-active .mk-ring { animation: mk-ring 700ms var(--motion-ease) 520ms both; }
+/* hardware: after the display wakes the CPU pins pulse twice */
+.is-active .mk-pins { animation: mk-pulse 360ms linear 620ms 2 both; }
+@keyframes mk-packet { 0% { transform: translate(0, 0); } 65% { transform: translate(62px, 0); } 100% { transform: translate(62px, 26px); } }
+@keyframes mk-ring { from { opacity: .9; transform: scale(.6); } to { opacity: 0; transform: scale(1.6); } }
+@keyframes mk-pulse { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-back, .fx-panel { display: none; }
+  .tile.is-active .tile-cover .cover, .plate.is-active .plate-cover .cover, .plate-link.is-active .plate-cover .cover, .tile:hover .tile-cover .cover { transform: none; }
 }

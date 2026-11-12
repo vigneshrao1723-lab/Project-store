@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile %}
+{% from "_macros.html" import tile, fx_back, fx_panel %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
 <section class="hero" data-motion="hero">
@@ -13,9 +13,9 @@
       </div>
     </div>
     {% if hero %}
-    <a class="plate-link" data-motion="hero-plate" href="{{ url_for('shop.product', slug=hero.slug) }}" aria-label="{{ hero.title }}">
+    <a class="plate-link" data-motion="hero-plate" data-motion-kind="{{ hero.category.cover_kind }}" href="{{ url_for('shop.product', slug=hero.slug) }}" aria-label="{{ hero.title }}">
       <div class="plate">
-        {{ cover(hero) }}
+        <div class="plate-cover">{{ fx_back() }}{{ cover(hero) }}{{ fx_panel(hero.category.cover_kind) }}</div>
         <dl class="spec">
           <div><dt>Featured</dt><dd>{{ hero.title }}</dd></div>
           <div><dt>Built with</dt><dd>{{ hero.tech_list[:3] | join(', ') }}</dd></div>

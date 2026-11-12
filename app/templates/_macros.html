@@ -1,6 +1,41 @@
+{# Presentational motion layers. Everything here is aria-hidden, holds nothing focusable, and sits inside the cover's
+   box, so it can never move text, links or forms. The category art is chosen by the category's cover_kind. #}
+{% macro fx_back() %}<span class="fx-back" aria-hidden="true"><i class="fx-b1"></i><i class="fx-b2"></i></span>{% endmacro %}
+
+{% macro fx_panel(kind) %}{% set k = kind if kind in ('crypto', 'ai', 'web', 'hardware') else 'web' %}<span class="fx-panel" aria-hidden="true"><svg class="fx-art" viewBox="0 0 96 72" focusable="false">
+{% if k == 'crypto' %}
+  <path class="mk-line mk-faint" d="M14 16H58M14 36H58M14 56H58M14 16V56M36 16V56M58 16V56"/>
+  <circle class="mk-node" cx="14" cy="16" r="2.6"/><circle class="mk-node" cx="36" cy="16" r="2.6"/><circle class="mk-node" cx="58" cy="16" r="2.6"/><circle class="mk-node" cx="14" cy="36" r="2.6"/><circle class="mk-node" cx="36" cy="36" r="2.6"/><circle class="mk-node" cx="58" cy="36" r="2.6"/><circle class="mk-node" cx="14" cy="56" r="2.6"/><circle class="mk-node" cx="36" cy="56" r="2.6"/><circle class="mk-node" cx="58" cy="56" r="2.6"/>
+  <g class="mk-env"><rect class="mk-line mk-paper" x="64" y="34" width="26" height="20"/><path class="mk-line mk-flap" d="M64 34 L77 45 L90 34"/></g>
+  <g class="mk-packet"><rect class="mk-line mk-yellow" x="8" y="10" width="12" height="12"/><rect class="mk-ink" x="12.5" y="15" width="3" height="3"/></g>
+{% elif k == 'ai' %}
+  <rect class="mk-line mk-paper" x="6" y="6" width="54" height="42"/><path class="mk-line" d="M27 48 V58 M18 58 H45"/>
+  <g class="mk-pane mk-left d1"><rect class="mk-line mk-paper" x="10" y="10" width="22" height="16"/><path class="mk-line mk-faint" d="M14 16H28M14 21H24"/></g>
+  <g class="mk-pane mk-up d2"><rect class="mk-line mk-paper" x="34" y="18" width="22" height="26"/><path class="mk-line mk-faint" d="M38 24H52M38 29H52M38 34H46"/></g>
+  <g class="mk-card mk-right d3"><rect class="mk-line mk-yellow" x="66" y="8" width="24" height="12"/></g>
+  <g class="mk-card mk-right d4"><rect class="mk-line mk-paper" x="66" y="24" width="24" height="12"/></g>
+  <g class="mk-card mk-right d5"><rect class="mk-line mk-paper" x="66" y="40" width="24" height="12"/></g>
+  <path class="mk-line mk-faint" d="M60 46 L76 62"/><circle class="mk-line mk-ring" cx="76" cy="62" r="5"/><circle class="mk-node" cx="76" cy="62" r="2.6"/>
+{% elif k == 'web' %}
+  <g class="mk-up d1"><rect class="mk-line mk-paper" x="6" y="34" width="40" height="28"/><path class="mk-line" d="M6 40H46"/></g>
+  <g class="mk-up d2"><rect class="mk-line mk-yellow" x="12" y="24" width="40" height="28"/><path class="mk-line" d="M12 30H52"/></g>
+  <g class="mk-up d3"><rect class="mk-line mk-paper" x="18" y="14" width="40" height="28"/><path class="mk-line" d="M18 20H58"/></g>
+  <g class="mk-cart"><path class="mk-line" d="M60 20 H66 L70 52 H88 L91 34 H67"/><path class="mk-line mk-paper" d="M67 34 H91 L88 52 H70 Z"/><circle class="mk-line mk-paper" cx="74" cy="58" r="3"/><circle class="mk-line mk-paper" cx="85" cy="58" r="3"/></g>
+  <g class="mk-drop d4"><rect class="mk-line mk-yellow" x="71" y="37" width="8" height="8"/></g>
+  <g class="mk-drop d5"><rect class="mk-line mk-paper" x="81" y="37" width="8" height="8"/></g>
+{% else %}
+  <rect class="mk-line mk-paper" x="6" y="6" width="46" height="32"/><rect class="mk-yellow mk-screen" x="10" y="10" width="38" height="24"/><path class="mk-line mk-screen" d="M14 18H34M14 25H28"/>
+  <path class="mk-line" d="M29 38 V44 M20 44 H38"/>
+  <g class="mk-cpu"><path class="mk-line mk-pins" d="M66 12V6M74 12V6M82 12V6M66 36V42M74 36V42M82 36V42M88 20H94M88 28H94"/><rect class="mk-line mk-yellow" x="62" y="12" width="26" height="24"/><rect class="mk-ink" x="70" y="18" width="12" height="12"/></g>
+  <rect class="mk-line mk-paper" x="10" y="60" width="30" height="6"/><rect class="mk-line mk-paper" x="52" y="60" width="30" height="6"/>
+  <g class="mk-stick mk-drop d5"><rect class="mk-line mk-yellow" x="12" y="48" width="26" height="10"/><rect class="mk-ink" x="16" y="51" width="4" height="4"/><rect class="mk-ink" x="24" y="51" width="4" height="4"/></g>
+  <g class="mk-stick mk-drop d6"><rect class="mk-line mk-paper" x="54" y="48" width="26" height="10"/><rect class="mk-ink" x="58" y="51" width="4" height="4"/><rect class="mk-ink" x="66" y="51" width="4" height="4"/></g>
+{% endif %}
+</svg></span>{% endmacro %}
+
 {% macro tile(p, i=0) %}
-<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}" data-motion="tile" data-motion-index="{{ i }}">
-  <div class="tile-cover" data-motion="tile-cover">{{ cover(p) }}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
+<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}" data-motion="tile" data-motion-kind="{{ p.category.cover_kind }}" data-motion-index="{{ i }}">
+  <div class="tile-cover" data-motion="tile-cover">{{ fx_back() }}{{ cover(p) }}{% if p.available %}{{ fx_panel(p.category.cover_kind) }}{% endif %}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
   <div class="tile-body">
     <h3>{{ p.title }}</h3>
     <p class="tagline">{{ p.tagline }}</p>

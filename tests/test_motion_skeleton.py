@@ -111,7 +111,7 @@ def test_home_page_hooks(client):
         assert hooks(html, name), name
     assert html.count("data-reveal") == 3                       # the field index, the shelf and how buying works
     assert 'data-motion-group="tiles"' in html
-    indices = [int(i) for i in re.findall(r'data-motion="tile" data-motion-index="(\d+)"', html)]
+    indices = [int(i) for i in re.findall(r'data-motion="tile" data-motion-kind="\w+" data-motion-index="(\d+)"', html)]
     assert indices == list(range(len(indices))) and indices
 
 

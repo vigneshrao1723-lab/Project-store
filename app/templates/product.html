@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile %}
+{% from "_macros.html" import tile, fx_back, fx_panel %}
 {% block title %}{{ p.title }}{% endblock %}
 {% block description %}{{ p.tagline }}{% endblock %}
 {% block content %}
 <div class="wrap">
   <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
   <article class="product">
-    <div class="plate" data-motion="plate">{{ cover(p) }}
+    <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}"><div class="plate-cover">{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
       <dl class="spec">
         <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
         <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
