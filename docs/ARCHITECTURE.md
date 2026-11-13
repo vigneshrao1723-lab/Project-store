@@ -124,15 +124,35 @@ Other pieces that are not words: the section rail (`<nav class="rail">`, desktop
 | Class | Pages | Treatment |
 |---|---|---|
 | `browse` (the default) | home, catalogue, product | Full: rise, cascade, count, pins, a product scene using that product's own generated cover, a scroll-progress hairline, a footer rise. |
-| `transactional` | cart, checkout, pay, sign in, register | Light: headings and read-only summaries only. A test fails if any element that starts hidden contains a form control, button or link (the footer aside). Fields, labels, buttons and error messages are never marked. |
+| `transactional` | cart, checkout, pay, sign in, register | Scroll words on headings and read-only summaries only (a test fails if any element that starts hidden contains a form control, button or link, the footer aside). Fields, labels, buttons and error messages are never hidden. The interface layer below gives them motion that hides nothing. |
 | `account` | orders, order detail | Table rows cascade. The payment-result sequence (`fx-pay.js`) is separate and unchanged. |
-| `none` | admin, error pages | No `data-fx`, no script. Tests walk the admin templates and the rendered pages. |
+| `admin` | admin dashboard, orders, products | One-shot words only (figures count up, rows fade in, the heading flips in) plus the interface layer; no scenes, pointer effects, hairline or rail. A test checks the templates and the rendered pages. |
+| `none` | error pages | No `data-fx`, no scripts. |
 
 **One loop.** The script creates a single `IntersectionObserver` (it watches every `rise`, every cascade child, every `count`, and every `pin` and `parallax` element) and a single `requestAnimationFrame` loop that runs only while something needs it: a pin or parallax element is near the screen, a counter is counting, or a scroll just happened. Reads are batched before writes, the scroll and resize listeners are passive, the loop stops while the tab is hidden, `will-change` is set only on `.fx-move` elements of a pin that is near the screen, and everything is undone on `pagehide`. The loop also keeps the header's condensed state (past 40 px) and the progress hairline's `--sp`, which is written on the hairline's own node and never on `<html>` (a custom property on the root makes the browser restyle every element on every scroll frame; that cost 90 ms per frame at 4x throttle before it was moved).
 
 **Tokens.** `--fx-dist`, `--fx-ease`, `--fx-stagger` and `--fx-dur` are defined once in `motion3.css` and used only there.
 
-**Rules a change here must keep** (enforced in `tests/test_fx_*.py`): only `transform` and `opacity` change with scroll (the drawn tick and cross use `stroke-dashoffset` on 20 px paths); no hiding without `html.fx-on`; no `:hover` dependence; nothing in admin or on error pages; nothing the visitor must use inside an element that starts hidden on a transactional page; at most one observer and one queued frame; no routes, services, models or headers involved.
+**The interface layer.** `static/css/motion3-ui.css` and `static/js/fx-ui.js` hold the motion that belongs to controls and to the pages people pay and sign in on. Nothing in it hides a control, and it has no observer and no animation-frame loop.
+
+| Piece | What it does |
+|---|---|
+| Checkout stepper (`stepper(n)` macro) | Cart, Details, Pay, Done; decorative (`aria-hidden`); the line into the current step draws. |
+| Fields (`field()` macro) | A focus underline that draws from the left, an error shake (420 ms, once), a success tick that draws (`:user-valid`). |
+| Posting button | While a form posts the button shows a spinning arc and a second submit of the same form is ignored (released after 15 s, or on a back-forward-cache return). The add-to-cart form handles its own guard and is left alone. |
+| Toasts | Flash messages leave the page flow (only while `fx-ui.js` runs), slide in, and success and info ones drain a timer line and slide out after six seconds. Errors stay. |
+| Cart | A removed row comes back as a harmless ghost that slides out; changed totals, counts and line totals tick; the empty cart bobs. |
+| Order timeline (`order_timeline(order)` macro) | Placed, Paid, Ready to download, drawn to match the status. Downloads show a "preparing" state when pressed. |
+| Sign in and register | Slow line-art drifts behind the form. |
+| Everywhere | An animated focus ring, press feedback, an underline wipe on navigation links, a hover lift on cards; table rows light on hover in admin. |
+
+**Switches.** One list turns any effect off: `OFF` at the top of `fx-scroll.js`. Names: the `data-fx` words above (`rise from-left from-right zoom flip clip lines words count cascade pin hscroll parallax draw tilt magnetic marquee`) and `rail stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift`. Each becomes an `fx-off-<name>` class on `<html>`; a data-fx word is also treated as already in place. View transitions are one `@view-transition` rule in `motion3.css`; delete it to switch them off.
+
+**Image fade-in.** The covers are generated inline SVG and arrive with the page, so there is no raster image load to smooth; they get the `clip` wipe instead.
+
+**Inventory.** `docs/MOTION_INVENTORY.md` lists every effect with a literal hook; `tests/test_fx_inventory.py` fails if a listed hook disappears. Motion work is additive.
+
+**Rules a change here must keep** (enforced in `tests/test_fx_*.py`): only `transform` and `opacity` change with scroll (plus `clip-path`, and `stroke-dashoffset` on drawn lines, which are paint-only; the focus ring animates `outline-offset`); no hiding without `html.fx-on`; no `:hover` dependence outside the fine-pointer query; nothing but one-shot words in admin and nothing at all on error pages; no control is ever hidden at first paint; at most one observer and one queued frame in `fx-scroll.js`; `fx-ui.js` has neither; no routes, services, models or headers involved.
 
 ## Security notes
 

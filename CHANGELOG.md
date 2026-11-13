@@ -2,6 +2,18 @@
 
 Dates are commit dates. The newest release is first.
 
+## Unreleased (branch `motion-3`)
+
+Motion, additive only (`docs/MOTION_INVENTORY.md` lists every effect; a test fails if one disappears).
+
+* **Add to cart** rolls the label out, carries an item off in the cart and draws a tick; the header count pulses. **Payment result** draws a tick or a cross from a growing disc. Both play from plain CSS or the page's own DOM changes; no route, service or model changed.
+* **Scroll system** (`fx-scroll.js`, one observer, one loop): a `data-fx` vocabulary written through macros: rise, cascade, count, pin, parallax, plus lines, words, from-left, from-right, zoom, flip, clip, draw, hscroll, marquee, tilt and magnetic. Hidden states exist only after the script sets `html.fx-on`. Page classes: browse, transactional, account, admin, none.
+* **Home**: headline line by line, copy word by word, three parallax layers, a stack marquee, story cards and counters, a pinned cover showcase whose headline crossfades through three lines with a Scroll cue, a sideways shelf, a drawn "How buying works" timeline, a section rail. **Catalogue and product**: alternating card entrances, clip-path cover wipes, tile tilt with a pointer spotlight, a pinned product scene (large screens only), cross-document view transitions with a shared cover.
+* **Checkout and account**: a stepper that draws into the current step, field underline, shake and tick, a spinner and double-submit guard on posting buttons, toasts with a draining timer, cart rows that slide away, ticking totals, a bobbing empty cart, an order status timeline, a download "preparing" state, drifting art behind sign in and register. **Admin**: figures count up and rows fade in.
+* **Everywhere**: a scroll-progress hairline, a condensed header, a footer rise, an animated focus ring, press feedback, underline wipes, hover lift.
+* **Adaptive quality**: `html.fx-lite` (few cores, little memory, or under 45 fps for half a second; `?fx=lite` and `?fx=full` force it) turns the pinned stages scroll-linked, the shelf into a swipe row and stops big parallax. Every other effect stays.
+* The home page's test count and coverage now come from `app/facts.json`; tests keep it, the README and the collected test count equal, and `scripts/update_facts.py` re-measures.
+
 ## 1.0.0 (2026-11-13)
 
 First tagged release. Everything below is in it.
