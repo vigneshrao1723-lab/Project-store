@@ -24,7 +24,7 @@
       </div>
       {% endfor %}
     </div>
-    <aside class="summary" aria-label="Order summary">
+    <aside class="summary" data-reveal aria-label="Order summary">
       <h2>Summary</h2>
       <div class="sum-row"><span>Items</span><span class="num" data-count>{{ cart.count }}</span></div>
       <div class="sum-row total"><span>Total</span><span class="num" data-total>{{ cart.total_paise | inr }}</span></div>

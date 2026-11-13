@@ -35,6 +35,7 @@
     document.querySelectorAll("[data-cart-count]").forEach((el) => {
       el.textContent = n; el.hidden = !n;
     });
+    document.dispatchEvent(new CustomEvent("cart:count", { detail: { count: n } }));   // motion-flow.js bumps the badge
   }
 
   // Quantity steppers (product page)
@@ -58,6 +59,7 @@
           product_id: +form.dataset.productId, qty: +form.qty.value || 1,
         });
         setCartCount(cart.count);
+        form.dispatchEvent(new CustomEvent("cart:added", { bubbles: true }));
         note.innerHTML = 'Added to your cart. <a href="/cart">View cart</a> or <a href="/checkout">check out</a>.';
       } catch (err) {
         note.textContent = err.message;
@@ -92,6 +94,7 @@
         row.querySelector("input").value = l.qty;
         row.querySelector("[data-line-total]").textContent = inr(l.line_paise);
       });
+      document.dispatchEvent(new CustomEvent("cart:rendered"));
       if (!cart.lines.length) location.reload();
     };
     cartRoot.addEventListener("click", async (e) => {

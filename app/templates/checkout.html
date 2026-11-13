@@ -12,7 +12,7 @@
       {{ field('phone', 'Phone number', phone, type='tel', autocomplete='tel', hint='Optional. Razorpay can use it to prefill the payment form.', required=False) }}
       <button class="btn" type="submit">Continue to payment</button>
     </form>
-    <aside class="summary" aria-label="Order summary">
+    <aside class="summary" data-reveal aria-label="Order summary">
       <h2>Your order</h2>
       {% for l in cart.lines %}
       <div class="sum-row"><span>{{ l.title }}{% if l.qty > 1 %} × {{ l.qty }}{% endif %}</span><span class="num">{{ l.line_paise | inr }}</span></div>

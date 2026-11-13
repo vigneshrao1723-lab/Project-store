@@ -504,3 +504,44 @@ p.stat-value { margin: 0; font-weight: 700; }
   .fx-back, .fx-panel { display: none; }
   .tile.is-active .tile-cover .cover, .plate.is-active .plate-cover .cover, .plate-link.is-active .plate-cover .cover, .tile:hover .tile-cover .cover { transform: none; }
 }
+
+/* ===== Motion 2: flow ==========================================================================================
+   Add to cart feedback, results and sections entering, the condensed header and the page fade. Same rules as
+   above: content is visible by default, motion-flow.js only opts elements in (.is-pending, then .is-in, both from
+   the skeleton), only transform and opacity animate, nothing depends on hover, and reduced motion gets instant
+   states. */
+
+/* page to page: main fades in over 180ms. There is no fade out, so a click is never delayed. */
+main { animation: flow-page 180ms var(--motion-ease); }
+@keyframes flow-page { from { opacity: 0; } }
+
+/* anchors scroll smoothly and stop below the sticky header */
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+main [id] { scroll-margin-top: 5.5rem; }
+
+/* header: a condensed look past 40px of scroll. It keeps its height, so nothing below it moves. */
+.site-header .wordmark { transform-origin: 0 50%; transition: transform var(--motion-med) var(--motion-ease); }
+.site-header.is-condensed .wordmark { transform: scale(.86); }
+
+/* add to cart: the button dims while pressed (.is-pressed above), then shows a check and "Added" for a moment */
+.btn[data-state="added"]::before { content: ""; width: .5em; height: .9em; border: solid currentColor; border-width: 0 3px 3px 0; transform: rotate(45deg); animation: flow-check 220ms var(--motion-ease) both; }
+@keyframes flow-check { from { opacity: 0; transform: rotate(45deg) scale(.3); } }
+
+/* the cart badge bumps once for each increase */
+.count.is-bump { animation: flow-bump 420ms var(--motion-ease); }
+@keyframes flow-bump { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.4); } }
+
+/* a quantity, line total or cart total that changed ticks in */
+.is-tick { animation: flow-tick 260ms var(--motion-ease); }
+@keyframes flow-tick { from { opacity: .35; transform: translateY(5px); } }
+
+/* the chosen field filter slides in, and filters and steppers dim while pressed (works for touch too) */
+.filters li a[aria-current="true"] { animation: flow-select 240ms var(--motion-ease); }
+@keyframes flow-select { from { opacity: .4; transform: translateX(-8px); } }
+.filters li a, .stepper button { transition: opacity var(--motion-fast) linear; }
+.filters li a:active, .stepper button:active { opacity: .6; }
+
+@media (prefers-reduced-motion: reduce) {
+  main, .count.is-bump, .is-tick, .filters li a[aria-current="true"], .btn[data-state="added"]::before { animation: none; }
+  .site-header .wordmark, .filters li a, .stepper button { transition: none; }
+}
