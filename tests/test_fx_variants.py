@@ -132,7 +132,7 @@ def test_tilt_and_magnetic_exist_only_for_fine_pointers_and_stay_within_6_degree
     outside = without_hover_media(VARIANTS[:VARIANTS.rindex("@media (prefers-reduced-motion: reduce)")])
     assert 'data-fx="tilt"' not in outside and 'data-fx="magnetic"' not in outside
     js = (ROOT / "app" / "static" / "js" / "fx-scroll.js").read_text(encoding="utf-8")
-    assert "clamp((x - 0.5) * 12, -6, 6)" in js and "* 6 + \"px\"" in js
+    assert 'knob("--tilt-max", 6)' in js and 'knob("--magnet-max", 6)' in js         # the 6 degrees and 6 px defaults are the knobs' defaults
 
 
 def test_the_spotlight_is_a_flat_disc_not_a_gradient():

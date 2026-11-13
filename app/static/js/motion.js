@@ -15,7 +15,8 @@
     const loader = document.querySelector("[data-loader]");
     const pct = loader && loader.querySelector("[data-loader-pct]");
     if (!pct) return;
-    const DURATION = 1000;
+    // --loader-ms (fx-tuning.css) says how long the loader stays; 1000 by default
+    const DURATION = (() => { try { const v = parseFloat(getComputedStyle(root).getPropertyValue("--loader-ms")); return v > 0 ? v : 1000; } catch (e) { return 1000; } })();
     const start = performance.now();
     let frame = 0;
     const finish = () => { cancelAnimationFrame(frame); root.classList.remove("intro-run"); };

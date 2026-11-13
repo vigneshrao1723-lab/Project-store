@@ -1,0 +1,86 @@
+/* Motion tuning: every number you are likely to want to change, in one place, loaded before motion3.css.
+   Change a value here and reload; nothing else needs editing. docs/MOTION_TUNING.md says what each one does and what a
+   good range is. The per-effect OFF switches are at the bottom: list a name in app/fx.json ("off": ["tilt"]) and the
+   attribute <html data-fx-off="tilt"> turns that effect off everywhere, with no script needed. */
+
+:root {
+  --fx-speed: 1;                 /* ALL motion: global speed multiplier. 0.5 = twice as slow, 2 = twice as fast. Good range 0.6 to 1.6. */
+  --fx-dist: 14px;               /* rise, cascade, zoom, flip, lines, words: how far things travel when they come in. Good range 8px to 24px. */
+  --fx-stagger: 60ms;            /* cascade, lines: delay between neighbours. Good range 30ms to 120ms. */
+  --fx-ease: cubic-bezier(.2, .7, .2, 1);       /* every entrance and scene: the easing curve. */
+  --tilt-max: 6;                 /* tilt: the most a tile leans toward the pointer, in degrees. Good range 2 to 10. */
+  --magnet-max: 6;               /* magnetic: the most a button leans toward the pointer, in px. Good range 2 to 10. */
+  --parallax-strength: 1;        /* parallax (home hero layers, product cover): drift multiplier. 0 = none, 2 = double. Good range 0 to 2. */
+  --cover-slide-distance: 60vw;  /* pin (showcase, product scene): how far off to the side the covers start. Good range 30vw to 100vw. */
+  --loader-ms: 1000ms;           /* loader: how long the intro loader stays before it fades out. Good range 600ms to 1600ms (a 2s failsafe hides it). */
+  --cart-anim-ms: 1000;          /* cart-button: length of the Add to cart sequence in ms (a number, not a length). Good range 600 to 1600. */
+  --pay-anim-ms: 1400;           /* pay-mark: length of the payment tick/cross sequence in ms (a number). Good range 900 to 2200. */
+  --marquee-speed: 1;            /* marquee: ticker speed. 0.5 = half speed, 2 = double. Good range 0.4 to 2. */
+
+  /* derived: do not edit */
+  --cart-k: calc(var(--cart-anim-ms) / 1000 / var(--fx-speed));
+  --pay-k: calc(var(--pay-anim-ms) / 1400 / var(--fx-speed));
+}
+
+/* ---- loader: when it starts to leave follows --loader-ms (its own scene timings are unchanged) ---- */
+html.intro-run .loader { animation-delay: var(--loader-ms), 2s; }
+
+/* ---- switches. Each rule forces one effect to its finished state and stops its animation. The names are the ones in
+   app/fx.json and in docs/MOTION_TUNING.md. They use !important on purpose: an OFF switch must beat every other rule. ---- */
+html[data-fx-off~="lines"] .ln > span { transform: none !important; transition: none !important; }
+html[data-fx-off~="words"] .w { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-fx-off~="from-left"] [data-fx="from-left"], html[data-fx-off~="from-right"] [data-fx="from-right"],
+html[data-fx-off~="zoom"] [data-fx="zoom"], html[data-fx-off~="flip"] [data-fx="flip"] { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-fx-off~="clip"] [data-fx="clip"] { clip-path: none !important; transition: none !important; }
+html[data-fx-off~="clip"] [data-fx="clip"] > .cover { transform: none !important; }
+html[data-fx-off~="draw"] .tl-draw { stroke-dashoffset: 0 !important; }
+html[data-fx-off~="draw"] .tl li::before { opacity: 1 !important; }
+html[data-fx-off~="hscroll"] [data-fx="hscroll"] { height: auto !important; }
+html[data-fx-off~="hscroll"] .hs-stage { position: static !important; height: auto !important; overflow-x: auto !important; }
+html[data-fx-off~="hscroll"] .hs-track { transform: none !important; }
+html[data-fx-off~="marquee"] .mq-row { animation: none !important; flex-wrap: wrap !important; }
+html[data-fx-off~="marquee"] .mq-row[aria-hidden="true"] { display: none !important; }
+html[data-fx-off~="tilt"] [data-fx="tilt"] { transform: none !important; transition: none !important; }
+html[data-fx-off~="spotlight"] [data-fx="tilt"]::after { display: none !important; }
+html[data-fx-off~="magnetic"] [data-fx="magnetic"] { transform: none !important; }
+html[data-fx-off~="rail"] .rail { display: none !important; }
+html[data-fx-off~="parallax"] [data-fx="parallax"] { transform: none !important; }
+html[data-fx-off~="view-transitions"] .product .plate-cover, html[data-fx-off~="view-transitions"] .tile .tile-cover { view-transition-name: none !important; }
+html[data-fx-off~="view-transitions"]::view-transition-group(*), html[data-fx-off~="view-transitions"]::view-transition-old(*),
+html[data-fx-off~="view-transitions"]::view-transition-new(*) { animation: none !important; }
+html[data-fx-off~="toasts"] .flashes { position: static !important; width: auto !important; }
+html[data-fx-off~="toasts"] .flashes .flash { animation: none !important; }
+html[data-fx-off~="toasts"] .flashes .flash::after { display: none !important; }
+html[data-fx-off~="stepper"] .stp-line::after { animation: none !important; }
+html[data-fx-off~="status-timeline"] .otl-line::after { animation: none !important; }
+html[data-fx-off~="admin-motion"] body[data-page="admin"] [data-fx], html[data-fx-off~="admin-motion"] body[data-page="admin"] [data-fx] > * { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+
+/* switches for the earlier effects, so every effect in docs/MOTION_INVENTORY.md has one */
+html[data-fx-off~="rise"] [data-fx="rise"] { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-fx-off~="cascade"] [data-fx="cascade"] > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-fx-off~="count"] [data-fx="count"] .cnt-live { transition: none !important; }
+html[data-fx-off~="pin"] [data-fx="pin"] { height: auto !important; }
+html[data-fx-off~="pin"] [data-fx="pin"] .fx-stage { position: relative !important; height: auto !important; overflow: visible !important; }
+html[data-fx-off~="pin"] [data-fx="pin"] .fx-move, html[data-fx-off~="pin"] [data-fx="pin"] .sc-head, html[data-fx-off~="pin"] [data-fx="pin"] .sc-line { opacity: 1 !important; transform: none !important; }
+html[data-fx-off~="loader"] .loader { display: none !important; }
+html[data-fx-off~="cards"] [data-motion="tile"] *, html[data-fx-off~="cards"] [data-motion="plate"] *, html[data-fx-off~="cards"] [data-motion="hero-plate"] * { animation: none !important; transition: none !important; }
+html[data-fx-off~="press"] .btn:active, html[data-fx-off~="press"] .stepper button:active, html[data-fx-off~="press"] .linkish:active { transform: none !important; }
+html[data-fx-off~="press"] .btn[data-press].is-pressed { opacity: 1 !important; }
+html[data-fx-off~="cart-button"] .atc * { animation: none !important; transition: none !important; }
+html[data-fx-off~="count-bump"] .count.is-bump { animation: none !important; }
+html[data-fx-off~="pay-mark"] .result * { animation: none !important; }
+html[data-fx-off~="pay-mark"] .delivery, html[data-fx-off~="pay-mark"] .pay-actions { animation: none !important; }
+html[data-fx-off~="hairline"] .fx-progress { display: none !important; }
+html[data-fx-off~="header"] .site-header .wordmark { transform: none !important; transition: none !important; }
+html[data-fx-off~="footer"] .site-footer[data-fx] { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-fx-off~="inputs"] .inp .ul, html[data-fx-off~="inputs"] .inp .ok { display: none !important; }
+html[data-fx-off~="shake"] .field.has-error .inp { animation: none !important; }
+html[data-fx-off~="forms"] .btn.is-loading::after { animation: none !important; }
+html[data-fx-off~="cart-rows"] .line.is-ghost { animation: none !important; }
+html[data-fx-off~="cart-ticks"] .is-tick { animation: none !important; }
+html[data-fx-off~="bob"] .empty-cart, html[data-fx-off~="bob"] .empty-art { animation: none !important; }
+html[data-fx-off~="downloads"] .delivery a.is-preparing::after { animation: none !important; }
+html[data-fx-off~="drift"] .drift span { animation: none !important; }
+html[data-fx-off~="focus-ring"] :focus-visible { animation: none !important; }
+html[data-fx-off~="wipe"] .nav a::after, html[data-fx-off~="wipe"] .site-footer a::after, html[data-fx-off~="wipe"] .crumbs a::after { transition: none !important; }
+html[data-fx-off~="lift"] .fx-card, html[data-fx-off~="lift"] .hs-card a, html[data-fx-off~="lift"] .sc-cover a, html[data-fx-off~="lift"] .summary, html[data-fx-off~="lift"] .delivery { transition: none !important; transform: none !important; }

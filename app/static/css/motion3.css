@@ -13,10 +13,10 @@
      system's hidden states exist only under html.fx-on, which the script sets after it has checked it can work.
    * prefers-reduced-motion gets the final state with no movement. */
 :root {
-  /* the scroll system's tokens: every section transition uses these and nothing else */
-  --fx-dist: 14px; --fx-ease: cubic-bezier(.2, .7, .2, 1); --fx-stagger: 60ms; --fx-dur: 460ms;
-  --fx-ease-in: cubic-bezier(.55, 0, .8, .3);
-  --fx-side: 56px; --fx-dur-slow: 720ms; --fx-stagger-word: 28ms;
+  /* the scroll system's derived tokens. The knobs themselves (--fx-dist, --fx-ease, --fx-stagger, --fx-speed ...) are in
+     fx-tuning.css, loaded before this file; nothing here defines them. */
+  --fx-dur: calc(460ms / var(--fx-speed, 1)); --fx-ease-in: cubic-bezier(.55, 0, .8, .3);
+  --fx-side: 56px; --fx-dur-slow: calc(720ms / var(--fx-speed, 1)); --fx-stagger-word: calc(28ms / var(--fx-speed, 1));
 }
 .is-animating { will-change: transform, opacity; }
 
@@ -32,23 +32,23 @@
 .atc[data-state] { opacity: 1; }                       /* app.js disables the button while the request runs; do not dim it */
 
 /* adding: the label fades and slides out, the cart rolls to the middle */
-.atc[data-state="adding"] .atc-label { animation: atc-label-out 240ms var(--fx-ease) both; }
-.atc[data-state="adding"] .atc-go { animation: atc-centre 360ms var(--fx-ease) both; }
+.atc[data-state="adding"] .atc-label { animation: atc-label-out calc(240ms * var(--cart-k)) var(--fx-ease) both; }
+.atc[data-state="adding"] .atc-go { animation: atc-centre calc(360ms * var(--cart-k)) var(--fx-ease) both; }
 /* added: an item drops in, the cart catches it and rolls out to the right, the tick draws */
 .atc[data-state="added"] .atc-label { opacity: 0; }
-.atc[data-state="added"] .atc-go { animation: atc-roll 340ms var(--fx-ease-in) 330ms both; }
-.atc[data-state="added"] .atc-item { animation: atc-drop 300ms var(--fx-ease) both; }
-.atc[data-state="added"] .atc-cart { animation: atc-catch 220ms var(--fx-ease) 250ms both; }
-.atc[data-state="added"] .atc-done { animation: atc-done-in 280ms var(--fx-ease) 560ms both; }
-.atc[data-state="added"] .atc-tick { animation: atc-draw 260ms var(--fx-ease) 700ms both; }
+.atc[data-state="added"] .atc-go { animation: atc-roll calc(340ms * var(--cart-k)) var(--fx-ease-in) calc(330ms * var(--cart-k)) both; }
+.atc[data-state="added"] .atc-item { animation: atc-drop calc(300ms * var(--cart-k)) var(--fx-ease) both; }
+.atc[data-state="added"] .atc-cart { animation: atc-catch calc(220ms * var(--cart-k)) var(--fx-ease) calc(250ms * var(--cart-k)) both; }
+.atc[data-state="added"] .atc-done { animation: atc-done-in calc(280ms * var(--cart-k)) var(--fx-ease) calc(560ms * var(--cart-k)) both; }
+.atc[data-state="added"] .atc-tick { animation: atc-draw calc(260ms * var(--cart-k)) var(--fx-ease) calc(700ms * var(--cart-k)) both; }
 /* back: Added leaves, the cart comes in from the left, the label returns */
-.atc[data-state="back"] .atc-done { animation: atc-done-out 200ms linear both; }
+.atc[data-state="back"] .atc-done { animation: atc-done-out calc(200ms * var(--cart-k)) linear both; }
 .atc[data-state="back"] .atc-tick { stroke-dashoffset: 0; }
-.atc[data-state="back"] .atc-go { animation: atc-enter 380ms var(--fx-ease) both; }
-.atc[data-state="back"] .atc-label { animation: atc-label-in 280ms var(--fx-ease) 120ms both; }
+.atc[data-state="back"] .atc-go { animation: atc-enter calc(380ms * var(--cart-k)) var(--fx-ease) both; }
+.atc[data-state="back"] .atc-label { animation: atc-label-in calc(280ms * var(--cart-k)) var(--fx-ease) calc(120ms * var(--cart-k)) both; }
 /* undo: the request failed, so the cart rolls back to its place */
-.atc[data-state="undo"] .atc-go { animation: atc-uncentre 300ms var(--fx-ease) both; }
-.atc[data-state="undo"] .atc-label { animation: atc-label-in 260ms var(--fx-ease) 60ms both; }
+.atc[data-state="undo"] .atc-go { animation: atc-uncentre calc(300ms * var(--cart-k)) var(--fx-ease) both; }
+.atc[data-state="undo"] .atc-label { animation: atc-label-in calc(260ms * var(--cart-k)) var(--fx-ease) calc(60ms * var(--cart-k)) both; }
 
 @keyframes atc-label-out { to { opacity: 0; transform: translateX(14px); } }
 @keyframes atc-label-in { from { opacity: 0; transform: translateX(-10px); } }
@@ -64,7 +64,7 @@
 .atc.is-animating .atc-go, .atc.is-animating .atc-label, .atc.is-animating .atc-done, .atc.is-animating .atc-item { will-change: transform, opacity; }
 
 /* header cart count: one pulse when the number goes up */
-.count.is-bump { animation: fx-bump 460ms var(--fx-ease); }
+.count.is-bump { animation: fx-bump calc(460ms * var(--cart-k)) var(--fx-ease); }
 @keyframes fx-bump { 0% { transform: scale(1); } 28% { transform: scale(1.55); } 60% { transform: scale(.92); } 100% { transform: scale(1); } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -97,16 +97,16 @@
 .result-success .rs-sweep { background: var(--green); }
 .result-failure .rs-sweep { background: var(--red); }
 
-.result[data-play]:not(.is-played) .rs-disc { animation: rs-disc 440ms var(--fx-ease) both; }
-.result[data-play]:not(.is-played) .rs-ring { animation: rs-ring 380ms var(--fx-ease) 260ms both; }
-.result[data-play]:not(.is-played) .rs-sweep { animation: rs-sweep 720ms var(--fx-ease) both; }
-.result-success[data-play]:not(.is-played) .rs-draw { animation: rs-draw 420ms var(--fx-ease) 440ms both; }
-.result-failure[data-play]:not(.is-played) .rs-x1 { animation: rs-draw 240ms var(--fx-ease) 440ms both; }
-.result-failure[data-play]:not(.is-played) .rs-x2 { animation: rs-draw 240ms var(--fx-ease) 600ms both; }
-.result-failure[data-play]:not(.is-played) .rs-arc { animation: rs-orbit 1000ms var(--fx-ease) 260ms both; }
+.result[data-play]:not(.is-played) .rs-disc { animation: rs-disc calc(440ms * var(--pay-k)) var(--fx-ease) both; }
+.result[data-play]:not(.is-played) .rs-ring { animation: rs-ring calc(380ms * var(--pay-k)) var(--fx-ease) calc(260ms * var(--pay-k)) both; }
+.result[data-play]:not(.is-played) .rs-sweep { animation: rs-sweep calc(720ms * var(--pay-k)) var(--fx-ease) both; }
+.result-success[data-play]:not(.is-played) .rs-draw { animation: rs-draw calc(420ms * var(--pay-k)) var(--fx-ease) calc(440ms * var(--pay-k)) both; }
+.result-failure[data-play]:not(.is-played) .rs-x1 { animation: rs-draw calc(240ms * var(--pay-k)) var(--fx-ease) calc(440ms * var(--pay-k)) both; }
+.result-failure[data-play]:not(.is-played) .rs-x2 { animation: rs-draw calc(240ms * var(--pay-k)) var(--fx-ease) calc(600ms * var(--pay-k)) both; }
+.result-failure[data-play]:not(.is-played) .rs-arc { animation: rs-orbit calc(1000ms * var(--pay-k)) var(--fx-ease) calc(260ms * var(--pay-k)) both; }
 /* then the page's own content fades up, once the mark has finished */
 main:has(.result[data-play]:not(.is-played)) .delivery,
-main:has(.result[data-play]:not(.is-played)) .pay-actions { animation: rs-after 400ms var(--fx-ease) 1000ms both; }
+main:has(.result[data-play]:not(.is-played)) .pay-actions { animation: rs-after calc(400ms * var(--pay-k)) var(--fx-ease) calc(1000ms * var(--pay-k)) both; }
 
 @keyframes rs-disc { from { opacity: 0; transform: scale(.1); } 25% { opacity: 1; } to { opacity: 1; transform: none; } }
 @keyframes rs-ring { from { opacity: 0; transform: scale(.82); } to { opacity: .45; transform: none; } }
@@ -147,7 +147,7 @@ html.fx-on [data-fx="rise"].is-instant, html.fx-on [data-fx="cascade"] > .is-ins
 .cnt-live { position: absolute; left: 0; top: 0; }
 
 /* parallax: a few pixels of drift against the scroll, transform only */
-[data-fx="parallax"] { transform: translate3d(0, calc(var(--py, 0) * var(--fx-dist) * var(--pm, -.6)), 0); }
+[data-fx="parallax"] { transform: translate3d(0, calc(var(--py, 0) * var(--fx-dist) * var(--pm, -.6) * var(--parallax-strength, 1)), 0); }
 html.fx-lite [data-fx="parallax"] { transform: none; }         /* adaptive quality: big parallax is one of the things fx-lite turns off */
 
 /* pin: a scene held on screen while the reader scrolls through a taller section. --p is how far through. */
@@ -160,7 +160,7 @@ html.fx-on:not(.fx-lite) [data-fx="pin"]:not(.pin-lg):not(.pin-soft) .fx-stage {
 }
 /* what moves inside a pin: slide in from a side (--dir) and/or grow from a smaller size (--sd), starting at --s */
 .fx-move { --s: 0; --dir: 0; --sd: 0; --e: clamp(0, calc((var(--p) - var(--s)) * 2.2), 1); --k: calc(var(--e) * var(--e) * (3 - 2 * var(--e)));
-  opacity: var(--k); transform: translate3d(calc((1 - var(--k)) * var(--dir) * 60vw), 0, 0) scale(calc(1 - (1 - var(--k)) * var(--sd))); }
+  opacity: var(--k); transform: translate3d(calc((1 - var(--k)) * var(--dir) * var(--cover-slide-distance, 60vw)), 0, 0) scale(calc(1 - (1 - var(--k)) * var(--sd))); }
 [data-fx="pin"].is-focus .fx-move { opacity: 1; transform: none; }
 
 /* ---- shared page furniture ---- */
@@ -325,7 +325,7 @@ html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
 .marquee { display: flex; }
 .mq-row { display: flex; flex: none; gap: 2.2rem; margin: 0; padding: .8rem 2.2rem .8rem 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
 .mq-row li::before { content: ""; display: inline-block; width: .5rem; height: .5rem; background: var(--mark); margin-right: .7rem; }
-html.fx-on:not(.fx-off-marquee) .mq-row { animation: fx-marquee 38s linear infinite; }
+html.fx-on:not(.fx-off-marquee) .mq-row { animation: fx-marquee calc(38s / var(--marquee-speed, 1)) linear infinite; }
 @keyframes fx-marquee { to { transform: translate3d(-100%, 0, 0); } }
 @media (hover: hover) and (pointer: fine) { html.fx-on .marquee:hover .mq-row { animation-play-state: paused; } }
 @media (prefers-reduced-motion: reduce) { .mq-row { animation: none; flex-wrap: wrap; } .mq-row[aria-hidden="true"] { display: none; } }

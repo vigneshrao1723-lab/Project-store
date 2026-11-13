@@ -128,7 +128,7 @@ def test_hover_rules_exist_only_under_the_fine_pointer_query_and_touch_loses_not
 
 
 def test_the_shake_is_short_and_runs_once_and_reduced_motion_switches_everything_off():
-    assert re.search(r"fx-shake 4\d\dms var\(--fx-ease\) 1;", BARE)
+    assert re.search(r"fx-shake calc\(4\d\dms / var\(--fx-speed, 1\)\) var\(--fx-ease\) 1;", BARE)
     tail = BARE[BARE.rindex("@media (prefers-reduced-motion: reduce)"):]
     for needle in (".btn.is-loading::after", ".empty-cart", ".drift .d1", ".line.is-ghost", ":focus-visible", ".field.has-error .inp", "transition: none"):
         assert needle in tail, needle

@@ -16,41 +16,41 @@
 .stp-line::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
 .stp li.is-done .stp-line::after { transform: scaleX(1); }
 .stp li:last-child .stp-line { display: none; }
-html.fx-on .stp li.is-arriving .stp-line::after { animation: fx-stp 760ms var(--fx-ease) both; }
+html.fx-on .stp li.is-arriving .stp-line::after { animation: fx-stp calc(760ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 @keyframes fx-stp { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---- fields: a focus underline that draws from the left, an error shake, a success tick that draws ---- */
 .inp { position: relative; display: block; }
 .inp input { padding-right: 2.4rem; }
-.inp .ul { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 320ms var(--fx-ease); pointer-events: none; }
+.inp .ul { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform calc(320ms / var(--fx-speed, 1)) var(--fx-ease); pointer-events: none; }
 .inp:focus-within .ul { transform: scaleX(1); }
 .field.has-error .inp .ul { background: var(--red); transform: scaleX(1); }
-.field.has-error .inp { animation: fx-shake 420ms var(--fx-ease) 1; }
+.field.has-error .inp { animation: fx-shake calc(420ms / var(--fx-speed, 1)) var(--fx-ease) 1; }
 @keyframes fx-shake { 18% { transform: translate3d(-7px, 0, 0); } 36% { transform: translate3d(6px, 0, 0); } 54% { transform: translate3d(-4px, 0, 0); } 72% { transform: translate3d(3px, 0, 0); } }
 .inp .ok { position: absolute; right: .7rem; top: 50%; translate: 0 -50%; width: 18px; height: 18px; pointer-events: none; }
-.inp .ok path { fill: none; stroke: var(--green); stroke-width: 2.6; stroke-linecap: square; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 340ms var(--fx-ease); }
+.inp .ok path { fill: none; stroke: var(--green); stroke-width: 2.6; stroke-linecap: square; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset calc(340ms / var(--fx-speed, 1)) var(--fx-ease); }
 .inp input:user-valid:not(:placeholder-shown) ~ .ok path { stroke-dashoffset: 0; }
 
 /* ---- submit button while the form posts: a spinning arc; fx-ui.js ignores a second submit meanwhile ---- */
 .btn.is-loading { position: relative; cursor: progress; }
-.btn.is-loading::after { content: ""; position: absolute; right: .85rem; top: 50%; width: 1rem; height: 1rem; margin-top: -.5rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin 700ms linear infinite; }
+.btn.is-loading::after { content: ""; position: absolute; right: .85rem; top: 50%; width: 1rem; height: 1rem; margin-top: -.5rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin calc(700ms / var(--fx-speed, 1)) linear infinite; }
 @keyframes fx-spin { to { transform: rotate(360deg); } }
 
 /* ---- flash messages become toasts: they slide in, success and info ones drain a timer line and slide out ---- */
 html.fx-ui .flashes { position: fixed; z-index: 40; top: 7rem; right: 1rem; width: min(26rem, calc(100% - 2rem)); max-width: none; margin: 0; padding: 0; }
-html.fx-ui .flashes .flash { position: relative; overflow: hidden; margin: 0 0 .5rem; background: var(--paper-2); border: 1.5px solid var(--ink); border-left-width: 6px; animation: fx-toast-in 420ms var(--fx-ease) both; }
+html.fx-ui .flashes .flash { position: relative; overflow: hidden; margin: 0 0 .5rem; background: var(--paper-2); border: 1.5px solid var(--ink); border-left-width: 6px; animation: fx-toast-in calc(420ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 html.fx-ui .flashes .flash-success { border-left-color: var(--green); }
 html.fx-ui .flashes .flash-error { border-left-color: var(--red); }
 html.fx-ui .flashes .flash:not(.flash-error)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--ink); transform-origin: 0 50%; animation: fx-drain 6s linear both; }
-html.fx-ui .flashes .flash.is-leaving { animation: fx-toast-out 360ms var(--fx-ease) both; }
+html.fx-ui .flashes .flash.is-leaving { animation: fx-toast-out calc(360ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 @keyframes fx-toast-in { from { opacity: 0; transform: translate3d(32px, 0, 0); } }
 @keyframes fx-toast-out { to { opacity: 0; transform: translate3d(32px, 0, 0); } }
 @keyframes fx-drain { to { transform: scaleX(0); } }
 
 /* ---- cart: a removed row slides away, changed figures tick, the empty cart bobs ---- */
-.line.is-ghost { pointer-events: none; animation: fx-ghost 320ms var(--fx-ease) both; }
+.line.is-ghost { pointer-events: none; animation: fx-ghost calc(320ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 @keyframes fx-ghost { to { opacity: 0; transform: translate3d(44px, 0, 0); } }
-.is-tick { animation: fx-tick 280ms var(--fx-ease); }
+.is-tick { animation: fx-tick calc(280ms / var(--fx-speed, 1)) var(--fx-ease); }
 @keyframes fx-tick { 40% { transform: translate3d(0, -3px, 0); opacity: .55; } }
 .empty-cart { display: block; width: 84px; height: 84px; margin-bottom: 1rem; color: var(--ink); animation: fx-bob 3.2s ease-in-out infinite; }
 @keyframes fx-bob { 50% { transform: translate3d(0, -7px, 0); } }
@@ -65,9 +65,9 @@ html.fx-ui .flashes .flash.is-leaving { animation: fx-toast-out 360ms var(--fx-e
 .otl-line::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
 .otl li.is-linked .otl-line::after { transform: scaleX(1); }
 .otl li:last-child .otl-line { display: none; }
-html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp 900ms var(--fx-ease) both; }
+html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp calc(900ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 .delivery a.is-preparing { position: relative; padding-right: 1.6rem; }
-.delivery a.is-preparing::after { content: ""; position: absolute; right: 0; top: 50%; width: .8rem; height: .8rem; margin-top: -.4rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin 700ms linear infinite; }
+.delivery a.is-preparing::after { content: ""; position: absolute; right: 0; top: 50%; width: .8rem; height: .8rem; margin-top: -.4rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin calc(700ms / var(--fx-speed, 1)) linear infinite; }
 
 /* ---- sign in and register: slow line-art drifting behind the form ---- */
 .auth-wrap { position: relative; overflow-x: clip; }
@@ -82,23 +82,24 @@ html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp 900ms var(--fx
 @media (max-width: 700px) { .drift .d2, .drift .d3 { display: none; } .drift .d1 { right: -30px; } }
 
 /* ---- everywhere: focus ring that settles in, press feedback, underline wipe on navigation links, hover lift ---- */
-:focus-visible { animation: fx-ring 260ms var(--fx-ease); }
+:focus-visible { animation: fx-ring calc(260ms / var(--fx-speed, 1)) var(--fx-ease); }
 @keyframes fx-ring { from { outline-offset: 9px; outline-color: transparent; } }
 .btn:active, .stepper button:active, .linkish:active { transform: translate3d(0, 1px, 0); }
 .btn, .stepper button, .linkish { transition-property: background-color, color, opacity, transform; }
 .nav a, .site-footer a, .crumbs a { position: relative; }
-.nav a::after, .site-footer a::after, .crumbs a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 260ms var(--fx-ease); pointer-events: none; }
+.nav a::after, .site-footer a::after, .crumbs a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform calc(260ms / var(--fx-speed, 1)) var(--fx-ease); pointer-events: none; }
 .nav a:focus-visible::after { transform: scaleX(1); }
 @media (hover: hover) and (pointer: fine) {
   .nav a:hover::after, .site-footer a:hover::after, .crumbs a:hover::after { transform: scaleX(1); }
-  .fx-card, .hs-card a, .sc-cover a, .summary, .delivery { transition: transform 200ms var(--fx-ease); }
+  .fx-card, .hs-card a, .sc-cover a, .summary, .delivery { transition: transform calc(200ms / var(--fx-speed, 1)) var(--fx-ease); }
   .fx-card:hover, .hs-card a:hover, .sc-cover a:hover, .summary:hover, .delivery:hover { transform: translate3d(0, -3px, 0); }
-  .admin .table tbody tr { transition: background-color 140ms linear; }
+  .admin .table tbody tr { transition: background-color calc(140ms / var(--fx-speed, 1)) linear; }
   .admin .table tbody tr:hover { background: var(--panel); }
 }
 
 /* ---- switches: the OFF list in fx-scroll.js adds fx-off-<name> to <html>; each of these puts one effect back to plain ---- */
-html.fx-off-stepper .stp, html.fx-off-timeline .otl, html.fx-off-drift .drift { display: none; }
+html.fx-off-stepper .stp-line::after, html.fx-off-timeline .otl-line::after { animation: none; }
+html.fx-off-drift .drift { display: none; }
 html.fx-off-bob .empty-cart { animation: none; }
 html.fx-off-shake .field.has-error .inp { animation: none; }
 html.fx-off-inputs .inp .ul, html.fx-off-inputs .inp .ok { display: none; }

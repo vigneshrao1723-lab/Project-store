@@ -7,7 +7,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 DOC = (ROOT / "docs" / "MOTION_INVENTORY.md").read_text(encoding="utf-8")
-ROWS = [m.groups() for m in re.finditer(r"^\| (?!Effect|---)(.+?) \| (.+?) \| `(.+?)` \| (.+?) \|$", DOC, re.M)]
+ALL_ROWS = [m.groups() for m in re.finditer(r"^\| (?!Effect|---)(.+?) \| (.+?) \| `(.+?)` \| (.+?) \| ([\w-]+) \|$", DOC, re.M)]
+ROWS = [r[:4] for r in ALL_ROWS]
 
 
 def test_the_inventory_lists_a_real_number_of_effects_and_never_fewer_than_it_did():

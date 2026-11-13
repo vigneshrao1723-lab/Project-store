@@ -13,6 +13,8 @@ from .services import payments
 # Figures about the project itself (test counts, coverage). One file, written only by scripts/update_facts.py and
 # checked by tests/test_fx_facts.py, so the home page and the README cannot drift from each other or from the suite.
 FACTS = json.loads((Path(__file__).parent / "facts.json").read_text(encoding="utf-8"))
+# Effects switched off, by name (see docs/MOTION_TUNING.md). One list for the whole site; written into <html data-fx-off>.
+FX_OFF = json.loads((Path(__file__).parent / "fx.json").read_text(encoding="utf-8"))["off"]
 
 
 def register_context(app):
@@ -27,4 +29,4 @@ def register_context(app):
         return {"csrf_token": stable_csrf_token, "cart_count": int(count or 0), "nav_categories": cats,
                 "gateway_mode": payments.mode(),
                 "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
-                "facts": FACTS}
+                "facts": FACTS, "fx_off": FX_OFF}

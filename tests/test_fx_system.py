@@ -91,13 +91,13 @@ def test_every_page_declares_its_class_and_only_the_classes_that_move_load_the_s
         assert ("fx-ui.js" in html) is (expected != "none"), path
         assert ("data-fx=" in html) is (expected != "none"), path
         if expected == "none":
-            assert "fx-progress" in html and 'data-fx' not in html and "fx-on" not in html, path
+            assert "fx-progress" in html and 'data-fx=' not in html and "fx-on" not in html, path
 
 
 def test_an_error_page_is_a_none_page_and_moves_nothing(client):
     for status in ("/no-such-page",):
         html = client.get(status).get_data(as_text=True)
-        assert 'data-page="none"' in html and "data-fx" not in html and "fx-scroll.js" not in html
+        assert 'data-page="none"' in html and "data-fx=" not in html and "fx-scroll.js" not in html
 
 
 ADMIN_WORDS = {"rise", "cascade", "count", "flip", "zoom", "from-left", "from-right", "words", "lines"}      # one-shot words only
@@ -205,9 +205,12 @@ def test_the_script_is_what_turns_the_system_on_so_the_server_never_renders_a_hi
 
 
 def test_tokens_are_defined_once_and_the_distance_is_12_to_16_pixels():
-    root = re.search(r":root \{(.*?)\n\}", BARE, re.S).group(1)
-    for token in ("--fx-dist", "--fx-ease", "--fx-stagger", "--fx-dur"):
-        assert root.count(token + ":") == 1, token
+    tuning = (ROOT / "app" / "static" / "css" / "fx-tuning.css").read_text(encoding="utf-8")
+    root = re.search(r":root \{(.*?)\n\}", tuning, re.S).group(1)
+    for token in ("--fx-dist", "--fx-ease", "--fx-stagger", "--fx-speed"):
+        assert root.count(token + ":") == 1, token                           # the knobs are defined once, in fx-tuning.css
+        assert token + ":" not in BARE, token                                # and never redefined in motion3.css
+    assert "--fx-dur:" in BARE and "var(--fx-speed" in BARE                   # durations are derived from the global speed
     assert 12 <= int(re.search(r"--fx-dist:\s*(\d+)px", root).group(1)) <= 16
     assert re.search(r"--fx-stagger:\s*60ms", root)
     # the section transitions use the tokens, not their own numbers

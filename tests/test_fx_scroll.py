@@ -40,7 +40,7 @@ function world(opts = {}) {
       observe(e) { this.targets.add(e); } unobserve(e) { this.targets.delete(e); } disconnect() { this.disconnected = true; this.targets.clear(); }
     };
     const body = make("body", { dataset: { page: opts.page === undefined ? "browse" : opts.page } });
-    const html = make("html", { scrollHeight: 4000 });
+    const html = make("html", { scrollHeight: 4000, dataset: { fxOff: opts.attr || "" } });
     html.classList = { s: rootClasses, add(c) { rootClasses.add(c); }, remove(c) { rootClasses.delete(c); } };
     const win = {
       matchMedia: (q) => ({ matches: String(q).indexOf("hover") >= 0 ? !!opts.fine : !!opts.calm }), innerHeight: 800, pageYOffset: 0, location: { search: opts.search || "" },
@@ -60,7 +60,7 @@ function world(opts = {}) {
       requestAnimationFrame: (f) => { queue.push(f); maxQueued = Math.max(maxQueued, queue.length); return ++rafId; },
       cancelAnimationFrame: () => { queue = []; },
       performance: { now: () => now },
-      getComputedStyle: (e) => ({ position: e.__position || "static" }),
+      getComputedStyle: (e) => ({ position: e.__position || "static", getPropertyValue: (n) => (opts.knobs || {})[n] || "" }),
       parseFloat, Math, Number, String, Set, Map, Array, Object,
     };
     w.win = win; w.doc = doc; w.html = html;
@@ -490,3 +490,33 @@ def test_a_pinned_scene_that_has_not_started_is_marked_so_its_headline_is_hidden
       const at2 = (top) => { sec.top = top; w.fire([{ target: sec, isIntersecting: true }]); w.advance(32); return sec.classList.s.has("is-pre"); };
       const result = { before: at2(75), started: at2(75 - 1195 * 0.4), later: at2(75 - 1195) };"""))
     assert r == {"before": True, "started": False, "later": False}
+
+
+# ---- tuning knobs and the server-side off list ---------------------------------------------------------------------------------
+
+def test_the_tilt_and_magnet_limits_follow_their_knobs():
+    r = run_node(variants("""
+      fire(tile, "pointerenter", {}); fire(tile, "pointermove", { clientX: 5000, clientY: -5000 });
+      fire(btn, "pointerenter", {}); fire(btn, "pointermove", { clientX: 9999, clientY: -9999 });
+      const result = { tilt: [tile.style.props["--rx"], tile.style.props["--ry"]], magnet: [btn.style.props["--tx"], btn.style.props["--ty"]] };""", '{ fine: true, knobs: { "--tilt-max": "3", "--magnet-max": "10" } }'))
+    assert r == {"tilt": ["3.000", "3.000"], "magnet": ["10px", "-10px"]}
+
+
+def test_an_unset_or_bad_knob_falls_back_to_the_defaults():
+    r = run_node(variants("""
+      fire(tile, "pointerenter", {}); fire(tile, "pointermove", { clientX: 5000, clientY: -5000 });
+      const result = { tilt: tile.style.props["--ry"] };""", '{ fine: true, knobs: { "--tilt-max": "nonsense" } }'))
+    assert r == {"tilt": "6.000"}
+
+
+def test_the_server_written_off_attribute_is_merged_with_the_script_list():
+    r = run_node(variants("""
+      const result = { classes: [...w.rootClasses].sort(), clip: clip.classList.s.has("is-in"), tilt: Object.keys(tile.__ls).length };""", '{ fine: true, attr: "clip tilt" }'))
+    assert r == {"classes": ["fx-off-clip", "fx-off-tilt", "fx-on"], "clip": True, "tilt": 0}
+
+
+def test_admin_motion_off_stops_the_script_on_admin_pages_only():
+    off = run_node(page("const result = { on: [...w.rootClasses].sort(), observers: w.observers.length };", '{ page: "admin", attr: "admin-motion" }'))
+    assert off == {"on": ["fx-off-admin-motion"], "observers": 0}
+    browse = run_node(page("const result = { on: [...w.rootClasses].sort() };", '{ page: "browse", attr: "admin-motion" }'))
+    assert "fx-on" in browse["on"]

@@ -22,11 +22,14 @@
   //   words:   rise from-left from-right zoom flip clip lines words count cascade pin hscroll parallax draw tilt magnetic marquee
   //   others:  rail stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift
   const OFF = [];
+  // The same list can come from the server: app/fx.json is written into <html data-fx-off="...">. Both are merged.
+  ((document.documentElement.dataset && document.documentElement.dataset.fxOff) || "").split(/\s+/).forEach((n) => { if (n && OFF.indexOf(n) < 0) OFF.push(n); });
   OFF.forEach((n) => document.documentElement.classList.add("fx-off-" + n));
 
   const body = document.body;
   const page = body && body.dataset.page;
   if (!page || page === "none") return;
+  if (page === "admin" && OFF.indexOf("admin-motion") >= 0) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!("IntersectionObserver" in window)) return;
 
@@ -44,6 +47,11 @@
   const bar = page === "browse" ? document.querySelector(".fx-progress") : null;   // --sp goes on this one node, never on <html>:
   const rail = page === "browse" ? document.querySelector(".rail") : null;         // a custom property on the root makes the browser restyle everything per frame
   const clamp = (x, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
+  // tuning knobs set in fx-tuning.css (--tilt-max in degrees, --magnet-max in px); read once
+  const knob = (name, fallback) => {
+    try { const cs = typeof getComputedStyle === "function" ? getComputedStyle(root) : null; const v = cs && cs.getPropertyValue ? parseFloat(cs.getPropertyValue(name)) : NaN; return v >= 0 ? v : fallback; } catch (e) { return fallback; }
+  };
+  const tiltMax = knob("--tilt-max", 6), magnetMax = knob("--magnet-max", 6);
   const ONE = ["rise", "from-left", "from-right", "zoom", "flip", "clip", "words", "lines", "count"];
   const SCENES = ["pin", "hscroll", "parallax", "draw"];
   const live = new Set();            // scenes that are on screen
@@ -171,7 +179,7 @@
       on(el, "pointermove", (e) => {
         r = r || el.getBoundingClientRect();
         const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        put(el, "--ry", clamp((x - 0.5) * 12, -6, 6)); put(el, "--rx", clamp((0.5 - y) * 12, -6, 6));
+        put(el, "--ry", clamp((x - 0.5) * 2 * tiltMax, -tiltMax, tiltMax)); put(el, "--rx", clamp((0.5 - y) * 2 * tiltMax, -tiltMax, tiltMax));
         put(el, "--mx", e.clientX - r.left + "px"); put(el, "--my", e.clientY - r.top + "px");
       });
       on(el, "pointerleave", () => { r = null; el.classList.remove("is-tilting"); put(el, "--rx", 0); put(el, "--ry", 0); });
@@ -181,8 +189,8 @@
       on(el, "pointerenter", () => { r = el.getBoundingClientRect(); });
       on(el, "pointermove", (e) => {
         r = r || el.getBoundingClientRect();
-        put(el, "--tx", clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2), -1, 1) * 6 + "px");
-        put(el, "--ty", clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2), -1, 1) * 6 + "px");
+        put(el, "--tx", clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2), -1, 1) * magnetMax + "px");
+        put(el, "--ty", clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2), -1, 1) * magnetMax + "px");
       });
       on(el, "pointerleave", () => { r = null; put(el, "--tx", "0px"); put(el, "--ty", "0px"); });
     });

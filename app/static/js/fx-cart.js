@@ -5,9 +5,14 @@
 (() => {
   "use strict";
   const calm = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const GO = 360;            // ms: label out, cart to the middle
-  const HOLD = 1600;         // ms from the click until the button starts to return
-  const SETTLE = 400;        // ms: the return animation
+  // tuning knobs from fx-tuning.css: the sequence length (--cart-anim-ms, default 1000) and the global speed (--fx-speed)
+  const root = document.documentElement;
+  const flag = (n) => !!(root && root.classList && root.classList.contains("fx-off-" + n));       // the one OFF list, see fx-scroll.js
+  const num = (name, d) => { try { const v = parseFloat(getComputedStyle(root).getPropertyValue(name)); return v > 0 ? v : d; } catch (e) { return d; } };
+  const K = (num("--cart-anim-ms", 1000) / 1000) / num("--fx-speed", 1);
+  const GO = 360 * K;        // ms: label out, cart to the middle
+  const HOLD = 1600 * K;     // ms from the click until the button starts to return
+  const SETTLE = 400 * K;    // ms: the return animation
   const GIVE_UP = 8000;      // ms: no answer from the request, put the button back
 
   function setup(form) {
@@ -58,7 +63,7 @@
     }).observe(note, { childList: true });
   }
 
-  document.querySelectorAll("form[data-add-to-cart]").forEach(setup);
+  if (!flag("cart-button")) document.querySelectorAll("form[data-add-to-cart]").forEach(setup);
 
   // header cart count: pulse when the number goes up
   document.querySelectorAll("[data-cart-count]").forEach((el) => {
@@ -67,7 +72,7 @@
       const now = parseInt(el.textContent, 10) || 0;
       const up = now > before;
       before = now;
-      if (!up || calm()) return;
+      if (!up || calm() || flag("count-bump")) return;
       el.classList.remove("is-bump"); void el.offsetWidth;
       el.classList.add("is-bump", "is-animating");
       el.addEventListener("animationend", () => el.classList.remove("is-bump", "is-animating"), { once: true });

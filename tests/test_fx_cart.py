@@ -54,7 +54,7 @@ def test_the_script_is_only_loaded_where_the_button_is(buyer, rag):
 def test_the_stylesheet_is_linked_once_after_main(client):
     html = client.get("/").get_data(as_text=True)
     links = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
-    assert [l.rsplit("/", 1)[1] for l in links] == ["main.css", "motion3.css", "motion3-ui.css"]
+    assert [l.rsplit("/", 1)[1] for l in links] == ["main.css", "fx-tuning.css", "motion3.css", "motion3-ui.css"]
 
 
 # ---- stylesheet -----------------------------------------------------------------------------------------------------
