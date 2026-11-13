@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field, fx %}
+{% from "_macros.html" import field, fx, stepper %}
 {% block title %}Checkout{% endblock %}
 {% block page_class %}transactional{% endblock %}
 {% block content %}
 <div class="wrap">
+  {{ stepper(1) }}
   <div class="page-head" {{ fx('rise') }}><h1 class="h2">Checkout</h1></div>
   <div class="two-col">
     <form method="post" novalidate>

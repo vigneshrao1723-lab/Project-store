@@ -1,11 +1,12 @@
 {% extends "admin/base.html" %}
+{% from "_macros.html" import fx %}
 {% block title %}Admin products{% endblock %}
 {% block admin %}
 <div class="title-row"><h1>Products</h1><a class="btn small" href="{{ url_for('admin.product_new') }}">Add a product</a></div>
 <div class="table-wrap">
 <table class="table table-stack">
   <thead><tr><th>Kit</th><th>Title</th><th class="r">Price</th><th class="r">Stock</th><th>Adjust stock</th><th>Visible</th></tr></thead>
-  <tbody>
+  <tbody {{ fx('cascade') }}>
   {% for p in products %}
     <tr>
       <td data-label="Kit" class="num">{{ p.code }}</td>

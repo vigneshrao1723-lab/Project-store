@@ -54,8 +54,8 @@
 {% macro field(name, label, value='', error=None, type='text', autocomplete=None, hint=None, required=True) %}
 <div class="field{% if error %} has-error{% endif %}">
   <label for="{{ name }}">{{ label }}</label>
-  <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value }}" {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
-         {% if required %}required{% endif %} {% if error %}aria-invalid="true" aria-describedby="{{ name }}-msg"{% elif hint %}aria-describedby="{{ name }}-msg"{% endif %}>
+  <span class="inp"><input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value }}" placeholder=" " {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+         {% if required %}required{% endif %} {% if error %}aria-invalid="true" aria-describedby="{{ name }}-msg"{% elif hint %}aria-describedby="{{ name }}-msg"{% endif %}><i class="ul" aria-hidden="true"></i><svg class="ok" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="20" d="M4.5 12.5l5 5L19.5 7"/></svg></span>
   {% if error %}<p class="msg" id="{{ name }}-msg">{{ error }}</p>{% elif hint %}<p class="hint" id="{{ name }}-msg">{{ hint }}</p>{% endif %}
 </div>
 {% endmacro %}
@@ -109,3 +109,14 @@
      tilt  magnetic                   pointer feedback, fine pointers only                                #}
 {% macro fx_lines() %}{% for l in varargs %}<span class="ln"><span>{{ l }}</span></span> {% endfor %}{% endmacro %}
 {% macro fx_words(text, limit=30) %}{% set ws = text.split() %}{% for w in ws[:limit] %}<span class="w">{{ w }}</span> {% endfor %}{{ ws[limit:] | join(' ') }}{% endmacro %}
+
+{# Checkout progress, Cart > Details > Pay > Done. Decorative and hidden from screen readers; the page's own heading says
+   where you are. `current` is 0 to 3. The line into the current step draws itself. #}
+{% macro stepper(current) %}<ol class="stp" aria-hidden="true">{% for label in ['Cart', 'Details', 'Pay', 'Done'] %}<li class="{% if loop.index0 < current %}is-done{% elif loop.index0 == current %}is-current{% endif %}{% if loop.index0 == current - 1 %} is-arriving{% endif %}"><i class="stp-line"></i>{{ label }}</li>{% endfor %}</ol>{% endmacro %}
+
+{# The order's status as a line: Placed, Paid, Ready to download. Decorative; the status badge says the same in words. #}
+{% macro order_timeline(order) %}{% set paid = order.status == 'paid' %}<ol class="otl" aria-hidden="true">
+  <li class="is-done{% if paid %} is-linked{% endif %}"><i class="otl-line"></i>Placed</li>
+  <li class="{% if paid %}is-done is-linked{% endif %}"><i class="otl-line"></i>Paid</li>
+  <li class="{% if paid %}is-done{% endif %}"><i class="otl-line"></i>Ready to download</li>
+</ol>{% endmacro %}

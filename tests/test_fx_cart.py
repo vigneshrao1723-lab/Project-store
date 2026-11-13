@@ -45,7 +45,7 @@ def test_signed_out_visitors_get_the_plain_sign_in_link_and_no_script(client, ra
 def test_the_script_is_only_loaded_where_the_button_is(buyer, rag):
     html = buyer.get(f"/p/{rag.slug}").get_data(as_text=True)
     scripts = re.findall(r'<script src="([^"]+)" defer></script>', html)
-    assert [s.rsplit("/", 1)[1] for s in scripts] == ["motion.js", "app.js", "fx-scroll.js", "fx-cart.js"]
+    assert [s.rsplit("/", 1)[1] for s in scripts] == ["motion.js", "app.js", "fx-scroll.js", "fx-ui.js", "fx-cart.js"]
     assert not re.search(r"<script(?![^>]*\bsrc=)[^>]*>", html)
     home = buyer.get("/").get_data(as_text=True)
     assert "fx-cart.js" not in home
@@ -54,7 +54,7 @@ def test_the_script_is_only_loaded_where_the_button_is(buyer, rag):
 def test_the_stylesheet_is_linked_once_after_main(client):
     html = client.get("/").get_data(as_text=True)
     links = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
-    assert [l.rsplit("/", 1)[1] for l in links] == ["main.css", "motion3.css"]
+    assert [l.rsplit("/", 1)[1] for l in links] == ["main.css", "motion3.css", "motion3-ui.css"]
 
 
 # ---- stylesheet -----------------------------------------------------------------------------------------------------

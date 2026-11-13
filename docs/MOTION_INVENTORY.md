@@ -86,3 +86,32 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Cover shared between card and product page | catalogue, product | `view-transition-name: cover` | app/static/css/motion3.css |
 | Adaptive quality list of switches | all | `const OFF = [];` | app/static/js/fx-scroll.js |
 | Settled arrivals lose their delay | all | `is-settled` | app/static/js/fx-scroll.js |
+| Checkout progress stepper | cart, checkout, pay, order | `{% macro stepper(current) %}` | app/templates/_macros.html |
+| Stepper line draws into the current step | cart, checkout, pay, order | `@keyframes fx-stp` | app/static/css/motion3-ui.css |
+| Field underline draws from the left | checkout, sign in, register, admin forms | `.inp:focus-within .ul` | app/static/css/motion3-ui.css |
+| Field error shake | sign in, register, checkout | `@keyframes fx-shake` | app/static/css/motion3-ui.css |
+| Field success tick draws | sign in, register, checkout | `.inp .ok path` | app/static/css/motion3-ui.css |
+| Field markup (underline and tick) | every form | `<span class="inp">` | app/templates/_macros.html |
+| Submit button spinner while posting | every form | `@keyframes fx-spin` | app/static/css/motion3-ui.css |
+| Double-submit guard and spinner script | every form | `posting.has(form)` | app/static/js/fx-ui.js |
+| Flash toasts slide in with a draining timer | every page | `@keyframes fx-drain` | app/static/css/motion3-ui.css |
+| Toasts leave after six seconds (errors stay) | every page | `is-leaving` | app/static/js/fx-ui.js |
+| Cart row slides away | cart | `@keyframes fx-ghost` | app/static/css/motion3-ui.css |
+| Cart row ghost script | cart | `is-ghost` | app/static/js/fx-ui.js |
+| Cart figures tick | cart | `@keyframes fx-tick` | app/static/css/motion3-ui.css |
+| Empty cart bobs | cart | `@keyframes fx-bob` | app/static/css/motion3-ui.css |
+| Empty cart line-art | cart | `class="empty-cart"` | app/templates/cart.html |
+| Pay amount zooms in | pay | `{{ fx('zoom') }}` | app/templates/pay.html |
+| Order status timeline | order detail | `{% macro order_timeline(order) %}` | app/templates/_macros.html |
+| Download preparing state | order detail | `is-preparing` | app/static/js/fx-ui.js |
+| Drifting line-art behind the form | sign in, register | `class="drift"` | app/templates/login.html |
+| Drift keyframes | sign in, register | `@keyframes fx-drift-a` | app/static/css/motion3-ui.css |
+| Animated focus ring | everywhere | `@keyframes fx-ring` | app/static/css/motion3-ui.css |
+| Press feedback | everywhere | `.btn:active` | app/static/css/motion3-ui.css |
+| Link underline wipe | everywhere | `.nav a::after` | app/static/css/motion3-ui.css |
+| Card hover lift | home, product, cart, order | `.fx-card:hover` | app/static/css/motion3-ui.css |
+| Admin: figures count up | admin dashboard | `fx_count(paid_count)` | app/templates/admin/dashboard.html |
+| Admin: heading flips in | admin dashboard | `{{ fx('flip') }}` | app/templates/admin/dashboard.html |
+| Admin: rows fade in | admin orders, products | `<tbody {{ fx('cascade') }}>` | app/templates/admin/orders.html |
+| Admin: row hover | admin | `.admin .table tbody tr:hover` | app/static/css/motion3-ui.css |
+| Interface script loaded on every page that moves | all but error pages | `js/fx-ui.js` | app/templates/base.html |

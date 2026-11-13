@@ -1,14 +1,14 @@
 {% extends "admin/base.html" %}
-{% from "_macros.html" import status %}
+{% from "_macros.html" import status, fx, fx_count %}
 {% block title %}Admin overview{% endblock %}
 {% block admin %}
-<h1>Overview</h1>
-<div class="figures">
+<h1 {{ fx('flip') }}>Overview</h1>
+<div class="figures" {{ fx('cascade') }}>
   <div class="figure"><div class="v">{{ revenue | inr }}</div><div class="k">Revenue from paid orders</div></div>
-  <div class="figure"><div class="v">{{ paid_count }}</div><div class="k">Paid orders</div></div>
-  <div class="figure"><div class="v">{{ counts.get('pending', 0) }}</div><div class="k">Awaiting payment</div></div>
-  <div class="figure"><div class="v">{{ counts.get('refund_due', 0) }}</div><div class="k">Refunds to issue</div></div>
-  <div class="figure"><div class="v">{{ units }}</div><div class="k">Copies on the shelf</div></div>
+  <div class="figure"><div class="v">{{ fx_count(paid_count) }}</div><div class="k">Paid orders</div></div>
+  <div class="figure"><div class="v">{{ fx_count(counts.get('pending', 0)) }}</div><div class="k">Awaiting payment</div></div>
+  <div class="figure"><div class="v">{{ fx_count(counts.get('refund_due', 0)) }}</div><div class="k">Refunds to issue</div></div>
+  <div class="figure"><div class="v">{{ fx_count(units) }}</div><div class="k">Copies on the shelf</div></div>
 </div>
 
 <h2>Revenue, last 14 days</h2>
@@ -21,7 +21,7 @@
   <section>
     <h2>Running low</h2>
     {% if low %}
-    <table class="table"><tbody>
+    <table class="table"><tbody {{ fx('cascade') }}>
       {% for p in low %}<tr><td><a href="{{ url_for('admin.product_edit', product_id=p.id) }}">{{ p.title }}</a></td><td class="num r">{{ p.stock }} left</td></tr>{% endfor %}
     </tbody></table>
     {% else %}<p class="muted">Nothing is running low.</p>{% endif %}
@@ -29,7 +29,7 @@
   <section>
     <h2>Latest orders</h2>
     {% if recent %}
-    <table class="table"><tbody>
+    <table class="table"><tbody {{ fx('cascade') }}>
       {% for o in recent %}<tr><td><a class="num" href="{{ url_for('admin.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td><td class="num r">{{ o.total_paise | inr }}</td><td>{{ status(o) }}</td></tr>{% endfor %}
     </tbody></table>
     {% else %}<p class="muted">No orders yet.</p>{% endif %}

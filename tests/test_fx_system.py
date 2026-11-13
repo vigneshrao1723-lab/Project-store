@@ -74,8 +74,8 @@ def pages(app, buyer, admin_client, rag, order_id):
         "/login": (anon, "transactional"), "/register": (anon, "transactional"),
         "/cart": (buyer, "transactional"), f"/checkout/pay/{order_id}": (buyer, "transactional"),
         "/orders": (buyer, "account"), f"/orders/{order_id}": (buyer, "account"),
-        "/admin": (admin_client, "none"), "/admin/orders": (admin_client, "none"), "/admin/products": (admin_client, "none"),
-        "/admin/products/new": (admin_client, "none"), f"/admin/orders/{order_id}": (admin_client, "none"),
+        "/admin": (admin_client, "admin"), "/admin/orders": (admin_client, "admin"), "/admin/products": (admin_client, "admin"),
+        "/admin/products/new": (admin_client, "admin"), f"/admin/orders/{order_id}": (admin_client, "admin"),
         "/no-such-page": (anon, "none"),
     }
 
@@ -88,6 +88,7 @@ def test_every_page_declares_its_class_and_only_the_classes_that_move_load_the_s
         html = resp.get_data(as_text=True)
         assert attr(html, "data-page") == [expected], (path, resp.status_code)
         assert ("fx-scroll.js" in html) is (expected != "none"), path
+        assert ("fx-ui.js" in html) is (expected != "none"), path
         assert ("data-fx=" in html) is (expected != "none"), path
         if expected == "none":
             assert "fx-progress" in html and 'data-fx' not in html and "fx-on" not in html, path
@@ -99,17 +100,29 @@ def test_an_error_page_is_a_none_page_and_moves_nothing(client):
         assert 'data-page="none"' in html and "data-fx" not in html and "fx-scroll.js" not in html
 
 
-def test_admin_templates_contain_no_data_fx_and_declare_themselves_none():
+ADMIN_WORDS = {"rise", "cascade", "count", "flip", "zoom", "from-left", "from-right", "words", "lines"}      # one-shot words only
+
+
+def test_admin_may_use_one_shot_words_but_never_scroll_linked_pinned_or_pointer_effects():
     for f in sorted((TEMPLATES / "admin").glob("*.html")):
-        assert "data-fx" not in f.read_text(encoding="utf-8"), f.name
-        assert "fx(" not in f.read_text(encoding="utf-8") and "fx_count" not in f.read_text(encoding="utf-8"), f.name
-    assert "{% block page_class %}none{% endblock %}" in (TEMPLATES / "admin" / "base.html").read_text(encoding="utf-8")
+        text = f.read_text(encoding="utf-8")
+        assert "data-fx" not in text, f.name                                   # spelled through the macros
+        used = set(re.findall(r"fx\('([\w-]+)'\)", text)) | ({"count"} if "fx_count" in text else set())
+        assert used <= ADMIN_WORDS, (f.name, used - ADMIN_WORDS)
+    assert "{% block page_class %}admin{% endblock %}" in (TEMPLATES / "admin" / "base.html").read_text(encoding="utf-8")
     assert "{% block page_class %}none{% endblock %}" in (TEMPLATES / "error.html").read_text(encoding="utf-8")
 
 
-def test_admin_pages_are_none_even_though_they_share_the_footer(admin_client):
-    html = admin_client.get("/admin").get_data(as_text=True)
-    assert '<footer class="site-footer">' in html and "data-fx" not in html
+def test_the_admin_pages_that_render_only_use_those_words_and_have_the_footer_rise_and_counters(admin_client, app, buyer, rag):
+    buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
+    buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"})
+    for path in ("/admin", "/admin/orders", "/admin/products"):
+        html = admin_client.get(path).get_data(as_text=True)
+        assert set(re.findall(r'data-fx="([\w-]+)"', html)) <= ADMIN_WORDS, path
+        assert '<footer class="site-footer" data-fx="rise">' in html and 'class="rail"' not in html and "fx-progress" in html
+    dash = admin_client.get("/admin").get_data(as_text=True)
+    assert dash.count('data-fx="count"') == 4 and '<h1 data-fx="flip">Overview</h1>' in dash and 'class="figures" data-fx="cascade"' in dash
+    assert re.search(r"<tbody data-fx=\"cascade\">", admin_client.get("/admin/orders").get_data(as_text=True))
 
 
 def test_the_footer_rises_on_every_page_that_moves(client):
@@ -276,7 +289,7 @@ def test_transactional_pages_move_only_text_and_never_anything_the_visitor_has_t
         for kind, text, tag in found:
             if tag == "footer":
                 continue
-            assert kind in {"rise", "cascade"}, (path, kind)
+            assert kind in {"rise", "cascade", "zoom"}, (path, kind)
             assert not CONTROLS.search(text), (path, "a control sits inside an element that starts hidden", text[:120])
 
 
@@ -315,7 +328,7 @@ def test_order_rows_cascade_lightly_and_the_payment_sequence_is_left_alone(buyer
 
 def test_all_the_fx_scripts_together_stay_under_12_kb_gzipped():
     sizes = {f.name: len(gzip.compress(f.read_bytes(), 9)) for f in (ROOT / "app" / "static" / "js").glob("fx-*.js")}
-    assert set(sizes) == {"fx-cart.js", "fx-pay.js", "fx-scroll.js"}, sizes
+    assert set(sizes) == {"fx-cart.js", "fx-pay.js", "fx-scroll.js", "fx-ui.js"}, sizes
     assert sum(sizes.values()) < 12 * 1024, sizes
 
 

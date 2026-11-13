@@ -1,0 +1,108 @@
+/* Motion 3, interface layer: the motion that belongs to controls and to the pages people pay and sign in on. Nothing
+   here hides a control. Hover, press, focus, validation and state changes animate; a field, a label, a button or an
+   error message is on screen and usable from first paint. Everything moves with transform or opacity (the focus ring
+   and the stroke of a drawn tick or line are paint-only). Reduced motion gets the finished states with no movement.
+   Pieces that need the script wait for html.fx-ui, which fx-ui.js sets only when it is running. */
+
+/* ---- checkout progress: Cart, Details, Pay, Done. Decorative (aria-hidden); the current step's line draws in. ---- */
+.stp { display: flex; list-style: none; margin: 1.4rem 0 1.4rem; padding: 0; font: 700 .78rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; counter-reset: stp; }
+.stp li { flex: 1; position: relative; padding-top: 1.6rem; color: var(--ink-2); counter-increment: stp; }
+.stp li::before { content: counter(stp); position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font: 800 .65rem var(--font-display); letter-spacing: 0; }
+.stp li.is-done { color: var(--ink); }
+.stp li.is-done::before { background: var(--ink); color: var(--paper); }
+.stp li.is-current { color: var(--ink); }
+.stp li.is-current::before { background: var(--mark); }
+.stp-line { position: absolute; top: .5rem; left: 1.5rem; right: .3rem; height: 2px; background: var(--rule); }
+.stp-line::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
+.stp li.is-done .stp-line::after { transform: scaleX(1); }
+.stp li:last-child .stp-line { display: none; }
+html.fx-on .stp li.is-arriving .stp-line::after { animation: fx-stp 760ms var(--fx-ease) both; }
+@keyframes fx-stp { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---- fields: a focus underline that draws from the left, an error shake, a success tick that draws ---- */
+.inp { position: relative; display: block; }
+.inp input { padding-right: 2.4rem; }
+.inp .ul { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 320ms var(--fx-ease); pointer-events: none; }
+.inp:focus-within .ul { transform: scaleX(1); }
+.field.has-error .inp .ul { background: var(--red); transform: scaleX(1); }
+.field.has-error .inp { animation: fx-shake 420ms var(--fx-ease) 1; }
+@keyframes fx-shake { 18% { transform: translate3d(-7px, 0, 0); } 36% { transform: translate3d(6px, 0, 0); } 54% { transform: translate3d(-4px, 0, 0); } 72% { transform: translate3d(3px, 0, 0); } }
+.inp .ok { position: absolute; right: .7rem; top: 50%; translate: 0 -50%; width: 18px; height: 18px; pointer-events: none; }
+.inp .ok path { fill: none; stroke: var(--green); stroke-width: 2.6; stroke-linecap: square; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 340ms var(--fx-ease); }
+.inp input:user-valid:not(:placeholder-shown) ~ .ok path { stroke-dashoffset: 0; }
+
+/* ---- submit button while the form posts: a spinning arc; fx-ui.js ignores a second submit meanwhile ---- */
+.btn.is-loading { position: relative; cursor: progress; }
+.btn.is-loading::after { content: ""; position: absolute; right: .85rem; top: 50%; width: 1rem; height: 1rem; margin-top: -.5rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin 700ms linear infinite; }
+@keyframes fx-spin { to { transform: rotate(360deg); } }
+
+/* ---- flash messages become toasts: they slide in, success and info ones drain a timer line and slide out ---- */
+html.fx-ui .flashes { position: fixed; z-index: 40; top: 7rem; right: 1rem; width: min(26rem, calc(100% - 2rem)); max-width: none; margin: 0; padding: 0; }
+html.fx-ui .flashes .flash { position: relative; overflow: hidden; margin: 0 0 .5rem; background: var(--paper-2); border: 1.5px solid var(--ink); border-left-width: 6px; animation: fx-toast-in 420ms var(--fx-ease) both; }
+html.fx-ui .flashes .flash-success { border-left-color: var(--green); }
+html.fx-ui .flashes .flash-error { border-left-color: var(--red); }
+html.fx-ui .flashes .flash:not(.flash-error)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--ink); transform-origin: 0 50%; animation: fx-drain 6s linear both; }
+html.fx-ui .flashes .flash.is-leaving { animation: fx-toast-out 360ms var(--fx-ease) both; }
+@keyframes fx-toast-in { from { opacity: 0; transform: translate3d(32px, 0, 0); } }
+@keyframes fx-toast-out { to { opacity: 0; transform: translate3d(32px, 0, 0); } }
+@keyframes fx-drain { to { transform: scaleX(0); } }
+
+/* ---- cart: a removed row slides away, changed figures tick, the empty cart bobs ---- */
+.line.is-ghost { pointer-events: none; animation: fx-ghost 320ms var(--fx-ease) both; }
+@keyframes fx-ghost { to { opacity: 0; transform: translate3d(44px, 0, 0); } }
+.is-tick { animation: fx-tick 280ms var(--fx-ease); }
+@keyframes fx-tick { 40% { transform: translate3d(0, -3px, 0); opacity: .55; } }
+.empty-cart { display: block; width: 84px; height: 84px; margin-bottom: 1rem; color: var(--ink); animation: fx-bob 3.2s ease-in-out infinite; }
+@keyframes fx-bob { 50% { transform: translate3d(0, -7px, 0); } }
+
+/* ---- order detail: Placed, Paid, Ready to download. The line draws; the steps that are reached are filled. ---- */
+.otl { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; margin: 1.2rem 0 1.6rem; padding: 0; font: 700 .8rem var(--font-display); letter-spacing: .06em; text-transform: uppercase; counter-reset: otl; }
+.otl li { position: relative; padding-top: 1.6rem; color: var(--ink-2); counter-increment: otl; }
+.otl li::before { content: ""; position: absolute; top: 0; left: 0; width: 1.2rem; height: 1.2rem; border: 2px solid var(--ink); background: var(--paper); }
+.otl li.is-done { color: var(--ink); }
+.otl li.is-done::before { background: var(--mark); }
+.otl-line { position: absolute; top: .5rem; left: 1.5rem; right: .3rem; height: 2px; background: var(--rule); }
+.otl-line::after { content: ""; position: absolute; inset: 0; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
+.otl li.is-linked .otl-line::after { transform: scaleX(1); }
+.otl li:last-child .otl-line { display: none; }
+html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp 900ms var(--fx-ease) both; }
+.delivery a.is-preparing { position: relative; padding-right: 1.6rem; }
+.delivery a.is-preparing::after { content: ""; position: absolute; right: 0; top: 50%; width: .8rem; height: .8rem; margin-top: -.4rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin 700ms linear infinite; }
+
+/* ---- sign in and register: slow line-art drifting behind the form ---- */
+.auth-wrap { position: relative; overflow-x: clip; }
+.drift { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--rule); }
+.auth-wrap > .auth { position: relative; z-index: 1; }
+.drift span { position: absolute; display: block; }
+.drift .d1 { right: 4%; top: 6%; animation: fx-drift-a 26s ease-in-out infinite alternate; }
+.drift .d2 { left: 3%; bottom: 8%; animation: fx-drift-b 34s ease-in-out infinite alternate; }
+.drift .d3 { right: 22%; bottom: 12%; animation: fx-drift-a 42s ease-in-out infinite alternate-reverse; }
+@keyframes fx-drift-a { to { transform: translate3d(-28px, 22px, 0) rotate(6deg); } }
+@keyframes fx-drift-b { to { transform: translate3d(30px, -26px, 0) rotate(-8deg); } }
+@media (max-width: 700px) { .drift .d2, .drift .d3 { display: none; } .drift .d1 { right: -30px; } }
+
+/* ---- everywhere: focus ring that settles in, press feedback, underline wipe on navigation links, hover lift ---- */
+:focus-visible { animation: fx-ring 260ms var(--fx-ease); }
+@keyframes fx-ring { from { outline-offset: 9px; outline-color: transparent; } }
+.btn:active, .stepper button:active, .linkish:active { transform: translate3d(0, 1px, 0); }
+.btn, .stepper button, .linkish { transition-property: background-color, color, opacity, transform; }
+.nav a, .site-footer a, .crumbs a { position: relative; }
+.nav a::after, .site-footer a::after, .crumbs a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 260ms var(--fx-ease); pointer-events: none; }
+.nav a:focus-visible::after { transform: scaleX(1); }
+@media (hover: hover) and (pointer: fine) {
+  .nav a:hover::after, .site-footer a:hover::after, .crumbs a:hover::after { transform: scaleX(1); }
+  .fx-card, .hs-card a, .sc-cover a, .summary, .delivery { transition: transform 200ms var(--fx-ease); }
+  .fx-card:hover, .hs-card a:hover, .sc-cover a:hover, .summary:hover, .delivery:hover { transform: translate3d(0, -3px, 0); }
+  .admin .table tbody tr { transition: background-color 140ms linear; }
+  .admin .table tbody tr:hover { background: var(--panel); }
+}
+
+/* ---- admin: figures count up and rows fade in (the same one-shot words as everywhere), a row lights on hover ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .stp li.is-arriving .stp-line::after, .otl li.is-linked .otl-line::after, .btn.is-loading::after, .delivery a.is-preparing::after,
+  .empty-cart, .drift .d1, .drift .d2, .drift .d3, .line.is-ghost, .is-tick, :focus-visible, .field.has-error .inp { animation: none; }
+  .stp li.is-current .stp-line::after, .stp li.is-arriving .stp-line::after { transform: scaleX(1); }
+  .inp .ul, .inp .ok path { transition: none; }
+  .nav a::after, .site-footer a::after, .crumbs a::after { transition: none; }
+}
