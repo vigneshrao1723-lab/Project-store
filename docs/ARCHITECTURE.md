@@ -86,6 +86,25 @@ A small, optional motion layer on the home page, the catalogue and the product p
 
 Rules every change here must keep (tests in `tests/test_motion_*.py` enforce them): only `transform` and `opacity` are animated; `will-change` appears only on the `.is-animating` class the script sets while the cover transitions; hover effects live only under `(hover: hover) and (pointer: fine)`; no gradients, shadows, external assets or inline styles and scripts; content is visible by default; and **pressing never changes the pressed element's own box** (a scale shrinks the hit area, so a press near an edge ends outside the element and the click is lost; tiles dim their text block and buttons dim themselves instead). Navigation is never delayed or cancelled.
 
+### Motion 2: the moments people use
+
+A second optional layer, `static/js/motion-flow.js` (deferred, loaded after `app.js`, about 2 KB gzipped) with the "Motion 2: flow" section at the end of `main.css`. The same rules apply: content is visible by default, the script only opts elements in, only `transform` and `opacity` move, nothing depends on hover, and reduced motion gets instant states.
+
+| Piece | What it does |
+|---|---|
+| Add to cart | `app.js` dispatches `cart:added` on the form after the API call succeeds. The button shows a check and "Added" for 1.6 s, then gets its label back. The button's box does not change. |
+| Cart badge | `app.js` dispatches `cart:count` whenever it sets the badge. The script compares the count with the one kept in `sessionStorage` (`ps-cart-count`) and bumps the badge once per increase, so a reload, a decrease or the first page of a session never bumps. No storage means no bump. |
+| Number ticks | Quantities, line totals and the cart total tick in when they change (`cart:rendered`), not when first seen. |
+| Scroll reveal | `[data-reveal]` sections, tiles and the cart and checkout summary get `.is-pending` from the script and `.is-in` from an `IntersectionObserver`, once each: a 14 px rise and fade, staggered by arrival order in a batch, 60 ms apart, at most 8. A section that holds a tile grid reveals its heading row and the tiles reveal one by one. If the observer never fires, the skeleton's CSS animation shows everything after 2 s; with no observer, or reduced motion, nothing is ever marked pending. |
+| Catalogue filters and search | These are ordinary page loads, so results enter through the same tile reveal and the chosen field filter slides in. Filters and steppers dim while pressed. |
+| Header | `.is-condensed` past 40 px of scroll shrinks the wordmark. The header keeps its height, so nothing below it moves. |
+| Page to page | `main` fades in over 180 ms on every page load. There is no fade out, so a click is never delayed. |
+| Anchors | Smooth scrolling (not under reduced motion), stopping below the sticky header. |
+
+**Add to cart does not work without JavaScript, and never did.** The product page form has no `method` or `action`: it is submitted by `app.js` calling `POST /api/v1/cart/items`, and no web route accepts a plain form post. Giving it a no-JS fallback needs a new route, which this pass deliberately did not add.
+
+`tests/test_motion_flow.py` pins the stylesheet rules and runs the script under node against a fake DOM (badge bumps, add-to-cart states, ticks, the header, the reveal batches, no observer, reduced motion).
+
 ## Security notes
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).

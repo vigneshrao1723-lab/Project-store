@@ -2,6 +2,14 @@
 
 Dates are commit dates. The newest release is first.
 
+## Unreleased (branch `motion-2`)
+
+* Add to cart: the button shows a check and "Added", and the cart badge bumps once per increase (judged against the count kept in `sessionStorage`).
+* Sections, tiles and the cart and checkout summary reveal once on scroll (14 px and a fade, staggered 60 ms, at most 8). Everything stays visible if JavaScript or the observer fails.
+* The header condenses past 40 px without changing height, `main` fades in over 180 ms on navigation, anchors scroll smoothly, and changed numbers and quantities tick in.
+* New `static/js/motion-flow.js` (about 2 KB gzipped) and a "Motion 2" section in `main.css`; `app.js` gained three `CustomEvent`s and nothing else.
+* Not changed: routes, services, models, migrations, security headers. Add to cart still needs JavaScript (see the architecture notes).
+
 ## 1.0.0 (2026-11-13)
 
 First tagged release. Everything below is in it.
