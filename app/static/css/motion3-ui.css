@@ -37,7 +37,7 @@ html.fx-on .stp li.is-arriving .stp-line::after { animation: fx-stp calc(760ms /
 @keyframes fx-spin { to { transform: rotate(360deg); } }
 
 /* ---- flash messages become toasts: they slide in, success and info ones drain a timer line and slide out ---- */
-html.fx-ui .flashes { position: fixed; z-index: 40; top: 7rem; right: 1rem; width: min(26rem, calc(100% - 2rem)); max-width: none; margin: 0; padding: 0; }
+html.fx-ui .flashes { position: fixed; z-index: 40; bottom: 1rem; right: 1rem; width: min(26rem, calc(100% - 2rem)); max-width: none; margin: 0; padding: 0; }
 html.fx-ui .flashes .flash { position: relative; overflow: hidden; margin: 0 0 .5rem; background: var(--paper-2); border: 1.5px solid var(--ink); border-left-width: 6px; animation: fx-toast-in calc(420ms / var(--fx-speed, 1)) var(--fx-ease) both; }
 html.fx-ui .flashes .flash-success { border-left-color: var(--green); }
 html.fx-ui .flashes .flash-error { border-left-color: var(--red); }
