@@ -5,6 +5,7 @@
 {% block content %}
 <div class="wrap page-pad">
   <div class="pay-box">
+    <h1 class="sr">Pay for order {{ order.public_id }}</h1>
     {{ stepper(2) }}
     {% if get_flashed_messages(category_filter=['error']) %}{{ result_mark('failure', order.public_id, true) }}{% endif %}
     <p class="ui stat-value">Order {{ order.public_id }}</p>
