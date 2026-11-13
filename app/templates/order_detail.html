@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status, result_mark %}
+{% from "_macros.html" import status, result_mark, fx %}
 {% block title %}Order {{ order.public_id }}{% endblock %}
+{% block page_class %}account{% endblock %}
 {% block content %}
 <div class="wrap w-820">
   {% if order.status == 'paid' %}{{ result_mark('success', order.public_id, get_flashed_messages(category_filter=['success']) | length > 0) }}{% endif %}
-  <div class="page-head">
+  <div class="page-head" {{ fx('rise') }}>
     <p class="crumbs flush"><a href="{{ url_for('account.orders') }}">Your orders</a></p>
     <h1 class="h2">Order <span class="num">{{ order.public_id }}</span></h1>
     <p class="mt-08">{{ status(order) }}</p>
@@ -31,7 +32,7 @@
   <div class="table-wrap">
     <table class="table">
       <thead><tr><th>Project</th><th class="num">Price</th><th class="num">Qty</th><th class="r">Line total</th></tr></thead>
-      <tbody>
+      <tbody {{ fx('cascade') }}>
         {% for i in order.items %}
         <tr><td>{{ i.title }}</td><td class="num">{{ i.unit_price_paise | inr }}</td><td class="num">{{ i.qty }}</td><td class="num r">{{ i.line_paise | inr }}</td></tr>
         {% endfor %}

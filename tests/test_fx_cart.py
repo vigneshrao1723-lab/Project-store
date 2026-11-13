@@ -45,7 +45,7 @@ def test_signed_out_visitors_get_the_plain_sign_in_link_and_no_script(client, ra
 def test_the_script_is_only_loaded_where_the_button_is(buyer, rag):
     html = buyer.get(f"/p/{rag.slug}").get_data(as_text=True)
     scripts = re.findall(r'<script src="([^"]+)" defer></script>', html)
-    assert [s.rsplit("/", 1)[1] for s in scripts] == ["motion.js", "app.js", "fx-cart.js"]
+    assert [s.rsplit("/", 1)[1] for s in scripts] == ["motion.js", "app.js", "fx-scroll.js", "fx-cart.js"]
     assert not re.search(r"<script(?![^>]*\bsrc=)[^>]*>", html)
     home = buyer.get("/").get_data(as_text=True)
     assert "fx-cart.js" not in home

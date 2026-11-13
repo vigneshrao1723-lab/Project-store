@@ -65,7 +65,7 @@ def labelled(html):
     tables = re.findall(r'<table class="table table-stack">(.*?)</table>', html, re.S)
     assert tables, "no stacked table on the page"
     for table in tables:
-        body = table.split("<tbody>", 1)[1]
+        body = re.split(r"<tbody[^>]*>", table, maxsplit=1)[1]
         cells = re.findall(r"<td\b([^>]*)>", body)
         assert cells and all("data-label=" in c for c in cells), cells
         head = re.findall(r"<th[^>]*>(.*?)</th>", table.split("</thead>")[0], re.S)

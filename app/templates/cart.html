@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% from "_macros.html" import fx %}
 {% block title %}Cart{% endblock %}
+{% block page_class %}transactional{% endblock %}
 {% block content %}
 <div class="wrap">
-  <div class="page-head"><h1 class="h2">Your cart</h1></div>
+  <div class="page-head" {{ fx('rise') }}><h1 class="h2">Your cart</h1></div>
   {% if cart.lines %}
   <div class="two-col" data-cart>
     <div class="lines">

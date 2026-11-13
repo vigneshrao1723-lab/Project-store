@@ -1,3 +1,5 @@
+{%- from "_macros.html" import fx -%}
+{%- set fx_page = self.page_class() | trim -%}
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,7 +13,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/motion3.css') }}">
   <script src="{{ url_for('static', filename='js/motion-boot.js') }}"></script>
 </head>
-<body>
+<body data-page="{% block page_class %}browse{% endblock %}">
   <div class="loader" data-loader aria-hidden="true">
     <div class="loader-box">
       <svg class="loader-scene" viewBox="0 0 336 72" focusable="false">
@@ -50,6 +52,7 @@
     </div>
   </div>
   <a class="skip" href="#main">Skip to content</a>
+  <div class="fx-progress" aria-hidden="true"></div>
   {% if gateway_mode == 'test' %}
     <div class="testbar">Test mode: payments here use a practice gateway and no real money moves.</div>
   {% endif %}
@@ -89,7 +92,7 @@
 
   <main id="main">{% block content %}{% endblock %}</main>
 
-  <footer class="site-footer">
+  <footer class="site-footer"{% if fx_page != 'none' %} {{ fx('rise') }}{% endif %}>
     <div class="wrap foot">
       <div>
         <p class="wordmark small"><span>Project Store</span></p>
@@ -115,6 +118,7 @@
   </footer>
   <script src="{{ url_for('static', filename='js/motion.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% if fx_page != 'none' %}<script src="{{ url_for('static', filename='js/fx-scroll.js') }}" defer></script>{% endif %}
   {% block scripts %}{% endblock %}
 </body>
 </html>

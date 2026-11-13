@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field %}
+{% from "_macros.html" import field, fx %}
 {% block title %}Create an account{% endblock %}
+{% block page_class %}transactional{% endblock %}
 {% block content %}
 <div class="wrap page-pad"><div class="auth">
-  <h1>Create an account</h1>
+  <h1 {{ fx('rise') }}>Create an account</h1>
   <form method="post" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {{ field('name', 'Your name', form.name, errors.name, autocomplete='name') }}

@@ -86,6 +86,37 @@ A small, optional motion layer on the home page, the catalogue and the product p
 
 Rules every change here must keep (tests in `tests/test_motion_*.py` enforce them): only `transform` and `opacity` are animated; `will-change` appears only on the `.is-animating` class the script sets while the cover transitions; hover effects live only under `(hover: hover) and (pointer: fine)`; no gradients, shadows, external assets or inline styles and scripts; content is visible by default; and **pressing never changes the pressed element's own box** (a scale shrinks the hit area, so a press near an edge ends outside the element and the click is lost; tiles dim their text block and buttons dim themselves instead). Navigation is never delayed or cancelled.
 
+## Scroll system
+
+One vocabulary, one script, one observer, one animation-frame loop. Pages do not write their own scroll code: they put attributes on elements through two macros in `_macros.html`, and `static/js/fx-scroll.js` does the rest. Styles live in `static/css/motion3.css` and nowhere else.
+
+**The vocabulary.** Five words, spelled only by the macros (a test fails if a template writes `data-fx` by hand):
+
+| Word | What it does | Example |
+|---|---|---|
+| `rise` | One block comes in once, as it nears the screen: it fades up by `--fx-dist` (14 px). | `<div class="section-head" {{ fx('rise') }}>` |
+| `cascade` | On a parent. Each direct child rises once, as it nears the screen. Children that arrive together are staggered by `--fx-stagger` (60 ms) in document order, the first 8 of a batch; later ones share the last step. | `<div class="grid" {{ fx('cascade') }}>{% for p in items %}{{ tile(p) }}{% endfor %}</div>` |
+| `count` | A figure counts up once, in about 0.9 s. The macro writes the number three times (target, a sizing copy and the live text), so the box is as wide as the final figure and counting moves nothing. | `{{ fx_count(n_projects) }}` |
+| `pin` | A tall section holds a scene on screen. The script writes `--p` (0 to 1) on the section while it is near the screen; children marked `.fx-move` turn that into sideways slides and growth. The section's height comes from `--pin-h`; add `.pin-lg` to pin on screens 900 px wide and up only, never on phones. | `<section class="scene pin-lg" {{ fx('pin') }}><div class="fx-stage">...<figure class="fx-move">` |
+| `parallax` | A few pixels of drift against the scroll. The script writes `--py` (-1 to 1) while the element is near the screen. Transform only. | `<div class="sc-art" {{ fx('parallax') }}>{{ cover(p) }}</div>` |
+
+**Defaults are visible.** The page as the server renders it has no hidden state, no taller sections and no sticky stages. Every hiding rule in `motion3.css` starts with `html.fx-on`, a class the script adds only after it has checked that reduced motion is off and `IntersectionObserver` exists. Anything already on screen at that moment gets `.is-in` first, so nothing flashes. With no script, a blocked script, reduced motion or no observer, the page is simply finished. A focused element is never left hidden: `focusin` brings in its `data-fx` ancestors, and shows a pinned scene whole.
+
+**Page classes.** `base.html` puts `data-page` on `<body>` from `{% block page_class %}`:
+
+| Class | Pages | Treatment |
+|---|---|---|
+| `browse` (the default) | home, catalogue, product | Full: rise, cascade, count, pins, a product scene using that product's own generated cover, a scroll-progress hairline, a footer rise. |
+| `transactional` | cart, checkout, pay, sign in, register | Light: headings and read-only summaries only. A test fails if any element that starts hidden contains a form control, button or link (the footer aside). Fields, labels, buttons and error messages are never marked. |
+| `account` | orders, order detail | Table rows cascade. The payment-result sequence (`fx-pay.js`) is separate and unchanged. |
+| `none` | admin, error pages | No `data-fx`, no script. Tests walk the admin templates and the rendered pages. |
+
+**One loop.** The script creates a single `IntersectionObserver` (it watches every `rise`, every cascade child, every `count`, and every `pin` and `parallax` element) and a single `requestAnimationFrame` loop that runs only while something needs it: a pin or parallax element is near the screen, a counter is counting, or a scroll just happened. Reads are batched before writes, the scroll and resize listeners are passive, the loop stops while the tab is hidden, `will-change` is set only on `.fx-move` elements of a pin that is near the screen, and everything is undone on `pagehide`. The loop also keeps the header's condensed state (past 40 px) and the progress hairline's `--sp`.
+
+**Tokens.** `--fx-dist`, `--fx-ease`, `--fx-stagger` and `--fx-dur` are defined once in `motion3.css` and used only there.
+
+**Rules a change here must keep** (enforced in `tests/test_fx_*.py`): only `transform` and `opacity` change with scroll (the drawn tick and cross use `stroke-dashoffset` on 20 px paths); no hiding without `html.fx-on`; no `:hover` dependence; nothing in admin or on error pages; nothing the visitor must use inside an element that starts hidden on a transactional page; at most one observer and one queued frame; no routes, services, models or headers involved.
+
 ## Security notes
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).

@@ -1,140 +1,156 @@
-/* Scroll-linked motion for the home page and the catalogue. One requestAnimationFrame loop does all of it: it
-   measures what is near the screen, writes a progress number onto each piece (--e for one card or tile, --p for the
-   pinned showcase) and the stylesheet turns that into transform and opacity. Pieces far from the screen are not
-   touched, scroll and resize listeners are passive, and the loop stops while the tab is hidden. With reduced
-   motion, or if this file never runs, every number defaults to "finished" in the stylesheet, so nothing is hidden. */
+/* The scroll system. One script, one IntersectionObserver, one requestAnimationFrame loop for every page.
+   It reads the data-fx vocabulary (see docs/ARCHITECTURE.md, "Scroll system"):
+     rise      one block comes in once, as it nears the screen
+     cascade   each direct child of the parent comes in once, in turn (the first 8 of a batch are staggered)
+     count     a number counts up once, inside a box as wide as its final figure
+     pin       a tall section holds a scene on screen; --p (0 to 1) says how far through it the reader is
+     parallax  a few pixels of drift against the scroll (--py, -1 to 1)
+   For rise, cascade and count the script only adds .is-in; for pin and parallax it writes custom properties; the
+   stylesheet does the rest with transform and opacity.
+   It starts only if reduced motion is off and IntersectionObserver exists, and only then puts fx-on on <html>,
+   which is the one class the stylesheet's hidden states depend on. Whatever is already on screen at that moment is
+   revealed in the same step, so nothing flashes. A focused element is never left hidden. The scroll and resize
+   listeners are passive, the loop stops while the tab is hidden or there is nothing to do, and everything is undone
+   on pagehide. Admin and error pages (data-page="none") do not run it at all. */
 (() => {
   "use strict";
+  const body = document.body;
+  const page = body && body.dataset.page;
+  if (!page || page === "none") return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!("IntersectionObserver" in window)) return;
 
-  const clamp = (x) => Math.min(1, Math.max(0, x));
-  const live = new Set();          // pieces near the screen
-  const pieces = [];
-  const counting = [];             // counters that are counting up right now
-  let raf = 0, dirty = true;
+  const root = document.documentElement;
+  const header = document.querySelector(".site-header");
+  const clamp = (x, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
+  const live = new Set();            // pins and parallax elements that are on screen
+  const settle = new Set();          // ones that just left: one last measurement puts them at 0 or 1
+  const counting = [];               // counters that are counting up right now
+  let raf = 0, docH = 0, condensed = false;
 
-  function put(el, name, value) {          // write only when it changed enough to matter
-    const v = value.toFixed(3);
+  function put(el, name, value) {    // write a number only when it changed enough to matter
+    const v = typeof value === "number" ? value.toFixed(3) : value;
     if (el.__v && el.__v[name] === v) return;
     (el.__v = el.__v || {})[name] = v;
     el.style.setProperty(name, v);
   }
 
-  // cards that come in one after another: 0 when the group's top is at 85% of the screen, 1 at 35%
-  function cascade(group) {
-    const items = [...group.querySelectorAll("[data-fx-item]")];
-    const counters = items.map((it) => it.querySelector("[data-fx-count]"));
-    counters.forEach((c) => { if (c) c.__n = +c.dataset.fxCount; });
-    return {
-      el: group, items,
-      measure: (vh) => group.getBoundingClientRect().top / vh,
-      apply(top) {
-        const p = clamp((0.85 - top) / 0.5);
-        items.forEach((it, i) => {
-          const e = clamp((p * (items.length + 1) - i) / 1.4);
-          put(it, "--e", e);
-          const c = counters[i];
-          if (c && e > 0.5 && !c.__done) startCount(c);
-        });
-      },
-    };
-  }
-
-  // tiles: each comes in as its own top crosses the lower part of the screen, and a tile further along its row
-  // follows a little after the one before it
-  function tiles(grid) {
-    const items = [...grid.querySelectorAll(".tile")];
-    return {
-      el: grid, items,
-      measure: (vh) => {
-        const rects = items.map((t) => t.getBoundingClientRect());
-        const rowTop = rects.length ? rects[0].top : 0;
-        const cols = Math.max(1, rects.filter((r) => Math.abs(r.top - rowTop) < 4).length);
-        return { rects, cols, vh };
-      },
-      apply({ rects, cols, vh }) {
-        items.forEach((t, i) => put(t, "--e", clamp((0.97 * vh - rects[i].top) / (0.2 * vh) - (i % cols) * 0.15)));
-      },
-    };
-  }
-
-  // the pinned showcase: 0 when the stage sticks, 1 when it lets go. The stage sticks just under the site header
-  // when the header itself is sticky, and at the top of the screen when it is not.
-  function showcase(sec) {
-    const stage = sec.querySelector(".showcase-stage");
-    const header = document.querySelector(".site-header");
-    const items = [...sec.querySelectorAll(".sc-cover, .sc-head")];
-    let top = 0, stale = true;                    // the header's height only changes when the window does
-    window.addEventListener("resize", () => { stale = true; }, { passive: true });
-    return {
-      el: sec, items,
-      measure: () => {
-        if (stale) { top = header && getComputedStyle(header).position === "sticky" ? header.offsetHeight : 0; stale = false; }
-        return { top, p: (top - sec.getBoundingClientRect().top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) };
-      },
-      apply({ top, p }) {
-        if (sec.__top !== top) { sec.__top = top; sec.style.setProperty("--fx-top", top + "px"); }
-        put(sec, "--p", clamp(p));
-      },
-    };
-  }
-
-  // counters: text changes only inside the fixed-width box the stylesheet gave them
-  function startCount(c) {
-    c.__done = true;
-    const out = c.querySelector(".cnt-live");
-    if (!out || !(c.__n > 0)) return;
-    counting.push({ out, n: c.__n, t0: performance.now() });
+  // ---- one-shot pieces: rise, cascade children, count --------------------------------------------------------
+  function startCount(el) {
+    const out = el.querySelector(".cnt-live"), n = +el.dataset.to;
+    el.__done = true;
+    if (!out || !(n > 0)) return;
     out.textContent = "0";
+    counting.push({ out, n, t0: performance.now() });
     schedule();
   }
-  function tickCounters(now) {
+  function reveal(el, i, instant) {
+    if (instant) el.classList.add("is-instant");         // no fade (or end one under way): focus must never land in something faint
+    if (el.__done || el.classList.contains("is-in")) return;
+    if (el.dataset.fx === "count") return startCount(el);
+    if (i !== undefined) put(el, "--i", String(Math.min(i, 7)));
+    el.classList.add("is-in");
+  }
+
+  // ---- scenes: pin and parallax ---------------------------------------------------------------------------------
+  function pin(sec) {
+    const stage = sec.querySelector(".fx-stage");
+    const moving = [...sec.querySelectorAll(".fx-move")];
+    let stuck = false, top = 0, stale = true;
+    return {
+      el: sec, moving,
+      measure() {
+        if (stale) {
+          stuck = !!stage && getComputedStyle(stage).position === "sticky";
+          top = header && getComputedStyle(header).position === "sticky" ? header.offsetHeight : 0;
+          stale = false;
+        }
+        const p = stuck ? (top - sec.getBoundingClientRect().top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : 1;
+        return { p, top };
+      },
+      apply({ p, top: t }) { if (sec.__top !== t) { sec.__top = t; sec.style.setProperty("--fx-top", t + "px"); } put(sec, "--p", clamp(p)); },
+      stale() { stale = true; },
+    };
+  }
+  function drift(el) {
+    return {
+      el, moving: [],
+      measure(vh) { const r = el.getBoundingClientRect(); return clamp(((r.top + r.height / 2) - vh / 2) / (vh / 2 + r.height / 2), -1, 1); },
+      apply(v) { put(el, "--py", v); },
+      stale() {},
+    };
+  }
+
+  // ---- collect everything ----------------------------------------------------------------------------------------
+  const vh0 = window.innerHeight || 1;
+  const rises = [...document.querySelectorAll('[data-fx="rise"], [data-fx="count"]')];
+  const parents = [...document.querySelectorAll('[data-fx="cascade"]')];
+  const scenes = new Map();
+  document.querySelectorAll('[data-fx="pin"]').forEach((el) => scenes.set(el, pin(el)));
+  document.querySelectorAll('[data-fx="parallax"]').forEach((el) => scenes.set(el, drift(el)));
+
+  // counters wait at zero until they come in; what is already on screen is revealed now, before fx-on, so it never hides
+  const waiting = [];
+  const arrive = (el, i) => { if (el.getBoundingClientRect().top < vh0 * 0.94) reveal(el, i); else waiting.push(el); };
+  rises.forEach((el) => { if (el.dataset.fx === "count") el.querySelector(".cnt-live").textContent = "0"; arrive(el); });
+  parents.forEach((parent) => [...parent.children].forEach((child, n) => arrive(child, n)));
+  root.classList.add("fx-on");
+  scenes.forEach((s) => { s.apply(s.measure(vh0)); s.stale(); });
+
+  // ---- the one observer ------------------------------------------------------------------------------------------
+  const io = new IntersectionObserver((entries) => {
+    let i = 0;
+    entries.forEach((e) => {
+      const el = e.target, scene = scenes.get(el);
+      if (scene) {
+        if (e.isIntersecting) { live.add(scene); scene.moving.forEach((m) => m.classList.add("is-animating")); }
+        else { live.delete(scene); settle.add(scene); scene.moving.forEach((m) => m.classList.remove("is-animating")); }
+      } else if (e.isIntersecting) { reveal(el, i++); io.unobserve(el); }
+    });
+    schedule();
+  }, { rootMargin: "0px 0px -6% 0px" });
+  waiting.forEach((el) => io.observe(el));
+  scenes.forEach((s, el) => io.observe(el));
+
+  // ---- the loop --------------------------------------------------------------------------------------------------
+  function frame(now) {
+    raf = 0;
+    const vh = window.innerHeight || 1, y = window.pageYOffset || 0;
+    const work = [...live, ...settle];
+    settle.clear();
+    const measured = work.map((s) => s.measure(vh));                 // all reads first
+    if (page === "browse") docH = root.scrollHeight;
+    work.forEach((s, i) => s.apply(measured[i]));                    // then all writes
+    if (header && (y > 40) !== condensed) { condensed = y > 40; header.classList.toggle("is-condensed", condensed); }
+    if (page === "browse") put(root, "--sp", clamp(y / Math.max(1, docH - vh)));
     for (let i = counting.length - 1; i >= 0; i--) {
       const c = counting[i], t = clamp((now - c.t0) / 900);
       c.out.textContent = String(Math.round(c.n * (1 - Math.pow(1 - t, 3))));
       if (t >= 1) counting.splice(i, 1);
     }
-  }
-
-  function frame(now) {
-    raf = 0;
-    const vh = window.innerHeight || 1;
-    const todo = [...live];
-    const measured = todo.map((p) => p.measure(vh));        // all reads first
-    todo.forEach((p, i) => p.apply(measured[i]));            // then all writes
-    tickCounters(now);
-    dirty = false;
     if (counting.length) schedule();
   }
-  function schedule() {
-    if (!raf && !document.hidden) raf = requestAnimationFrame(frame);
-  }
+  function schedule() { if (!raf && !document.hidden) raf = requestAnimationFrame(frame); }
 
-  document.querySelectorAll('[data-fx="cascade"]').forEach((g) => pieces.push(cascade(g)));
-  document.querySelectorAll('[data-fx="tiles"]').forEach((g) => pieces.push(tiles(g)));
-  document.querySelectorAll('[data-fx="showcase"]').forEach((s) => {
-    pieces.push(showcase(s));
-    s.addEventListener("focusin", () => s.classList.add("is-focus"));
-  });
-  if (!pieces.length) return;
-  // counters wait at zero until their card has come in (without a script they simply show the final number)
-  document.querySelectorAll("[data-fx-count] .cnt-live").forEach((l) => { l.textContent = "0"; });
-
-  // will-change is on only for pieces that are near the screen, and comes off when they leave it
-  const near = (p, on) => { if (on) live.add(p); else live.delete(p); p.items.forEach((i) => i.classList[on ? "add" : "remove"]("is-animating")); };
-  if ("IntersectionObserver" in window) {
-    const byEl = new Map(pieces.map((p) => [p.el, p]));
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => near(byEl.get(e.target), e.isIntersecting));
-      schedule();
-    }, { rootMargin: "30% 0px 30% 0px" });
-    pieces.forEach((p) => io.observe(p.el));
-  } else {
-    pieces.forEach((p) => near(p, true));
-  }
-
+  const onResize = () => { scenes.forEach((s) => s.stale()); schedule(); };
+  const onVisible = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else schedule(); };
+  // a focused element is never left hidden: bring in every fx ancestor, and show a pinned scene whole
+  const onFocus = (e) => {
+    for (let n = e.target.closest ? e.target.closest("[data-fx]") : null; n; n = n.parentElement && n.parentElement.closest("[data-fx]")) {
+      if (n.dataset.fx === "pin") n.classList.add("is-focus"); else reveal(n, undefined, true);
+    }
+    for (let n = e.target; n && n !== root; n = n.parentElement) {
+      if (n.parentElement && n.parentElement.dataset && n.parentElement.dataset.fx === "cascade") reveal(n, 0, true);
+    }
+  };
   window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule, { passive: true });
-  document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else schedule(); });
+  window.addEventListener("resize", onResize, { passive: true });
+  document.addEventListener("visibilitychange", onVisible);
+  document.addEventListener("focusin", onFocus);
+  window.addEventListener("pagehide", () => {
+    io.disconnect(); cancelAnimationFrame(raf); raf = 0; live.clear(); settle.clear(); counting.length = 0;
+    window.removeEventListener("scroll", schedule); window.removeEventListener("resize", onResize);
+    document.removeEventListener("visibilitychange", onVisible); document.removeEventListener("focusin", onFocus);
+  }, { once: true });
   schedule();
 })();

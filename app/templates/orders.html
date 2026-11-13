@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status %}
+{% from "_macros.html" import status, fx %}
 {% block title %}Your orders{% endblock %}
+{% block page_class %}account{% endblock %}
 {% block content %}
 <div class="wrap">
-  <div class="page-head"><h1 class="h2">Your orders</h1></div>
+  <div class="page-head" {{ fx('rise') }}><h1 class="h2">Your orders</h1></div>
   {% if orders %}
   <div class="table-wrap end-gap">
     <table class="table table-stack">
       <thead><tr><th>Order</th><th>Placed</th><th>Items</th><th class="r">Total</th><th>Status</th></tr></thead>
-      <tbody>
+      <tbody {{ fx('cascade') }}>
       {% for o in orders %}
         <tr>
           <td data-label="Order"><a class="num" href="{{ url_for('account.order_detail', public_id=o.public_id) }}">{{ o.public_id }}</a></td>

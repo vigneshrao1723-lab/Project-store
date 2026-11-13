@@ -9,9 +9,14 @@
    * will-change appears only on .is-animating, which a script sets for the length of one animation.
    * Nothing here depends on hover, so touch devices lose nothing. (The one :hover rule only cancels the site-wide
      link highlight on the showcase covers.)
-   * Nothing is hidden unless a script put the element in a state, and every hidden state ends in CSS.
+   * Nothing is hidden unless a script put the element in a state, and every hidden state ends in CSS. The scroll
+     system's hidden states exist only under html.fx-on, which the script sets after it has checked it can work.
    * prefers-reduced-motion gets the final state with no movement. */
-:root { --fx-ease: cubic-bezier(.2, .7, .2, 1); --fx-ease-in: cubic-bezier(.55, 0, .8, .3); }
+:root {
+  /* the scroll system's tokens: every section transition uses these and nothing else */
+  --fx-dist: 14px; --fx-ease: cubic-bezier(.2, .7, .2, 1); --fx-stagger: 60ms; --fx-dur: 460ms;
+  --fx-ease-in: cubic-bezier(.55, 0, .8, .3);
+}
 .is-animating { will-change: transform, opacity; }
 
 /* ---------- 1. Add to cart --------------------------------------------------------------------------------------
@@ -116,72 +121,117 @@ main:has(.result[data-play]:not(.is-played)) .pay-actions { animation: rs-after 
   main:has(.result[data-play]) .delivery, main:has(.result[data-play]) .pay-actions { animation: none; }
 }
 
-/* ---------- 3. Scroll ---------------------------------------------------------------------------------------------
-   fx-scroll.js measures where things are and writes two kinds of number onto elements: --e (0 to 1, how far an
-   item has come in) and --p (0 to 1, how far through the pinned showcase the reader has scrolled). The CSS turns
-   those into transform and opacity. Every var() has a fallback of 1, so with no script, or with reduced motion,
-   everything is simply in its final place. */
+/* ---------- 3. Scroll system -------------------------------------------------------------------------------------
+   fx-scroll.js reads data-fx attributes (written through the fx() and fx_count() macros) and does two things:
+     * for rise, cascade and count it adds .is-in once the element nears the screen;
+     * for pin and parallax it writes a number (--p, 0 to 1, or --py, -1 to 1) while the element is near the screen.
+   Nothing is hidden until that script has run: every hiding rule starts with html.fx-on, a class the script puts on
+   <html> only after it has checked that reduced motion is off and IntersectionObserver exists. Anything already on
+   screen at that moment is revealed in the same step, so there is no flash. Every var() has a finished-state
+   fallback, so even with fx-on set a missing number means "already in place". */
 
-/* story: cards that come in one after another as the section scrolls into view */
+/* rise: one block comes in once */
+html.fx-on [data-fx="rise"]:not(.is-in),
+html.fx-on [data-fx="cascade"] > *:not(.is-in) { opacity: 0; transform: translate3d(0, var(--fx-dist), 0); }
+html.fx-on [data-fx="rise"],
+html.fx-on [data-fx="cascade"] > * { transition: opacity var(--fx-dur) var(--fx-ease), transform var(--fx-dur) var(--fx-ease); }
+/* cascade: each child comes in once, as it nears the screen; children that arrive together are staggered, the first 8 of them (--i) */
+html.fx-on [data-fx="cascade"] > * { transition-delay: calc(var(--i, 0) * var(--fx-stagger)); }
+/* something that took keyboard focus comes in at once, with no fade */
+html.fx-on [data-fx="rise"].is-instant, html.fx-on [data-fx="cascade"] > .is-instant { transition: none; }
+
+/* count: figures keep their width, so counting never moves anything */
+.cnt { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
+.cnt-size { opacity: 0; }
+.cnt-live { position: absolute; left: 0; top: 0; }
+
+/* parallax: a few pixels of drift against the scroll, transform only */
+[data-fx="parallax"] { transform: translate3d(0, calc(var(--py, 0) * var(--fx-dist) * -.6), 0); }
+
+/* pin: a scene held on screen while the reader scrolls through a taller section. --p is how far through. */
+[data-fx="pin"] { position: relative; --p: 1; --fx-top: 0px; }
+html.fx-on [data-fx="pin"]:not(.pin-lg) { height: var(--pin-h, 240vh); }
+html.fx-on [data-fx="pin"]:not(.pin-lg) .fx-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
+@media (min-width: 900px) {            /* .pin-lg scenes are pinned on large screens only, never on phones */
+  html.fx-on [data-fx="pin"].pin-lg { height: var(--pin-h, 170vh); }
+  html.fx-on [data-fx="pin"].pin-lg .fx-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
+}
+/* what moves inside a pin: slide in from a side (--dir) and/or grow from a smaller size (--sd), starting at --s */
+.fx-move { --s: 0; --dir: 0; --sd: 0; --e: clamp(0, calc((var(--p) - var(--s)) * 2.2), 1); --k: calc(var(--e) * var(--e) * (3 - 2 * var(--e)));
+  opacity: var(--k); transform: translate3d(calc((1 - var(--k)) * var(--dir) * 60vw), 0, 0) scale(calc(1 - (1 - var(--k)) * var(--sd))); }
+[data-fx="pin"].is-focus .fx-move { opacity: 1; transform: none; }
+
+/* ---- shared page furniture ---- */
+.fx-progress { display: none; }
+html.fx-on body[data-page="browse"] .fx-progress { display: block; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 2px; background: var(--ink); pointer-events: none;
+  transform-origin: 0 50%; transform: scaleX(var(--sp, 0)); }
+.site-header .wordmark { transform-origin: 0 50%; }
+html.fx-on .site-header .wordmark { transition: transform var(--fx-dur) var(--fx-ease); }
+html.fx-on .site-header.is-condensed .wordmark { transform: scale(.88); }
+
+/* ---- the home page: story cards and the cover showcase ---- */
 .story { padding-block: clamp(36px, 6vw, 72px); border-top: 1px solid var(--rule); }
 .story .h2 { margin-bottom: 1.6rem; }
 .story-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 2vw, 20px); }
-.fx-card { background: var(--paper-2); border: 1.5px solid var(--ink); padding: 1.2rem 1.3rem 1.3rem; opacity: var(--e, 1); transform: translate3d(0, calc((1 - var(--e, 1)) * 28px), 0); }
+.fx-card { background: var(--paper-2); border: 1.5px solid var(--ink); padding: 1.2rem 1.3rem 1.3rem; }
 .fx-wide { grid-column: span 2; }
 .fx-card h3 { font-size: 1.1rem; font-stretch: 108%; margin-bottom: .5rem; }
 .fx-card p { margin: 0; color: var(--ink-2); font-size: .98rem; }
 .fx-stat { border-top: 6px solid var(--ink); }
 .fx-stat .fx-n { color: var(--ink); font: 800 clamp(2.4rem, 5vw, 3.6rem)/1 var(--font-display); letter-spacing: -.02em; margin-bottom: .5rem; }
 .fx-stat .fx-l { font: 600 .92rem/1.35 var(--font-display); color: var(--ink-2); }
-/* counters change text only inside a box as wide as the final number, in figures of equal width */
-.cnt { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
-.cnt-size { opacity: 0; }
-.cnt-live { position: absolute; left: 0; top: 0; }
 
-/* showcase: one screen that stays put while the covers slide in from the sides */
-.showcase { position: relative; border-top: 1px solid var(--rule); --p: 1; --fx-top: 0px; }
+.showcase { border-top: 1px solid var(--rule); --pin-h: 240vh; }
 .showcase-stage { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 1rem; max-width: var(--wrap); margin-inline: auto; padding: clamp(24px, 5vw, 48px) var(--gutter); }
 .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 2vw, 20px); width: 100%; max-width: calc((100vh - 230px) * 1.19); margin-inline: auto; }
-.sc-cover { --s: 0; --dir: -1; --e: clamp(0, calc((var(--p) - var(--s)) * 2.2), 1); --k: calc(var(--e) * var(--e) * (3 - 2 * var(--e)));
-  opacity: var(--k); transform: translate3d(calc((1 - var(--k)) * var(--dir) * 60vw), 0, 0); }
+.sc-0 { --dir: -1; }
 .sc-1 { --s: .08; --dir: 1; }
-.sc-2 { --s: .16; }
+.sc-2 { --s: .16; --dir: -1; }
 .sc-3 { --s: .24; --dir: 1; }
 .sc-cover a { display: block; background: var(--paper-2); border: 1.5px solid var(--ink); text-decoration: none; }
 .sc-cover a:hover { background: var(--paper-2); }
 .sc-art .cover { aspect-ratio: 4/3; width: 100%; height: auto; border-bottom: 1.5px solid var(--ink); }
 .sc-cap { display: flex; justify-content: space-between; gap: .8rem; padding: .55rem .8rem; font: 700 .88rem/1.3 var(--font-display); }
 .sc-head { --e: clamp(0, calc((var(--p) - .55) * 3.4), 1); background: var(--ink); color: var(--paper); padding: 1.1rem 1.4rem 1.3rem; border-bottom: 6px solid var(--mark);
-  opacity: var(--e); transform: translate3d(0, calc((1 - var(--e)) * 18px), 0); }
+  opacity: var(--e); transform: translate3d(0, calc((1 - var(--e)) * var(--fx-dist) * 1.3), 0); }
 .sc-head h2 { color: var(--paper); margin-bottom: .4rem; }
 .sc-head p { margin: 0; color: var(--panel); font-size: .98rem; }
-/* before the covers arrive the stage says what is about to happen; it is gone by the time the first cover lands */
 .sc-hint { display: none; margin: 0; position: absolute; left: 50%; top: 50%; translate: -50% -50%; text-align: center; font: 700 .85rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); opacity: clamp(0, calc(1 - var(--p) * 7), 1); }
+html.fx-on .sc-hint { display: block; }
 @media (min-width: 900px) {
-  /* covers in the outer columns, the headline in the middle one */
   .sc-grid { --cw: calc((100vh - 230px) * .6); grid-template-columns: minmax(0, var(--cw)) minmax(14rem, 24rem) minmax(0, var(--cw)); justify-content: center; max-width: none; column-gap: clamp(14px, 2vw, 28px); }
   .sc-0 { grid-area: 1 / 1; } .sc-2 { grid-area: 2 / 1; } .sc-1 { grid-area: 1 / 3; } .sc-3 { grid-area: 2 / 3; }
   .sc-head { position: absolute; left: 50%; top: 50%; width: min(24rem, 30%); margin: 0; pointer-events: none; translate: -50% -50%; }
 }
-/* scripting is on: the section is as tall as a few screens and the stage stays pinned while the reader scrolls through it */
-@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  .showcase { height: 240vh; }
-  .showcase-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
-  .sc-hint { display: block; }
-}
-@media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 900px) { .showcase { --fx-top: 64px; } }
-/* the reader tabbed into a cover: show everything now */
-.showcase.is-focus .sc-cover, .showcase.is-focus .sc-head { opacity: 1; transform: none; }
-
 @media (max-width: 899px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .fx-wide { grid-column: 1 / -1; } .story-grid { gap: 10px; } .fx-stat .fx-n { font-size: 2.2rem; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .fx-card, .sc-cover, .sc-head { opacity: 1; transform: none; }
-  .showcase { height: auto; }
-  .showcase-stage { position: relative; height: auto; overflow: visible; }
-  .showcase .sc-head { position: static; translate: none; width: auto; }
+/* ---- the product page: its own cover, with the stack and the price sliding in beside it. Pinned on large screens
+   only, for under one screen of extra scrolling. ---- */
+.scene { --pin-h: 170vh; margin-block: clamp(24px, 4vw, 48px); border-block: 1px solid var(--rule); }
+.scene-stage { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: center; padding: 1.2rem 0; }
+.scene .sc-mid { margin: 0; --sd: .1; }
+.scene .sc-mid .sc-art { border: 1.5px solid var(--ink); background: var(--paper-2); }
+.scene .sc-mid .cover { aspect-ratio: 4/3; width: 100%; height: auto; }
+.scene figcaption { padding: .5rem .2rem 0; font: 700 .9rem/1.3 var(--font-display); }
+.sc-side { align-self: center; }
+.sc-side .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.sc-price { font: 800 clamp(1.8rem, 3vw, 2.4rem)/1 var(--font-display); margin: 0 0 .3rem; }
+.sc-note { margin: 0; font: 600 .92rem var(--font-display); color: var(--ink-2); }
+@media (min-width: 900px) {
+  .scene-stage { grid-template-columns: minmax(0, 1fr) minmax(0, min(46rem, 52%)) minmax(0, 1fr); gap: clamp(16px, 3vw, 40px); max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gutter); height: 100%; }
+  .scene .sc-l { --dir: -.7; --s: .05; }
+  .scene .sc-mid { --s: -.4; }               /* already mostly there when the scene arrives, so the stage is never empty */
+  .scene .sc-r { --dir: .7; --s: .1; }
 }
 
-/* catalogue and shelf: tiles come in row by row as they cross the lower part of the screen */
-[data-fx="tiles"] .tile { opacity: var(--e, 1); transform: translate3d(0, calc((1 - var(--e, 1)) * 22px), 0); }
+@media (prefers-reduced-motion: reduce) {
+  /* the script does not switch the system on for this setting; if the setting changes while a page is open, this
+     puts everything back in its finished state */
+  html.fx-on [data-fx="rise"], html.fx-on [data-fx="cascade"] > * { opacity: 1; transform: none; transition: none; }
+  html.fx-on [data-fx="pin"] { height: auto; }
+  html.fx-on [data-fx="pin"] .fx-stage { position: relative; height: auto; overflow: visible; }
+  .fx-move, .sc-head { opacity: 1; transform: none; }
+  [data-fx="parallax"] { transform: none; }
+  html.fx-on .fx-progress { display: none; }
+}

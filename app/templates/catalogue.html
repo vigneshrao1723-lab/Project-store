@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile, pager %}
+{% from "_macros.html" import tile, pager, fx %}
 {% block title %}Catalogue{% endblock %}
 {% block content %}
 <div class="wrap cat-layout">
@@ -32,7 +32,7 @@
       </form>
     </div>
     {% if result.items %}
-      <div class="grid" data-motion-group="tiles" data-fx="tiles">{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
+      <div class="grid" data-motion-group="tiles" {{ fx('cascade') }}>{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
       {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
     {% else %}
       <div class="empty">
@@ -44,4 +44,3 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/fx-scroll.js') }}" defer></script>{% endblock %}

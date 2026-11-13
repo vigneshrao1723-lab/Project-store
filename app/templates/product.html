@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile, fx_back, fx_panel %}
+{% from "_macros.html" import tile, fx_back, fx_panel, fx %}
 {% block title %}{{ p.title }}{% endblock %}
 {% block description %}{{ p.tagline }}{% endblock %}
 {% block content %}
 <div class="wrap">
   <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
   <article class="product">
-    <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}"><div class="plate-cover">{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
+    <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}" {{ fx('rise') }}><div class="plate-cover">{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
       <dl class="spec">
         <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
         <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
@@ -42,20 +42,38 @@
         <p class="buy-note" data-note role="status" aria-live="polite"></p>
       </div>
 
-      <dl class="def">
+      <dl class="def" {{ fx('cascade') }}>
         <div><dt>Built with</dt><dd><span class="chips">{% for t in p.tech_list %}<span class="chip">{{ t }}</span>{% endfor %}</span></dd></div>
-        {% if p.includes_list %}<div><dt>In the kit</dt><dd><ul>{% for i in p.includes_list %}<li>{{ i }}</li>{% endfor %}</ul></dd></div>{% endif %}
+        {% if p.includes_list %}<div><dt>In the kit</dt><dd><ul {{ fx('cascade') }}>{% for i in p.includes_list %}<li>{{ i }}</li>{% endfor %}</ul></dd></div>{% endif %}
         <div><dt>Delivery</dt><dd>A download link on your order page as soon as payment is confirmed.</dd></div>
       </dl>
 
-      <div class="prose">{% for para in p.paragraphs %}<p>{{ para }}</p>{% endfor %}</div>
+      <div class="prose" {{ fx('cascade') }}>{% for para in p.paragraphs %}<p>{{ para }}</p>{% endfor %}</div>
     </div>
   </article>
 
+  <section class="scene pin-lg" {{ fx('pin') }} aria-label="{{ p.title }}">
+    <div class="scene-stage fx-stage">
+      <div class="sc-side sc-l fx-move">
+        <p class="foot-h">Built with</p>
+        <span class="chips">{% for t in p.tech_list %}<span class="chip">{{ t }}</span>{% endfor %}</span>
+      </div>
+      <figure class="sc-mid fx-move">
+        <div class="sc-art" {{ fx('parallax') }}>{{ cover(p) }}</div>
+        <figcaption>{{ p.title }}</figcaption>
+      </figure>
+      <div class="sc-side sc-r fx-move">
+        <p class="foot-h">{{ p.category.name }}</p>
+        <p class="sc-price num">{{ p.price_paise | inr }}</p>
+        <p class="sc-note">{% if p.stock == 0 %}Not available right now{% elif p.stock <= 5 %}Only {{ p.stock }} left{% else %}In stock, {{ p.stock }} copies{% endif %}</p>
+      </div>
+    </div>
+  </section>
+
   {% if related %}
   <section class="section flush-top" data-reveal>
-    <div class="section-head"><h2 class="h2">More in {{ p.category.name }}</h2></div>
-    <div class="grid" data-motion-group="tiles">{% for r in related %}{{ tile(r, loop.index0) }}{% endfor %}</div>
+    <div class="section-head" {{ fx('rise') }}><h2 class="h2">More in {{ p.category.name }}</h2></div>
+    <div class="grid" data-motion-group="tiles" {{ fx('cascade') }}>{% for r in related %}{{ tile(r, loop.index0) }}{% endfor %}</div>
   </section>
   {% endif %}
 </div>
