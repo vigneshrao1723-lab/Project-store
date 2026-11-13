@@ -70,7 +70,7 @@ A small, optional motion layer on the home page, the catalogue and the product p
 | Piece | Where | What it does |
 |---|---|---|
 | `static/js/motion-boot.js` | plain script in `<head>` | Adds `.intro-run` to `<html>` on the first page of a browser session (storage works, reduced motion off). Sets its flag at once, so a broken `motion.js` can show the loader at most once. |
-| Loader | `base.html`, CSS "intro loader" | Hidden by default. A pure-CSS timeline plays a six-object line-art scene (inbox, cart, TV, PC, CPU, RAM) and fades out by 1.4 s; a second animation hides it at 2 s whatever else fails. `pointer-events: none`, nothing focusable, only the loader is `aria-hidden`. |
+| Loader | `base.html`, CSS "intro loader" | Hidden by default. A pure-CSS timeline plays a six-object line-art scene (inbox, cart, TV, PC, CPU, RAM) and fades out by 1.2 s; a second animation hides it at 2 s whatever else fails. `pointer-events: none`, nothing focusable, only the loader is `aria-hidden`. |
 | `static/js/motion.js` (deferred, about 6 KB) | end of `<body>` | Counts the loader percentage and removes `.intro-run` when the loader's own exit animation ends. Runs the card interactions below. No timers; everything is cleaned up on `pagehide`. |
 | `_macros.html` `fx_back()` / `fx_panel(kind)` | tiles, hero plate, product plate | Two `aria-hidden` layers inside the cover's box: a flat ink/yellow backdrop behind the cover and a small corner panel with the category's motif. Chosen by `p.category.cover_kind` (`data-motion-kind`), never by title or id. |
 

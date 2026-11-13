@@ -10,12 +10,12 @@
 
   // ---- intro loader -------------------------------------------------------------------------------------------
   // motion-boot.js adds .intro-run to <html> on the first page of a session. The CSS plays the scene and fades
-  // the loader out at about 1.2s; this only counts up the percentage, then removes the class (display: none).
+  // the loader out at about 1.0s; this only counts up the percentage, then removes the class (display: none).
   function runLoader() {
     const loader = document.querySelector("[data-loader]");
     const pct = loader && loader.querySelector("[data-loader-pct]");
     if (!pct) return;
-    const DURATION = 1180;
+    const DURATION = 1000;
     const start = performance.now();
     let frame = 0;
     const finish = () => { cancelAnimationFrame(frame); root.classList.remove("intro-run"); };
