@@ -64,7 +64,7 @@
 </section>
 
 {% if latest | length >= 2 %}
-<section class="showcase pin-soft" {{ fx('pin') }} aria-labelledby="showcase-h">
+<section class="showcase" {{ fx('pin') }} aria-labelledby="showcase-h">
   <div class="showcase-stage fx-stage">
     <ul class="plain sc-grid">
       {% for p in latest[:4] %}
@@ -72,9 +72,11 @@
       {% endfor %}
     </ul>
     <p class="sc-hint" aria-hidden="true">Scroll to bring the covers in</p>
+    <p class="sc-cue" aria-hidden="true"><span>Scroll</span><i></i></p>
     <div class="sc-head">
-      <h2 class="h2" id="showcase-h">Every cover is its own drawing</h2>
-      <p>The store draws each cover from the project's name and field, so no two look alike.</p>
+      <div class="sc-line sc-l1"><h2 class="h2" id="showcase-h">Every cover is its own drawing</h2><p>The store draws each cover from the project's name and field, so no two look alike.</p></div>
+      <div class="sc-line sc-l2"><h2 class="h2">{{ n_projects }} {{ 'project' if n_projects == 1 else 'projects' }}, {{ fields | length }} {{ 'field' if fields | length == 1 else 'fields' }}</h2><p>Every one ships with the working source, a setup guide and the architecture notes.</p></div>
+      <div class="sc-line sc-l3"><h2 class="h2">Open one to see what is in the kit</h2><p>Each page lists the stack, the contents and how delivery works.</p></div>
     </div>
   </div>
 </section>

@@ -21,6 +21,13 @@
   if (!("IntersectionObserver" in window)) return;
 
   const root = document.documentElement;
+  // adaptive quality: a weak device (few cores, little memory, or measured under 45 fps for half a second) gets fx-lite,
+  // which turns off only the heaviest effects (the pinned sticky stages become scroll-linked, big parallax stops).
+  // ?fx=lite or ?fx=full in the address forces either way, for testing.
+  const forced = /[?&]fx=(lite|full)\b/.exec(window.location.search || "");
+  const lite = forced ? forced[1] === "lite" : (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  if (lite) root.classList.add("fx-lite");
+  let probing = !lite && !forced && !document.hidden, probeN = 0, probeT0 = 0;
   const header = document.querySelector(".site-header");
   const bar = page === "browse" ? document.querySelector(".fx-progress") : null;   // --sp goes on this one node, never on <html>: a custom
                                                                                // property on the root makes the browser restyle every element per frame
@@ -119,6 +126,13 @@
   // ---- the loop --------------------------------------------------------------------------------------------------
   function frame(now) {
     raf = 0;
+    if (probing) {
+      probeN++; probeT0 = probeT0 || now;
+      if (now - probeT0 >= 500) {
+        probing = false;
+        if ((probeN * 1000) / (now - probeT0) < 45) { root.classList.add("fx-lite"); scenes.forEach((s) => s.stale()); }
+      } else schedule();
+    }
     const vh = window.innerHeight || 1, y = window.pageYOffset || 0;
     const work = [...live, ...settle];
     settle.clear();

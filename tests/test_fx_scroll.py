@@ -43,7 +43,7 @@ function world(opts = {}) {
     const html = make("html", { scrollHeight: 4000 });
     html.classList = { s: rootClasses, add(c) { rootClasses.add(c); }, remove(c) { rootClasses.delete(c); } };
     const win = {
-      matchMedia: () => ({ matches: !!opts.calm }), innerHeight: 800, pageYOffset: 0,
+      matchMedia: () => ({ matches: !!opts.calm }), innerHeight: 800, pageYOffset: 0, location: { search: opts.search || "" },
       addEventListener: (t, f, o) => { (listeners[t] = listeners[t] || []).push({ f, o }); },
       removeEventListener: (t, f) => { removed.push(t); const l = listeners[t] || []; const i = l.findIndex((x) => x.f === f); if (i >= 0) l.splice(i, 1); },
     };
@@ -56,7 +56,7 @@ function world(opts = {}) {
       removeEventListener: (t, f) => { removed.push("doc:" + t); const l = listeners["doc:" + t] || []; const i = l.findIndex((x) => x.f === f); if (i >= 0) l.splice(i, 1); },
     };
     const sandbox = {
-      window: win, document: doc, IntersectionObserver: IO,
+      window: win, document: doc, IntersectionObserver: IO, navigator: opts.nav || { hardwareConcurrency: 8, deviceMemory: 8 },
       requestAnimationFrame: (f) => { queue.push(f); maxQueued = Math.max(maxQueued, queue.length); return ++rafId; },
       cancelAnimationFrame: () => { queue = []; },
       performance: { now: () => now },
@@ -66,7 +66,7 @@ function world(opts = {}) {
     w.win = win; w.doc = doc; w.html = html;
     vm.runInNewContext(src, sandbox);
   };
-  w.advance = (ms) => { const end = now + ms; for (let g = 0; g < 4000; g++) { now = Math.min(end, now + 16); const q = queue; queue = []; q.forEach((f) => f(now)); if (now >= end) break; } };
+  w.advance = (ms) => { const end = now + ms; for (let g = 0; g < 4000; g++) { now = Math.min(end, now + (opts.frameMs || 16)); const q = queue; queue = []; q.forEach((f) => f(now)); if (now >= end) break; } };
   w.pending = () => queue.length;
   w.maxQueued = () => maxQueued;
   w.io = () => observers[0];
@@ -335,4 +335,35 @@ def test_everything_is_undone_on_pagehide():
 
 
 def test_script_budget():
-    assert len(gzip.compress(JS.read_bytes(), 9)) < 3.5 * 1024
+    assert len(gzip.compress(JS.read_bytes(), 9)) < 6 * 1024
+
+
+# ---- adaptive quality: fx-lite ---------------------------------------------------------------------------------------------
+
+def test_a_capable_device_gets_the_full_system_and_no_lite_class():
+    r = run_node(page("""
+      w.advance(700);
+      const result = { classes: [...w.rootClasses].sort() };"""))
+    assert r == {"classes": ["fx-on"]}
+
+
+def test_few_cores_or_little_memory_switch_on_fx_lite_straight_away():
+    for nav in ("{ hardwareConcurrency: 4, deviceMemory: 8 }", "{ hardwareConcurrency: 8, deviceMemory: 4 }", "{ hardwareConcurrency: 2 }"):
+        r = run_node(page("const result = { classes: [...w.rootClasses].sort() };", "{ nav: %s }" % nav))
+        assert r == {"classes": ["fx-lite", "fx-on"]}, nav
+
+
+def test_the_address_can_force_lite_or_full_either_way():
+    assert run_node(page("const result = { c: [...w.rootClasses].sort() };", '{ search: "?fx=lite" }')) == {"c": ["fx-lite", "fx-on"]}
+    assert run_node(page("const result = { c: [...w.rootClasses].sort() };", '{ search: "?a=1&fx=full", nav: { hardwareConcurrency: 2 } }')) == {"c": ["fx-on"]}
+
+
+def test_a_slow_first_half_second_switches_lite_on_and_a_fast_one_does_not():
+    slow = run_node(page("""
+      w.advance(1200);                     // frames arrive every 40 ms: 25 fps
+      const result = { c: [...w.rootClasses].sort() };""", "{ frameMs: 40 }"))
+    assert slow == {"c": ["fx-lite", "fx-on"]}
+    fast = run_node(page("""
+      w.advance(1200);
+      const result = { c: [...w.rootClasses].sort() };"""))
+    assert fast == {"c": ["fx-on"]}
