@@ -14,7 +14,7 @@ CSS = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-
 BARE = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
 JS = ROOT / "app" / "static" / "js" / "fx-pay.js"
 NODE = shutil.which("node")
-PAY = BARE[BARE.index(".result {"):]
+PAY = BARE[BARE.index(".result {"):BARE.index(".story {")]
 
 
 def _order(client, product):

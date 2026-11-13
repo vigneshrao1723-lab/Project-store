@@ -2,6 +2,9 @@
 {% from "_macros.html" import tile, fx_back, fx_panel %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
+{# Figures that are not in the database. They are the ones the README states under "What is checked, and where",
+   and tests/test_fx_scroll.py fails if the two drift apart. The other figures on this page are counted live. #}
+{% set facts = {"tests": 641, "coverage": 96} %}
 <section class="hero" data-motion="hero">
   <div class="wrap hero-grid">
     <div data-motion="hero-copy">
@@ -28,6 +31,57 @@
   </div>
 </section>
 
+{% set n_projects = categories | sum(attribute=1) %}
+{% set fields = categories | selectattr(1) | list %}
+<section class="story" data-fx="cascade" aria-labelledby="story-h">
+  <div class="wrap">
+    <h2 class="h2" id="story-h">The store in plain numbers</h2>
+    <div class="story-grid">
+      <article class="fx-card fx-wide" data-fx-item>
+        <h3>Your copy is held while you pay</h3>
+        <p>Checkout reserves what you chose. If the hold runs out before the payment arrives, the copies go back on the shelf.</p>
+      </article>
+      <article class="fx-card fx-wide" data-fx-item>
+        <h3>The price is worked out on the server</h3>
+        <p>The amount charged comes from your order as the store holds it, never from a number sent by the browser.</p>
+      </article>
+      <article class="fx-card fx-stat" data-fx-item>
+        <p class="fx-n"><span class="cnt" data-fx-count="{{ n_projects }}"><span class="cnt-size">{{ n_projects }}</span><span class="cnt-live" aria-hidden="true">{{ n_projects }}</span></span></p>
+        <p class="fx-l">{{ 'project' if n_projects == 1 else 'projects' }} on sale</p>
+      </article>
+      <article class="fx-card fx-stat" data-fx-item>
+        <p class="fx-n"><span class="cnt" data-fx-count="{{ fields | length }}"><span class="cnt-size">{{ fields | length }}</span><span class="cnt-live" aria-hidden="true">{{ fields | length }}</span></span></p>
+        <p class="fx-l">{{ 'field' if fields | length == 1 else 'fields' }}: {{ fields | map(attribute=0) | map(attribute='name') | join(', ') }}</p>
+      </article>
+      <article class="fx-card fx-stat" data-fx-item>
+        <p class="fx-n"><span class="cnt" data-fx-count="{{ reservation_minutes }}"><span class="cnt-size">{{ reservation_minutes }}</span><span class="cnt-live" aria-hidden="true">{{ reservation_minutes }}</span></span></p>
+        <p class="fx-l">minutes your copy is held at checkout</p>
+      </article>
+      <article class="fx-card fx-stat" data-fx-item>
+        <p class="fx-n"><span class="cnt" data-fx-count="{{ facts.tests }}"><span class="cnt-size">{{ facts.tests }}</span><span class="cnt-live" aria-hidden="true">{{ facts.tests }}</span></span></p>
+        <p class="fx-l">automated tests, covering {{ facts.coverage }}% of the app's lines</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% if latest | length >= 2 %}
+<section class="showcase" data-fx="showcase" aria-labelledby="showcase-h">
+  <div class="showcase-stage">
+    <ul class="plain sc-grid">
+      {% for p in latest[:4] %}
+      <li class="sc-cover sc-{{ loop.index0 }}"><a href="{{ url_for('shop.product', slug=p.slug) }}"><span class="sc-art">{{ cover(p) }}</span><span class="sc-cap"><span>{{ p.title }}</span><span class="num">{{ p.price_paise | inr }}</span></span></a></li>
+      {% endfor %}
+    </ul>
+    <p class="sc-hint" aria-hidden="true">Scroll to bring the covers in</p>
+    <div class="sc-head">
+      <h2 class="h2" id="showcase-h">Every cover is its own drawing</h2>
+      <p>The store draws each cover from the project's name and field, so no two look alike.</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head"><h2 class="h2">Browse by field</h2></div>
@@ -42,7 +96,7 @@
 <section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head"><h2 class="h2">On the shelf</h2><a href="{{ url_for('shop.catalogue') }}">See all projects</a></div>
-    <div class="grid" data-motion-group="tiles">{% for p in latest %}{{ tile(p, loop.index0) }}{% endfor %}</div>
+    <div class="grid" data-motion-group="tiles" data-fx="tiles">{% for p in latest %}{{ tile(p, loop.index0) }}{% endfor %}</div>
   </div>
 </section>
 
@@ -57,3 +111,4 @@
   </div>
 </section>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/fx-scroll.js') }}" defer></script>{% endblock %}

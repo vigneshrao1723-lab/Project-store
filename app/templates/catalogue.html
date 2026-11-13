@@ -32,7 +32,7 @@
       </form>
     </div>
     {% if result.items %}
-      <div class="grid" data-motion-group="tiles">{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
+      <div class="grid" data-motion-group="tiles" data-fx="tiles">{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
       {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
     {% else %}
       <div class="empty">
@@ -44,3 +44,4 @@
   </section>
 </div>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/fx-scroll.js') }}" defer></script>{% endblock %}

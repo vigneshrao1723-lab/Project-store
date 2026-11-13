@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CSS = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8").replace("\r\n", "\n")
 JS = ROOT / "app" / "static" / "js" / "fx-cart.js"
 NODE = shutil.which("node")
-BARE = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
+BARE = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S).split(".result {")[0]        # this file also holds the payment and scroll sections, which have their own tests
 
 
 def section(start, end=None):
