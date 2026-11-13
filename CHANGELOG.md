@@ -2,7 +2,7 @@
 
 Dates are commit dates. The newest release is first.
 
-## Unreleased (branch `motion-3`)
+## 1.1.0 (2026-11-14)
 
 Motion, additive only (`docs/MOTION_INVENTORY.md` lists every effect; a test fails if one disappears).
 
@@ -13,6 +13,14 @@ Motion, additive only (`docs/MOTION_INVENTORY.md` lists every effect; a test fai
 * **Everywhere**: a scroll-progress hairline, a condensed header, a footer rise, an animated focus ring, press feedback, underline wipes, hover lift.
 * **Adaptive quality**: `html.fx-lite` (few cores, little memory, or under 45 fps for half a second; `?fx=lite` and `?fx=full` force it) turns the pinned stages scroll-linked, the shelf into a swipe row and stops big parallax. Every other effect stays.
 * The home page's test count and coverage now come from `app/facts.json`; tests keep it, the README and the collected test count equal, and `scripts/update_facts.py` re-measures.
+* **Pinned showcase restored with three scenes** ("Scroll to fill the shelf", "Four fields, one platform", "Built to be checked"): four covers slide in from both sides, the headline crossfades, a counter reads 01 / 02 / 03, a Scroll cue fades. Pinned from 900 px up, scroll-linked and unpinned on phones and under `fx-lite`.
+* **Home headline** arrives out of a 6 px blur (that one element, once). **Product page**: title row, then a sticky cover and buy box beside the details (CSS sticky, falls back to normal flow on short or narrow windows), cover clip-reveal, sections cascading.
+* **Transactional**: the stepper appears on cart, checkout, pay and the order page (also for a pending order); the payment mark shows on the paid order page and on a declined payment, with a ring pulse behind the tick; empty cart, no orders and no search results have line-art with a small idle loop; toasts moved bottom-right so they never cover the stepper.
+* **Tuning layer**: `app/static/css/fx-tuning.css` (speed, distance, stagger, easing, tilt, magnet, parallax, cover distance, loader, cart and pay lengths, marquee), `app/fx.json` to switch any single effect off, `docs/MOTION_TUNING.md`, and `docs/MOTION_INVENTORY.md` with a test that fails if an effect is lost.
+* **Accessibility**: the test-mode notice is a labelled region, the catalogue lists projects under a heading, and the pay page has a level-one heading (all three were axe findings that also exist in 1.0.0). Axe finds nothing new with the motion on, and nothing at all under reduced motion beyond those.
+* **Copy**: admin product visibility reads Visible / Hidden; the home "Pay at checkout" step no longer names Razorpay.
+* **Measured**: 957 tests pass (3 skip without MySQL), coverage 97%. At normal speed every page holds about 7 ms a frame; under a 4x CPU throttle the home page does not (known limitation).
+* No route, service, model, migration or security header changed; the migration head is still 0004. The only Python change in the app is `app/context.py`, which now also supplies the measured facts and the switched-off list to templates.
 
 ## 1.0.0 (2026-11-13)
 

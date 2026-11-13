@@ -6,17 +6,25 @@ Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design note
 
 ![Home page at 1280 px](docs/screenshots/home.png)
 
-| Catalogue | Product |
+| Home: the story | Home: the pinned showcase |
 |---|---|
+| ![Home story](docs/screenshots/home-story.png) | ![Pinned showcase, scene two of three](docs/screenshots/home-showcase.png) |
+| **Catalogue** | **Product** |
 | ![Catalogue](docs/screenshots/catalogue.png) | ![Product page](docs/screenshots/product.png) |
-| **Cart** | **Paid order** |
-| ![Cart](docs/screenshots/cart.png) | ![Paid order](docs/screenshots/order.png) |
+| **Cart** | **Checkout** |
+| ![Cart](docs/screenshots/cart.png) | ![Checkout](docs/screenshots/checkout.png) |
+| **Pay (practice gateway)** | **Paid order** |
+| ![Pay page](docs/screenshots/pay.png) | ![Paid order](docs/screenshots/order.png) |
+| **Your orders** | **Admin overview** |
+| ![Orders](docs/screenshots/orders.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
 
-![Admin dashboard](docs/screenshots/admin-dashboard.png)
+On a 390 px phone: home, catalogue, product, cart, pay and paid order.
 
-The home page at 390 px: ![Home page at 390 px](docs/screenshots/home-390.png)
+| ![Home at 390 px](docs/screenshots/home-390.png) | ![Catalogue at 390 px](docs/screenshots/catalogue-390.png) | ![Product at 390 px](docs/screenshots/product-390.png) |
+|---|---|---|
+| ![Cart at 390 px](docs/screenshots/cart-390.png) | ![Pay at 390 px](docs/screenshots/pay-390.png) | ![Paid order at 390 px](docs/screenshots/order-390.png) |
 
-The screenshots were taken from a fresh database loaded with the demo seed and one practice purchase, so they show no real customer data. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
+The screenshots were taken from a fresh database loaded with the demo seed and one practice purchase, so they show no real customer data. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
 
 **This is an open-source demo store.** The source is public (MIT), so there is no paywall. The download links in the seeded catalogue are blank, so a paid order's page says "Link coming soon. Contact the store." If you run a store like this for your own work, set private links as described in [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 
@@ -32,6 +40,15 @@ Every number below comes from a command you can run.
 | CI runs four jobs on every push and pull request: `test` (SQLite, then MySQL for the concurrency and migration tests), `security` (`pip-audit`, `bandit` at medium severity and above, lock files match the pins), `build` (Docker image plus a smoke test) and `deploy` (main only: pushes the image to GitHub Container Registry) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | The schema is defined only by Alembic migrations, and a test fails if models and migrations disagree | `tests/test_migrations.py` |
 
+## Motion and design
+
+The look is graph-paper green-grey with one ink blue and one highlighter yellow, Archivo and Source Serif 4 self-hosted, and no gradients, shadows or emoji icons. Motion is progressive: the server renders every page complete, and the scripts add movement on top.
+
+* **One scroll system.** `fx-scroll.js` runs one observer and one animation-frame loop. Templates ask for an effect with `data-fx` words written through two macros (rise, cascade, count, pin, parallax, lines, words, from-left, from-right, zoom, flip, clip, draw, hscroll, marquee, tilt, magnetic). The home page has a pinned showcase (covers slide in from both sides over three scenes), a sideways shelf and a drawn timeline; the other pages use the quieter words. `docs/MOTION_INVENTORY.md` lists every effect, and a test fails if one disappears. Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#scroll-system).
+* **Only cheap properties move.** Transform and opacity, plus clip-path, stroke-dashoffset and a 6 px blur on the home headline once. Hidden states exist only after the script has started, so no script, a blocked observer or `prefers-reduced-motion` all show the finished page.
+* **Adaptive quality (`fx-lite`).** On a machine with four or fewer cores, four GB of memory or less, or one that renders under 45 frames a second just after load, the pinned stages become scroll-linked and the shelf becomes a swipe row; every other effect stays. `?fx=lite` and `?fx=full` force it. At normal speed pages hold about 7 ms a frame on the test machine; under a 4x CPU throttle the home page does not (about 28 ms), and `fx-lite` does not fix that. See "Measured limit" in the architecture notes.
+* **Tuning.** `app/static/css/fx-tuning.css` holds the speed, distance, stagger, easing, tilt, parallax, loader and payment-mark knobs; `app/fx.json` switches single effects off. [docs/MOTION_TUNING.md](docs/MOTION_TUNING.md) lists both.
+
 ## Known limitations
 
 Read these before you rely on the store.
@@ -39,6 +56,8 @@ Read these before you rely on the store.
 * **No email, and no password reset.** The app sends no mail at all. A user who forgets a password cannot recover the account by themselves. The only built-in tool that sets a password is `flask create-admin`, and it also makes that account an admin, so it is not a customer reset.
 * **Registering an email that already has an account says so.** That reveals the address is registered. It is an accepted risk, because the proper fix (telling the address's owner by email instead of answering in the page) needs email.
 * **The Razorpay path has been tested with mocks only.** The client code, signature checks, amount/currency/status checks and the webhook are tested against a mocked Razorpay API. This code has never run against a live Razorpay account, test or live mode. In particular, `style-src 'self'` might block styling that Razorpay's checkout script injects (see "Razorpay and style-src" in the architecture notes).
+* **Add to cart needs JavaScript.** The button calls the REST API from the page script. With scripts blocked it reloads the product page and nothing is added; every page still renders in full without scripts, and checkout and payment are plain form posts.
+* **Motion is progressive and reduced-motion aware, not guaranteed everywhere.** It was checked in Chromium only (no Firefox or Safari run), at normal speed and under a 4x CPU throttle where the home page is not smooth. With `prefers-reduced-motion` nothing animates.
 * **Use the practice gateway for demos.** With `ALLOW_PRACTICE_GATEWAY=true`, anyone who is signed in can mark their own order paid for nothing. It is for demos and local development, and must stay off for a store that sells for real.
 * **Download links are blank in the demo seed.** Paid orders show "Link coming soon. Contact the store." until you set a link per product in the admin screen.
 * **`COOKIE_SECURE` and HSTS are off unless you set them.** `COOKIE_SECURE=true` marks the session cookies Secure and turns on `Strict-Transport-Security`. Set it when the site is served over HTTPS. Over plain HTTP, leave it off, or sign-in stops working.
