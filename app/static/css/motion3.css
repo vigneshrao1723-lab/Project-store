@@ -68,3 +68,47 @@
   .atc[data-state="added"] .atc-tick { stroke-dashoffset: 0; }
   .count.is-bump { animation: none; }
 }
+
+/* ---------- 2. Payment result -------------------------------------------------------------------------------------
+   The mark is always drawn in its finished state. Only a mark carrying data-play animates, and it does so from
+   plain CSS, so it needs no script: a dot grows into a disc, a thin ring settles around it, a progress line sweeps
+   across, the tick (or the cross) draws itself, and then the part of the page the visitor acts on (the downloads,
+   or the buttons to try again) fades up. fx-pay.js only adds .is-played, which switches the sequence off, when this
+   order's success has already been shown in this browser session. */
+.result { position: relative; width: 96px; height: 96px; margin: 1.6rem auto 2rem; }
+.result svg { overflow: visible; }
+.rs-ring { stroke-width: 1.5; opacity: .45; }
+.rs-disc { stroke: none; }
+.rs-draw { stroke: #fff; stroke-width: 5; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: 30; stroke-dashoffset: 0; }
+.result-success .rs-ring { stroke: var(--green); }
+.result-success .rs-disc { fill: var(--green); }
+.result-failure .rs-ring { stroke: var(--red); }
+.result-failure .rs-disc { fill: var(--red); }
+.rs-arc { stroke: var(--red); stroke-width: 4; stroke-dasharray: 6 94; stroke-dashoffset: 0; }
+.rs-ring, .rs-disc, .rs-arc { transform-box: fill-box; transform-origin: center; }
+.rs-sweep { position: absolute; left: -44px; right: -44px; bottom: -14px; height: 2px; background: var(--ink); opacity: 0; transform-origin: 0 50%; transform: scaleX(0); }
+
+.result[data-play]:not(.is-played) .rs-disc { animation: rs-disc 440ms var(--fx-ease) both; }
+.result[data-play]:not(.is-played) .rs-ring { animation: rs-ring 380ms var(--fx-ease) 260ms both; }
+.result[data-play]:not(.is-played) .rs-sweep { animation: rs-sweep 720ms var(--fx-ease) both; }
+.result-success[data-play]:not(.is-played) .rs-draw { animation: rs-draw 420ms var(--fx-ease) 440ms both; }
+.result-failure[data-play]:not(.is-played) .rs-x1 { animation: rs-draw 240ms var(--fx-ease) 440ms both; }
+.result-failure[data-play]:not(.is-played) .rs-x2 { animation: rs-draw 240ms var(--fx-ease) 600ms both; }
+.result-failure[data-play]:not(.is-played) .rs-arc { animation: rs-orbit 1000ms var(--fx-ease) 260ms both; }
+/* then the page's own content fades up, once the mark has finished */
+main:has(.result[data-play]:not(.is-played)) .delivery,
+main:has(.result[data-play]:not(.is-played)) .pay-actions { animation: rs-after 400ms var(--fx-ease) 1000ms both; }
+
+@keyframes rs-disc { from { opacity: 0; transform: scale(.1); } 25% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes rs-ring { from { opacity: 0; transform: scale(.82); } to { opacity: .45; transform: none; } }
+@keyframes rs-sweep { 0% { opacity: 1; transform: scaleX(0); } 70% { opacity: 1; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1); } }
+@keyframes rs-draw { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+@keyframes rs-orbit { from { opacity: 0; transform: rotate(-360deg); } 12% { opacity: 1; } to { opacity: 1; transform: rotate(0deg); } }
+@keyframes rs-after { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* main.css already switches every animation off for this setting; stated here so the final state is explicit:
+     with no animation the mark is simply its finished drawing and the page content is simply there */
+  .result[data-play] * { animation: none; }
+  main:has(.result[data-play]) .delivery, main:has(.result[data-play]) .pay-actions { animation: none; }
+}

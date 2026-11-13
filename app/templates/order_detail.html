@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status %}
+{% from "_macros.html" import status, result_mark %}
 {% block title %}Order {{ order.public_id }}{% endblock %}
 {% block content %}
 <div class="wrap w-820">
+  {% if order.status == 'paid' %}{{ result_mark('success', order.public_id, get_flashed_messages(category_filter=['success']) | length > 0) }}{% endif %}
   <div class="page-head">
     <p class="crumbs flush"><a href="{{ url_for('account.orders') }}">Your orders</a></p>
     <h1 class="h2">Order <span class="num">{{ order.public_id }}</span></h1>
@@ -41,3 +42,4 @@
   <p class="muted ui placed-note">Placed {{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC for {{ order.billing_name }}{% if order.paid_at %}. Paid {{ order.paid_at.strftime('%d %b %Y, %H:%M') }} UTC{% endif %}.</p>
 </div>
 {% endblock %}
+{% block scripts %}{% if order.status == 'paid' %}<script src="{{ url_for('static', filename='js/fx-pay.js') }}" defer></script>{% endif %}{% endblock %}

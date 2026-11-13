@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% from "_macros.html" import result_mark %}
 {% block title %}Pay for {{ order.public_id }}{% endblock %}
 {% block content %}
 <div class="wrap page-pad">
   <div class="pay-box">
+    {% if get_flashed_messages(category_filter=['error']) %}{{ result_mark('failure', order.public_id, true) }}{% endif %}
     <p class="ui stat-value">Order {{ order.public_id }}</p>
     <div class="amount">{{ order.total_paise | inr }}</div>
     <ul class="plain ui pay-items">

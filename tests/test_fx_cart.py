@@ -22,7 +22,7 @@ def section(start, end=None):
     return text.split(end)[0] if end else text
 
 
-CART = section(".atc {", "/* header cart count")
+CART = section(".atc {", ".count.is-bump {")
 
 
 # ---- markup ---------------------------------------------------------------------------------------------------------

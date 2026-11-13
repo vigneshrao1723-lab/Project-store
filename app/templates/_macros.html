@@ -69,3 +69,19 @@
 </nav>
 {% endif %}
 {% endmacro %}
+
+{# The result mark: a decorative picture of what the page's own text already says. It carries no words, so it is
+   hidden from screen readers; the flash message above it (inside a role="status" region) is what they hear.
+   `play` is true only on the page the visitor lands on right after paying or being declined. #}
+{% macro result_mark(kind, public_id, play) %}
+<div class="result result-{{ kind }}" data-result="{{ kind }}" data-order="{{ public_id }}"{% if play %} data-play{% endif %} aria-hidden="true">
+  <svg viewBox="0 0 96 96" width="96" height="96" fill="none">
+    <circle class="rs-ring" cx="48" cy="48" r="45"/>
+    {% if kind == 'failure' %}<circle class="rs-arc" cx="48" cy="48" r="45" pathLength="100"/>{% endif %}
+    <circle class="rs-disc" cx="48" cy="48" r="36"/>
+    {% if kind == 'success' %}<path class="rs-draw" pathLength="30" d="M31 49.5l12.5 12.5L66 35"/>
+    {% else %}<path class="rs-draw rs-x1" pathLength="30" d="M35 35l26 26"/><path class="rs-draw rs-x2" pathLength="30" d="M61 35l-26 26"/>{% endif %}
+  </svg>
+  <span class="rs-sweep"></span>
+</div>
+{% endmacro %}
