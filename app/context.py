@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from flask import current_app, request
 from flask_login import current_user
 from sqlalchemy import func
@@ -5,6 +8,11 @@ from sqlalchemy import func
 from .extensions import db, stable_csrf_token
 from .models import CartItem, Category
 from .services import payments
+
+
+# Figures about the project itself (test counts, coverage). One file, written only by scripts/update_facts.py and
+# checked by tests/test_fx_facts.py, so the home page and the README cannot drift from each other or from the suite.
+FACTS = json.loads((Path(__file__).parent / "facts.json").read_text(encoding="utf-8"))
 
 
 def register_context(app):
@@ -18,4 +26,5 @@ def register_context(app):
         cats = db.session.scalars(db.select(Category).order_by(Category.name)).all()
         return {"csrf_token": stable_csrf_token, "cart_count": int(count or 0), "nav_categories": cats,
                 "gateway_mode": payments.mode(),
-                "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path}
+                "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
+                "facts": FACTS}

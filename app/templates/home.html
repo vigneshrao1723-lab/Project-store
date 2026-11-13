@@ -2,9 +2,7 @@
 {% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
-{# Figures that are not in the database. They are the ones the README states under "What is checked, and where",
-   and tests/test_fx_scroll.py fails if the two drift apart. The other figures on this page are counted live. #}
-{% set facts = {"tests": 641, "coverage": 96} %}
+{# facts (test count, coverage) come from app/facts.json through the context processor; every other figure here is counted live. #}
 <section class="hero" data-motion="hero">
   <div class="wrap hero-grid">
     <div data-motion="hero-copy">
