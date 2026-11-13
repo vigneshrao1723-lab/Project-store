@@ -40,7 +40,7 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Cascade: related projects | product | `{{ fx('cascade') }}>{% for r in related %}` | app/templates/product.html | cascade |
 | Count: four story figures | home | `fx_count(n_projects)` | app/templates/home.html | count |
 | Count macro (target, sizer, live text) | home | `data-fx="count" data-to=` | app/templates/_macros.html | - |
-| Home showcase, pinned and scroll-linked | home | `class="showcase" {{ fx('pin') }}` | app/templates/home.html | pin |
+| Home showcase, pinned and scroll-linked | home | `class="showcase pin-lg" {{ fx('pin') }}` | app/templates/home.html | pin |
 | Showcase pinned stage | home | `position: sticky` | app/static/css/motion3.css | pin |
 | Showcase covers slide in from both sides | home | `sc-cover fx-move` | app/templates/home.html | pin |
 | Showcase headline crossfades through three lines | home | `sc-l3` | app/templates/home.html | pin |
@@ -116,3 +116,14 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Admin: row hover | admin | `.admin .table tbody tr:hover` | app/static/css/motion3-ui.css | admin-motion |
 | Interface script loaded on every page that moves | all but error pages | `js/fx-ui.js` | app/templates/base.html | - |
 | Pointer spotlight disc | home, catalogue, product | `[data-fx="tilt"]::after` | app/static/css/motion3.css | spotlight |
+| Showcase counter 01 / 02 / 03 | home | `class="sc-count"` | app/templates/home.html | pin |
+| Showcase scene one, "Scroll to fill the shelf" | home | `Scroll to fill the shelf` | app/templates/home.html | pin |
+| Showcase scene two, fields | home | `, one platform` | app/templates/home.html | pin |
+| Showcase scene three, "Built to be checked" | home | `Built to be checked` | app/templates/home.html | pin |
+| Hero headline blur-to-sharp arrival | home | `@keyframes fx-ghost` | app/static/css/motion3-ui.css | ghost |
+| Product page sticky cover and buy box | product | `class="product-rail"` | app/templates/product.html | lift |
+| Ring pulse behind the payment tick | order detail, pay | `@keyframes rs-pulse` | app/static/css/motion3.css | pay-mark |
+| Stepper on a pending order | order detail | `elif order.status == 'pending' %}{{ stepper(2) }}` | app/templates/order_detail.html | stepper |
+| Page fade where view transitions are unsupported | all | `@keyframes fx-page-in` | app/static/css/motion3-ui.css | page-fade |
+| Empty orders line-art idle loop | orders | `empty-art empty-orders` | app/templates/orders.html | bob |
+| Empty search line-art idle loop | catalogue | `empty-art empty-search` | app/templates/catalogue.html | bob |

@@ -34,6 +34,6 @@ def test_every_row_names_an_existing_file_and_no_row_is_listed_twice():
 def test_the_pinned_showcase_is_restored_and_stays_pinned():
     home = (ROOT / "app" / "templates" / "home.html").read_text(encoding="utf-8")
     css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
-    assert 'class="showcase" {{ fx(\'pin\') }}' in home and "pin-soft" not in home
+    assert 'class="showcase pin-lg" {{ fx(\'pin\') }}' in home and "pin-soft" not in home
     assert re.search(r'html\.fx-on:not\(\.fx-lite\) \[data-fx="pin"\]:not\(\.pin-lg\):not\(\.pin-soft\) \.fx-stage \{[^}]*position: sticky', css)
     assert home.count("sc-line") >= 3 and "sc-cue" in home       # three headline lines and the Scroll cue

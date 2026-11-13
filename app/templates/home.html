@@ -76,7 +76,7 @@
 </section>
 
 {% if latest | length >= 2 %}
-<section class="showcase" {{ fx('pin') }} aria-labelledby="showcase-h">
+<section class="showcase pin-lg" {{ fx('pin') }} aria-labelledby="showcase-h">
   <div class="showcase-stage fx-stage">
     <ul class="plain sc-grid">
       {% for p in latest[:4] %}
@@ -85,11 +85,13 @@
     </ul>
     <p class="sc-hint" aria-hidden="true">Scroll to bring the covers in</p>
     <p class="sc-cue" aria-hidden="true"><span>Scroll</span><i></i></p>
+    {% set number_words = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'] %}
     <div class="sc-head">
-      <div class="sc-line sc-l1"><h2 class="h2" id="showcase-h">Every cover is its own drawing</h2><p>The store draws each cover from the project's name and field, so no two look alike.</p></div>
-      <div class="sc-line sc-l2"><h2 class="h2">{{ n_projects }} {{ 'project' if n_projects == 1 else 'projects' }}, {{ fields | length }} {{ 'field' if fields | length == 1 else 'fields' }}</h2><p>Every one ships with the working source, a setup guide and the architecture notes.</p></div>
-      <div class="sc-line sc-l3"><h2 class="h2">Open one to see what is in the kit</h2><p>Each page lists the stack, the contents and how delivery works.</p></div>
+      <div class="sc-line sc-l1"><h2 class="h2" id="showcase-h">Scroll to fill the shelf</h2><p>{{ n_projects }} {{ 'project' if n_projects == 1 else 'projects' }}, and the store draws each cover from the project's name and field.</p></div>
+      <div class="sc-line sc-l2"><h2 class="h2">{{ number_words[fields | length] if fields | length < 10 else fields | length }} {{ 'field' if fields | length == 1 else 'fields' }}, one platform</h2><p>{{ fields | map(attribute=0) | map(attribute='name') | join(', ') }}.</p></div>
+      <div class="sc-line sc-l3"><h2 class="h2">Built to be checked</h2><p>{{ facts.tests }} automated tests, {{ facts.security_tests }} of them security checks, run in CI on every push.</p></div>
     </div>
+    <p class="sc-count" aria-hidden="true"><span class="sc-num"><b class="sc-n1">01</b><b class="sc-n2">02</b><b class="sc-n3">03</b></span><span> / 03</span></p>
   </div>
 </section>
 {% endif %}

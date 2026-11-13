@@ -76,6 +76,7 @@
 {% macro result_mark(kind, public_id, play) %}
 <div class="result result-{{ kind }}" data-result="{{ kind }}" data-order="{{ public_id }}"{% if play %} data-play{% endif %} aria-hidden="true">
   <svg viewBox="0 0 96 96" width="96" height="96" fill="none">
+    <circle class="rs-pulse" cx="48" cy="48" r="36"/>
     <circle class="rs-ring" cx="48" cy="48" r="45"/>
     {% if kind == 'failure' %}<circle class="rs-arc" cx="48" cy="48" r="45" pathLength="100"/>{% endif %}
     <circle class="rs-disc" cx="48" cy="48" r="36"/>

@@ -23,7 +23,7 @@
     </table>
   </div>
   {% else %}
-  <div class="empty end-gap"><h2>No orders yet.</h2><p>When you buy a project it shows up here, with its download link.</p><a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a></div>
+  <div class="empty end-gap"><svg class="empty-art empty-orders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" aria-hidden="true" focusable="false"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></svg><h2>No orders yet.</h2><p>When you buy a project it shows up here, with its download link.</p><a class="btn" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a></div>
   {% endif %}
 </div>
 {% endblock %}

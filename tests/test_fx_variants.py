@@ -105,7 +105,7 @@ def test_the_sideways_shelf_lists_real_projects_as_plain_links(client):
 
 def test_the_showcase_has_three_headline_lines_and_a_scroll_cue_and_is_pinned(client):
     home = client.get("/").get_data(as_text=True)
-    show = home[home.index('class="showcase"'):home.index("</section>", home.index('class="showcase"'))]
+    show = home[home.index('class="showcase pin-lg"'):home.index("</section>", home.index('class="showcase pin-lg"'))]
     assert show.count('class="sc-line') == 3 and 'class="sc-cue"' in show and "pin-soft" not in show
 
 
@@ -183,3 +183,38 @@ def test_reduced_motion_restores_every_variant():
     tail = VARIANTS[VARIANTS.rindex("@media (prefers-reduced-motion: reduce)"):]
     for needle in ('[data-fx="clip"]', ".fx-alt", '[data-fx="lines"]', '[data-fx="words"]', '[data-fx="hscroll"]', ".tl-draw { stroke-dashoffset: 0; }", "is-tilting"):
         assert needle in tail, needle
+
+
+# ---- the three-scene showcase -----------------------------------------------------------------------------------------------
+
+def test_the_showcase_is_three_scenes_with_a_counter_and_the_stated_headlines(client, app):
+    home = client.get("/").get_data(as_text=True)
+    show = home[home.index('class="showcase pin-lg"'):home.index("</section>", home.index('class="showcase pin-lg"'))]
+    heads = re.findall(r"<h2 class=\"h2\"[^>]*>(.*?)</h2>", show)
+    assert heads == ["Scroll to fill the shelf", "Four fields, one platform", "Built to be checked"]
+    assert re.search(r'<p class="sc-count" aria-hidden="true">.*<b class="sc-n1">01</b><b class="sc-n2">02</b><b class="sc-n3">03</b>.* / 03</span></p>', show, re.S)
+    assert show.count("sc-cover fx-move") == 4 and 'class="sc-cue"' in show
+
+
+def test_the_second_headline_counts_the_real_fields_and_the_third_quotes_the_facts_file(client, rag, soc):
+    from app.extensions import db
+    from app.context import FACTS
+    rag.is_active = False
+    db.session.commit()
+    home = client.get("/").get_data(as_text=True)
+    assert "Three fields, one platform" in home
+    assert f"{FACTS['tests']} automated tests, {FACTS['security_tests']} of them security checks" in home
+
+
+def test_the_scenes_change_at_set_points_and_the_counter_follows_the_same_windows():
+    seen = {m: (a, b) for m, a, b in re.findall(r"\.sc-l(\d), \.sc-n\d \{ --a: (-?[\d.]+); --b: (-?[\d.]+); \}", BARE)}
+    assert seen == {"1": ("-1", ".36"), "2": (".3", ".7"), "3": (".64", "9")}
+    assert ".sc-line, .sc-num b { --in:" in BARE and "opacity: min(var(--in), var(--out))" in BARE
+
+
+def test_the_showcase_is_pinned_on_large_screens_and_scroll_linked_unpinned_on_phones():
+    big = block(VARIANTS + BARE, "@media (min-width: 900px)")
+    assert 'html.fx-on:not(.fx-lite) [data-fx="pin"].pin-lg .fx-stage { contain: layout paint; position: sticky' in big
+    phone = block(BARE, "@media (max-width: 899px)")
+    assert ".sc-count { position: static;" in phone and "html.fx-on .sc-cue" in phone
+    assert "--pin-h: 300vh" in BARE

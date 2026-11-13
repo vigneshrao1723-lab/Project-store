@@ -36,6 +36,7 @@
       {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
     {% else %}
       <div class="empty">
+        <svg class="empty-art empty-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L21 21"/></svg>
         <h2>No projects match that.</h2>
         <p>Try a different word, such as a language or a framework, or clear the filters.</p>
         <a class="btn ghost" href="{{ url_for('shop.catalogue') }}">Show all projects</a>

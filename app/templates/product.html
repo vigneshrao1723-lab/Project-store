@@ -6,16 +6,17 @@
 <div class="wrap">
   <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
   <article class="product">
+    <div class="product-head">
+      <h1>{{ p.title }}</h1>
+      <p class="lede" {{ fx('words') }}>{{ fx_words(p.tagline) }}</p>
+    </div>
+    <div class="product-rail">
     <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}" {{ fx('rise') }}><div class="plate-cover" {{ fx('clip') }}>{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
       <dl class="spec">
         <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
         <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
       </dl>
     </div>
-    <div data-motion="product-info">
-      <h1>{{ p.title }}</h1>
-      <p class="lede" {{ fx('words') }}>{{ fx_words(p.tagline) }}</p>
-
       <div class="buy" data-motion="buybox" data-product="{{ p.id }}">
         <div class="price-big">{{ p.price_paise | inr }}</div>
         <p class="ui byline">
@@ -41,7 +42,8 @@
         {% endif %}
         <p class="buy-note" data-note role="status" aria-live="polite"></p>
       </div>
-
+    </div>
+    <div data-motion="product-info">
       <dl class="def" {{ fx('cascade') }}>
         <div><dt>Built with</dt><dd><span class="chips">{% for t in p.tech_list %}<span class="chip">{{ t }}</span>{% endfor %}</span></dd></div>
         {% if p.includes_list %}<div><dt>In the kit</dt><dd><ul {{ fx('cascade') }}>{% for i in p.includes_list %}<li>{{ i }}</li>{% endfor %}</ul></dd></div>{% endif %}

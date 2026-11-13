@@ -4,7 +4,7 @@
 {% block page_class %}account{% endblock %}
 {% block content %}
 <div class="wrap w-820">
-  {% if order.status == 'paid' %}{{ stepper(3) }}{% endif %}
+  {% if order.status == 'paid' %}{{ stepper(3) }}{% elif order.status == 'pending' %}{{ stepper(2) }}{% endif %}
   {% if order.status == 'paid' %}{{ result_mark('success', order.public_id, get_flashed_messages(category_filter=['success']) | length > 0) }}{% endif %}
   <div class="page-head" {{ fx('rise') }}>
     <p class="crumbs flush"><a href="{{ url_for('account.orders') }}">Your orders</a></p>

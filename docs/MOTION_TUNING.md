@@ -67,6 +67,8 @@ The server writes it into `<html data-fx-off="tilt marquee">`, so the switch wor
 | `hairline`, `header`, `footer` | scroll-progress line, condensed header, footer rise |
 | `inputs`, `shake`, `forms` | field underline and tick, error shake, posting spinner |
 | `downloads`, `drift` | download "preparing" state, drifting art behind sign in and register |
+| `ghost` | the hero headline's blur-to-sharp arrival |
+| `page-fade` | the short page fade-in used where view transitions are unsupported |
 
 Every effect in `docs/MOTION_INVENTORY.md` has a switch in its last column; a test checks that each one has a rule in
 `fx-tuning.css` and that `app/fx.json` only names real switches.

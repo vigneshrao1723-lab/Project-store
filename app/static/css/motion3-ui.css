@@ -81,6 +81,22 @@ html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp calc(900ms / v
 @keyframes fx-drift-b { to { transform: translate3d(30px, -26px, 0) rotate(-8deg); } }
 @media (max-width: 700px) { .drift .d2, .drift .d3 { display: none; } .drift .d1 { right: -30px; } }
 
+/* ---- the hero headline arrives out of a brief blur (6px at most, that one element, gone when it ends) ---- */
+html.fx-on .hero h1 { animation: fx-ghost calc(900ms / var(--fx-speed, 1)) var(--fx-ease) backwards; }
+@keyframes fx-ghost { from { opacity: 0; filter: blur(6px); } }
+html.fx-lite .hero h1 { animation: none; }
+
+/* ---- a short fade-in on pages for browsers without view transitions, so a click never lands on a blank flash ---- */
+@supports not (view-transition-name: a) { main { animation: fx-page-in calc(180ms / var(--fx-speed, 1)) ease-out backwards; } }
+@keyframes fx-page-in { from { opacity: 0; } }
+
+/* ---- empty states: line-art with a small idle loop ---- */
+.empty-art { display: block; width: 84px; height: 84px; margin-bottom: 1rem; color: var(--ink); }
+.empty-orders { animation: fx-float 4.2s ease-in-out infinite; }
+.empty-search { animation: fx-scan 5s ease-in-out infinite; }
+@keyframes fx-float { 50% { transform: translate3d(0, -6px, 0) rotate(-2deg); } }
+@keyframes fx-scan { 25% { transform: translate3d(8px, -4px, 0) rotate(8deg); } 70% { transform: translate3d(-6px, 3px, 0) rotate(-6deg); } }
+
 /* ---- everywhere: focus ring that settles in, press feedback, underline wipe on navigation links, hover lift ---- */
 :focus-visible { animation: fx-ring calc(260ms / var(--fx-speed, 1)) var(--fx-ease); }
 @keyframes fx-ring { from { outline-offset: 9px; outline-color: transparent; } }
@@ -111,7 +127,7 @@ html.fx-off-rail .rail { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .stp li.is-arriving .stp-line::after, .otl li.is-linked .otl-line::after, .btn.is-loading::after, .delivery a.is-preparing::after,
-  .empty-cart, .drift .d1, .drift .d2, .drift .d3, .line.is-ghost, .is-tick, :focus-visible, .field.has-error .inp { animation: none; }
+  .empty-cart, .empty-orders, .empty-search, .drift .d1, .drift .d2, .drift .d3, .line.is-ghost, .is-tick, :focus-visible, .field.has-error .inp { animation: none; }
   .stp li.is-current .stp-line::after, .stp li.is-arriving .stp-line::after { transform: scaleX(1); }
   .inp .ul, .inp .ok path { transition: none; }
   .nav a::after, .site-footer a::after, .crumbs a::after { transition: none; }

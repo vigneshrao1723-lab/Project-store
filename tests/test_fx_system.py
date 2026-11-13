@@ -190,7 +190,7 @@ def test_nothing_the_stylesheet_hides_is_hidden_without_the_script():
     # taller sections and sticky stages exist only after the script ran, too
     for selector, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", SCROLL):
         if re.search(r"(^|[;\s])(height|position)\s*:\s*(var\(--pin-h|calc\(100vh|sticky)", body):
-            assert "html.fx-on" in selector, selector
+            assert "html.fx-on" in selector or ".product-rail" in selector, selector        # the product page's sticky rail is plain layout, visible without the script
     assert "visibility: hidden" not in re.sub(r'\[data-fx="pin"\]\.is-pre[^{]*\{[^}]*\}', "", SCROLL) and "display: none; }" in SCROLL      # the one exception is a state the script sets
 
 

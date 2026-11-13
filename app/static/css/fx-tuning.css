@@ -80,6 +80,8 @@ html[data-fx-off~="cart-rows"] .line.is-ghost { animation: none !important; }
 html[data-fx-off~="cart-ticks"] .is-tick { animation: none !important; }
 html[data-fx-off~="bob"] .empty-cart, html[data-fx-off~="bob"] .empty-art { animation: none !important; }
 html[data-fx-off~="downloads"] .delivery a.is-preparing::after { animation: none !important; }
+html[data-fx-off~="ghost"] .hero h1 { animation: none !important; }
+html[data-fx-off~="page-fade"] main { animation: none !important; }
 html[data-fx-off~="drift"] .drift span { animation: none !important; }
 html[data-fx-off~="focus-ring"] :focus-visible { animation: none !important; }
 html[data-fx-off~="wipe"] .nav a::after, html[data-fx-off~="wipe"] .site-footer a::after, html[data-fx-off~="wipe"] .crumbs a::after { transition: none !important; }

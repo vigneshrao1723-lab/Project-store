@@ -49,7 +49,7 @@ function world(opts = {}) {
     };
     if (IO) win.IntersectionObserver = IO;
     const doc = {
-      hidden: false, body, documentElement: html,
+      hidden: false, readyState: "complete", body, documentElement: html,
       querySelector: (s) => (dom[s] || [])[0] || null,
       querySelectorAll: (s) => (s === "[data-fx]" ? [...(dom['[data-fx="rise"], [data-fx="count"]'] || []), ...(dom['[data-fx="cascade"]'] || []), ...(dom['[data-fx="pin"]'] || []), ...(dom['[data-fx="parallax"]'] || []), ...(dom.extra || [])] : dom[s] || []),
       addEventListener: (t, f) => { (listeners["doc:" + t] = listeners["doc:" + t] || []).push({ f }); },
@@ -59,7 +59,7 @@ function world(opts = {}) {
       window: win, document: doc, IntersectionObserver: IO, navigator: opts.nav || { hardwareConcurrency: 8, deviceMemory: 8 },
       requestAnimationFrame: (f) => { queue.push(f); maxQueued = Math.max(maxQueued, queue.length); return ++rafId; },
       cancelAnimationFrame: () => { queue = []; },
-      performance: { now: () => now },
+      performance: { now: () => now }, setTimeout: (f) => { f(); return 1; },
       getComputedStyle: (e) => ({ position: e.__position || "static", getPropertyValue: (n) => (opts.knobs || {})[n] || "" }),
       parseFloat, Math, Number, String, Set, Map, Array, Object,
     };

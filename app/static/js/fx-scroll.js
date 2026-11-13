@@ -40,7 +40,7 @@
   const forced = /[?&]fx=(lite|full)\b/.exec(window.location.search || "");
   const lite = forced ? forced[1] === "lite" : (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
   if (lite) root.classList.add("fx-lite");
-  let probing = !lite && !forced && !document.hidden, probeN = 0, probeT0 = 0;
+  let probing = false, probeN = 0, probeT0 = 0;          // the frame-rate probe starts 300 ms after the page has loaded, so loading jank is not mistaken for a slow device
 
   const scenic = page !== "admin";                 // admin pages get the one-shot words only
   const header = document.querySelector(".site-header");
@@ -106,7 +106,7 @@
         }
         const r = sec.getBoundingClientRect();
         // pinned: how far through the taller section; not pinned (phones, fx-lite, .pin-soft): how far it has come up the screen
-        const p = stuck ? (top - r.top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : (0.9 * vh - r.top) / (0.6 * vh);
+        const p = stuck ? (top - r.top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : (0.9 * vh - r.top) / (0.6 * vh + 0.4 * r.height);
         return { p, top };
       },
       apply({ p, top: t }) {
@@ -274,4 +274,8 @@
     document.removeEventListener("transitionend", onEnd);
   }, { once: true });
   schedule();
+  if (!lite && !forced) {
+    const startProbe = () => setTimeout(() => { probing = !document.hidden; schedule(); }, 300);
+    if (document.readyState === "complete") startProbe(); else window.addEventListener("load", startProbe, { once: true });
+  }
 })();

@@ -117,7 +117,8 @@ def test_nothing_in_the_interface_layer_hides_a_control_or_depends_on_the_script
 def test_every_animation_moves_transform_or_opacity_or_is_paint_only():
     for name, body in re.findall(r"@keyframes ([\w-]+) \{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}", BARE):
         props = set(re.findall(r"([\w-]+)\s*:", body)) - {"from", "to"}
-        assert props <= {"transform", "opacity", "outline-offset", "outline-color"}, (name, props)
+        allowed = {"transform", "opacity", "outline-offset", "outline-color"} | ({"filter"} if name == "fx-ghost" else set())
+        assert props <= allowed, (name, props)
     assert re.search(r"@keyframes fx-ring \{ from \{ outline-offset: 9px; outline-color: transparent; \} \}", BARE)
     assert re.search(r"@keyframes fx-shake .*transform", BARE) and "translate3d" in BARE
 
@@ -319,3 +320,72 @@ def test_switching_toasts_forms_cart_and_downloads_off_leaves_them_plain():
       w.fire("submit", { target: form, defaultPrevented: false, preventDefault() {} });
       const result = { ui: w.html.classList.s.has("fx-ui"), spinning: btn.classList.s.has("is-loading") };""")
     assert r == {"ui": False, "spinning": False}
+
+
+# ---- the ghost arrival and the other Part 2 pieces ---------------------------------------------------------------------------
+
+def test_the_only_filter_in_the_interface_layer_is_the_hero_headlines_blur_of_at_most_6px():
+    assert BARE.count("filter:") == 1
+    m = re.search(r"@keyframes fx-ghost \{ from \{ opacity: 0; filter: blur\((\d+)px\); \} \}", BARE)
+    assert m and int(m.group(1)) <= 6
+    assert re.search(r"html\.fx-on \.hero h1 \{ animation: fx-ghost [^;]*backwards; \}", BARE)         # no forwards fill: the filter is gone when it ends
+    assert "html.fx-lite .hero h1 { animation: none; }" in BARE                                         # blur is one of the things fx-lite drops
+    assert BARE.count(".hero h1") == 2
+
+
+def test_the_ghost_is_on_one_element_and_the_headline_text_is_unchanged(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.count("<h1") == 1
+    lines = re.findall(r'<span class="ln"><span>(.*?)</span></span> ', html)
+    assert " ".join(lines) == "Real engineering projects, ready to run and ready to explain."
+
+
+def test_the_pay_marks_get_a_ring_pulse_and_only_when_they_play(buyer, rag):
+    buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
+    pid = buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    declined = buyer.post(f"/checkout/test-pay/{pid}", data={"outcome": "fail"}, follow_redirects=True).get_data(as_text=True)
+    assert '<circle class="rs-pulse"' in declined
+    css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
+    assert re.search(r"\.result\[data-play\]:not\(\.is-played\) \.rs-pulse \{ animation: rs-pulse calc\(720ms \* var\(--pay-k\)\) ease-out", css)
+    assert re.search(r"@keyframes rs-pulse \{ from \{ opacity: \.6; transform: scale\(1\); \} to \{ opacity: 0; transform: scale\(1\.7\); \} \}", css)
+
+
+def test_the_stepper_is_on_all_four_checkout_pages_and_on_a_pending_order(buyer, rag):
+    buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
+    assert steps(buyer.get("/cart").get_data(as_text=True))[0][0].startswith("is-current")
+    assert "is-current" in steps(buyer.get("/checkout").get_data(as_text=True))[1][0]
+    pid = buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    assert "is-current" in steps(buyer.get(f"/checkout/pay/{pid}").get_data(as_text=True))[2][0]
+    assert "is-current" in steps(buyer.get(f"/orders/{pid}").get_data(as_text=True))[2][0]            # still unpaid: Pay is the current step
+    buyer.post(f"/checkout/test-pay/{pid}", data={"outcome": "pay"})
+    assert "is-current" in steps(buyer.get(f"/orders/{pid}").get_data(as_text=True))[3][0]
+
+
+def test_empty_states_have_line_art_with_an_idle_loop_that_reduced_motion_stops(buyer, client):
+    for page, cls in (("/orders", "empty-orders"), ("/catalogue?q=zzzzqqqq", "empty-search"), ("/cart", "empty-cart")):
+        html = buyer.get(page).get_data(as_text=True)
+        assert cls in html and 'aria-hidden="true" focusable="false"' in html, page
+    for name in ("fx-float", "fx-scan", "fx-bob"):
+        assert f"@keyframes {name}" in BARE
+    tail = BARE[BARE.rindex("@media (prefers-reduced-motion: reduce)"):]
+    assert ".empty-orders, .empty-search" in tail
+
+
+def test_pages_fade_in_only_where_view_transitions_are_unsupported():
+    assert "@supports not (view-transition-name: a) { main { animation: fx-page-in" in BARE
+    assert "@keyframes fx-page-in { from { opacity: 0; } }" in BARE
+
+
+# ---- the product page's sticky rail ------------------------------------------------------------------------------------------
+
+def test_the_product_page_is_head_then_a_rail_of_cover_and_buy_box_then_the_details(client, rag):
+    html = client.get(f"/p/{rag.slug}").get_data(as_text=True)
+    art = html[html.index('<article class="product">'):html.index("</article>")]
+    order = [art.index(m) for m in ('class="product-head"', 'class="product-rail"', '<div class="plate"', '<div class="buy"', 'data-motion="product-info"', '<dl class="def"', 'class="prose"')]
+    assert order == sorted(order)
+    head = art[art.index('class="product-head"'):art.index('class="product-rail"')]
+    assert f"<h1>{rag.title}</h1>" in head and 'class="lede"' in head
+    css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
+    assert re.search(r"\.product-rail \{[^}]*position: sticky; top: 5\.5rem;", css) and ".product .plate { position: static; }" in css
+    phone = css[css.index("@media (max-width: 900px) {\n  .product {"):]
+    assert ".product-rail { position: static;" in phone
