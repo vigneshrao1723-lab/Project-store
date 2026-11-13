@@ -1,0 +1,70 @@
+/* Motion 3. Three moments, each driven by a state the page's own script sets, and each finished (and fully
+   visible) in plain CSS when no script runs:
+     1. the Add to cart button on the product page   (fx-cart.js)
+     2. the payment result mark                       (fx-pay.js)
+     3. the home-page story and the cover showcase    (fx-scroll.js)
+   Rules for this file:
+   * Only transform and opacity move. The one exception is stroke-dashoffset on the two drawn marks (the tick and
+     the cross), a paint-only change on a 20 px SVG path.
+   * will-change appears only on .is-animating, which a script sets for the length of one animation.
+   * No :hover anywhere in this file, so touch devices depend on nothing.
+   * Nothing is hidden unless a script put the element in a state, and every hidden state ends in CSS.
+   * prefers-reduced-motion gets the final state with no movement. */
+:root { --fx-ease: cubic-bezier(.2, .7, .2, 1); --fx-ease-in: cubic-bezier(.55, 0, .8, .3); }
+.is-animating { will-change: transform, opacity; }
+
+/* ---------- 1. Add to cart --------------------------------------------------------------------------------------
+   Idle: icon and label side by side, as before. The button's box never changes: the moving parts are children, and
+   the button clips them. --atc-x (icon to the centre), --atc-out and --atc-in (off the right edge, and in from the
+   left) are measured and set by the script at click time. */
+.atc { position: relative; overflow: hidden; }
+.atc-go { position: relative; display: block; width: 22px; height: 22px; flex: none; }
+.atc-item { position: absolute; left: 8px; top: 3px; width: 6px; height: 9px; background: currentColor; opacity: 0; }
+.atc-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; opacity: 0; }
+.atc-tick { stroke-dasharray: 20; stroke-dashoffset: 20; }
+.atc[data-state] { opacity: 1; }                       /* app.js disables the button while the request runs; do not dim it */
+
+/* adding: the label fades and slides out, the cart rolls to the middle */
+.atc[data-state="adding"] .atc-label { animation: atc-label-out 240ms var(--fx-ease) both; }
+.atc[data-state="adding"] .atc-go { animation: atc-centre 360ms var(--fx-ease) both; }
+/* added: an item drops in, the cart catches it and rolls out to the right, the tick draws */
+.atc[data-state="added"] .atc-label { opacity: 0; }
+.atc[data-state="added"] .atc-go { animation: atc-roll 340ms var(--fx-ease-in) 330ms both; }
+.atc[data-state="added"] .atc-item { animation: atc-drop 300ms var(--fx-ease) both; }
+.atc[data-state="added"] .atc-cart { animation: atc-catch 220ms var(--fx-ease) 250ms both; }
+.atc[data-state="added"] .atc-done { animation: atc-done-in 280ms var(--fx-ease) 560ms both; }
+.atc[data-state="added"] .atc-tick { animation: atc-draw 260ms var(--fx-ease) 700ms both; }
+/* back: Added leaves, the cart comes in from the left, the label returns */
+.atc[data-state="back"] .atc-done { animation: atc-done-out 200ms linear both; }
+.atc[data-state="back"] .atc-tick { stroke-dashoffset: 0; }
+.atc[data-state="back"] .atc-go { animation: atc-enter 380ms var(--fx-ease) both; }
+.atc[data-state="back"] .atc-label { animation: atc-label-in 280ms var(--fx-ease) 120ms both; }
+/* undo: the request failed, so the cart rolls back to its place */
+.atc[data-state="undo"] .atc-go { animation: atc-uncentre 300ms var(--fx-ease) both; }
+.atc[data-state="undo"] .atc-label { animation: atc-label-in 260ms var(--fx-ease) 60ms both; }
+
+@keyframes atc-label-out { to { opacity: 0; transform: translateX(14px); } }
+@keyframes atc-label-in { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes atc-centre { to { transform: translateX(var(--atc-x, 0px)); } }
+@keyframes atc-uncentre { from { transform: translateX(var(--atc-x, 0px)); } }
+@keyframes atc-drop { from { opacity: 0; transform: translateY(-34px); } 30% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes atc-catch { 45% { transform: translateY(2px); } }
+@keyframes atc-roll { from { transform: translateX(var(--atc-x, 0px)); } to { transform: translateX(var(--atc-out, 0px)); } }
+@keyframes atc-enter { from { transform: translateX(var(--atc-in, 0px)); } }
+@keyframes atc-done-in { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; } }
+@keyframes atc-done-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes atc-draw { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+.atc.is-animating .atc-go, .atc.is-animating .atc-label, .atc.is-animating .atc-done, .atc.is-animating .atc-item { will-change: transform, opacity; }
+
+/* header cart count: one pulse when the number goes up */
+.count.is-bump { animation: fx-bump 460ms var(--fx-ease); }
+@keyframes fx-bump { 0% { transform: scale(1); } 28% { transform: scale(1.55); } 60% { transform: scale(.92); } 100% { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* no movement: the added state is shown at once, with the tick already drawn */
+  .atc[data-state] * { animation: none; }
+  .atc[data-state="added"] .atc-go { opacity: 0; }
+  .atc[data-state="added"] .atc-done { opacity: 1; }
+  .atc[data-state="added"] .atc-tick { stroke-dashoffset: 0; }
+  .count.is-bump { animation: none; }
+}

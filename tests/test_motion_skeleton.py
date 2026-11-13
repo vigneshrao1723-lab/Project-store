@@ -128,7 +128,7 @@ def test_product_page_hooks(buyer, client, rag):
     for html in (anonymous, signed_in):
         for name in ("plate", "product-info", "buybox"):
             assert hooks(html, name) == [f'data-motion="{name}"'], name
-    assert 'class="btn" data-press type="submit">Add to cart' in signed_in
+    assert 'class="btn atc" data-press type="submit">' in signed_in and '<span class="atc-label">Add to cart</span>' in signed_in
     assert 'class="btn" data-press href=' in anonymous
 
 
