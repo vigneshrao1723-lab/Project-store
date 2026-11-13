@@ -202,7 +202,7 @@ def test_scenes_marked_pin_lg_are_pinned_on_large_screens_only():
     assert ".pin-lg .fx-stage { position: sticky" in big
     outside = SCROLL.replace(big, "")
     assert not re.search(r"\.pin-lg(?!\))[^{]*\{[^}]*(sticky|height: var)", outside)
-    assert 'html.fx-on [data-fx="pin"]:not(.pin-lg)' in outside          # a plain pin (the home showcase) is pinned everywhere
+    assert 'html.fx-on [data-fx="pin"]:not(.pin-lg):not(.pin-soft)' in outside     # a plain pin is pinned everywhere; .pin-soft never is
 
 
 def test_the_product_scene_asks_for_less_than_one_screen_of_extra_scroll():

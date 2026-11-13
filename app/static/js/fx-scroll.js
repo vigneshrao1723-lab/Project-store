@@ -22,6 +22,8 @@
 
   const root = document.documentElement;
   const header = document.querySelector(".site-header");
+  const bar = page === "browse" ? document.querySelector(".fx-progress") : null;   // --sp goes on this one node, never on <html>: a custom
+                                                                               // property on the root makes the browser restyle every element per frame
   const clamp = (x, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
   const live = new Set();            // pins and parallax elements that are on screen
   const settle = new Set();          // ones that just left: one last measurement puts them at 0 or 1
@@ -65,7 +67,9 @@
           top = header && getComputedStyle(header).position === "sticky" ? header.offsetHeight : 0;
           stale = false;
         }
-        const p = stuck ? (top - sec.getBoundingClientRect().top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : 1;
+        const r = sec.getBoundingClientRect();
+        // pinned: how far through the taller section; not pinned (phones, .pin-soft): how far the section has come up the screen
+        const p = stuck ? (top - r.top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : (0.9 * (window.innerHeight || 1) - r.top) / (0.6 * (window.innerHeight || 1));
         return { p, top };
       },
       apply({ p, top: t }) { if (sec.__top !== t) { sec.__top = t; sec.style.setProperty("--fx-top", t + "px"); } put(sec, "--p", clamp(p)); },
@@ -119,10 +123,10 @@
     const work = [...live, ...settle];
     settle.clear();
     const measured = work.map((s) => s.measure(vh));                 // all reads first
-    if (page === "browse") docH = root.scrollHeight;
+    if (bar) docH = root.scrollHeight;
     work.forEach((s, i) => s.apply(measured[i]));                    // then all writes
     if (header && (y > 40) !== condensed) { condensed = y > 40; header.classList.toggle("is-condensed", condensed); }
-    if (page === "browse") put(root, "--sp", clamp(y / Math.max(1, docH - vh)));
+    if (bar) put(bar, "--sp", clamp(y / Math.max(1, docH - vh)));
     for (let i = counting.length - 1; i >= 0; i--) {
       const c = counting[i], t = clamp((now - c.t0) / 900);
       c.out.textContent = String(Math.round(c.n * (1 - Math.pow(1 - t, 3))));

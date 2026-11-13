@@ -150,8 +150,8 @@ html.fx-on [data-fx="rise"].is-instant, html.fx-on [data-fx="cascade"] > .is-ins
 
 /* pin: a scene held on screen while the reader scrolls through a taller section. --p is how far through. */
 [data-fx="pin"] { position: relative; --p: 1; --fx-top: 0px; }
-html.fx-on [data-fx="pin"]:not(.pin-lg) { height: var(--pin-h, 240vh); }
-html.fx-on [data-fx="pin"]:not(.pin-lg) .fx-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
+html.fx-on [data-fx="pin"]:not(.pin-lg):not(.pin-soft) { height: var(--pin-h, 240vh); }
+html.fx-on [data-fx="pin"]:not(.pin-lg):not(.pin-soft) .fx-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
 @media (min-width: 900px) {            /* .pin-lg scenes are pinned on large screens only, never on phones */
   html.fx-on [data-fx="pin"].pin-lg { height: var(--pin-h, 170vh); }
   html.fx-on [data-fx="pin"].pin-lg .fx-stage { position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; }
@@ -181,7 +181,7 @@ html.fx-on .site-header.is-condensed .wordmark { transform: scale(.88); }
 .fx-stat .fx-n { color: var(--ink); font: 800 clamp(2.4rem, 5vw, 3.6rem)/1 var(--font-display); letter-spacing: -.02em; margin-bottom: .5rem; }
 .fx-stat .fx-l { font: 600 .92rem/1.35 var(--font-display); color: var(--ink-2); }
 
-.showcase { border-top: 1px solid var(--rule); --pin-h: 240vh; }
+.showcase { border-top: 1px solid var(--rule); --pin-h: 240vh; overflow-x: clip; }      /* covers start off to the sides; clip them without making a scroll container */      /* .pin-soft: the covers slide in as the section passes, without holding the screen */
 .showcase-stage { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 1rem; max-width: var(--wrap); margin-inline: auto; padding: clamp(24px, 5vw, 48px) var(--gutter); }
 .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 2vw, 20px); width: 100%; max-width: calc((100vh - 230px) * 1.19); margin-inline: auto; }
 .sc-0 { --dir: -1; }
@@ -197,7 +197,7 @@ html.fx-on .site-header.is-condensed .wordmark { transform: scale(.88); }
 .sc-head h2 { color: var(--paper); margin-bottom: .4rem; }
 .sc-head p { margin: 0; color: var(--panel); font-size: .98rem; }
 .sc-hint { display: none; margin: 0; position: absolute; left: 50%; top: 50%; translate: -50% -50%; text-align: center; font: 700 .85rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); opacity: clamp(0, calc(1 - var(--p) * 7), 1); }
-html.fx-on .sc-hint { display: block; }
+html.fx-on [data-fx="pin"]:not(.pin-soft) .sc-hint { display: block; }
 @media (min-width: 900px) {
   .sc-grid { --cw: calc((100vh - 230px) * .6); grid-template-columns: minmax(0, var(--cw)) minmax(14rem, 24rem) minmax(0, var(--cw)); justify-content: center; max-width: none; column-gap: clamp(14px, 2vw, 28px); }
   .sc-0 { grid-area: 1 / 1; } .sc-2 { grid-area: 2 / 1; } .sc-1 { grid-area: 1 / 3; } .sc-3 { grid-area: 2 / 3; }

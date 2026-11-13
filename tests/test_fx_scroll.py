@@ -96,8 +96,8 @@ PAGE = """
   const count = w.make("count", { dataset: { fx: "count", to: "641" }, top: 1800, querySelector: (s) => (s === ".cnt-live" ? live : null) });
   const live2 = w.make("live2", {});
   const count_in = w.make("count_in", { dataset: { fx: "count", to: "15" }, top: 200, querySelector: (s) => (s === ".cnt-live" ? live2 : null) });
-  const header = w.make("header", {});
-  const dom = { '[data-fx="rise"], [data-fx="count"]': [rise_in, rise_below, count, count_in], '[data-fx="cascade"]': [grid], '[data-fx="pin"]': [], '[data-fx="parallax"]': [], ".site-header": [header] };
+  const header = w.make("header", {}); const bar = w.make("bar", {});
+  const dom = { '[data-fx="rise"], [data-fx="count"]': [rise_in, rise_below, count, count_in], '[data-fx="cascade"]': [grid], '[data-fx="pin"]': [], '[data-fx="parallax"]': [], ".site-header": [header], ".fx-progress": [bar] };
   w.run(dom);
 """
 
@@ -234,6 +234,13 @@ def test_a_scene_that_is_not_pinned_stays_finished_and_will_change_comes_off_whe
     assert r == {"p": 1, "animating": False}
 
 
+def test_a_scene_that_is_not_pinned_follows_its_position_on_the_screen_instead():
+    r = run_node(pin("""
+      const ps = [900, 600, 400, 100, -300].map(at);
+      const result = { ps };""", "static"))
+    assert r["ps"][0] == 0 and 0 < r["ps"][1] < r["ps"][2] < 1 and r["ps"][3] == 1 and r["ps"][4] == 1, r
+
+
 def test_a_scene_that_scrolled_out_fast_gets_one_last_measurement_so_it_ends_at_zero_or_one():
     r = run_node(pin("""
       at(75 - 600);                               // half way through
@@ -255,7 +262,7 @@ def test_parallax_drifts_with_position_and_is_clamped():
 def test_the_header_condenses_past_40px_and_the_progress_line_follows_the_scroll_on_browse_pages():
     r = run_node(page("""
       w.win.pageYOffset = 0; w.dispatch("scroll"); w.advance(32);
-      const top = [header.classList.s.has("is-condensed"), w.html.style.props["--sp"]];
+      const top = [header.classList.s.has("is-condensed"), bar.style.props["--sp"]];
       w.win.pageYOffset = 41; w.dispatch("scroll"); w.advance(32);
       const below = header.classList.s.has("is-condensed");
       w.win.pageYOffset = 0; w.dispatch("scroll"); w.advance(32);
@@ -264,11 +271,19 @@ def test_the_header_condenses_past_40px_and_the_progress_line_follows_the_scroll
     assert r["top"][0] is False and r["top"][1] == "0.000" and r["below"] is True and r["back"] is False
 
 
+def test_the_progress_number_is_written_on_its_own_node_and_never_on_the_root_element():
+    r = run_node(page("""
+      w.win.pageYOffset = 1000; w.dispatch("scroll"); w.advance(32);
+      const rootWrites = w.writes.filter((x) => x[0] === "html").length;
+      const result = { bar: parseFloat(bar.style.props["--sp"]) > 0, rootWrites };"""))
+    assert r == {"bar": True, "rootWrites": 0}
+
+
 def test_other_page_classes_condense_the_header_but_draw_no_progress_line():
     r = run_node(page("""
       w.win.pageYOffset = 100; w.dispatch("scroll"); w.advance(32);
-      const result = { condensed: header.classList.s.has("is-condensed"), sp: w.html.style.props["--sp"] === undefined };""", '{ page: "transactional" }'))
-    assert r == {"condensed": True, "sp": True}
+      const result = { condensed: header.classList.s.has("is-condensed"), sp: bar.style.props["--sp"] === undefined, root: w.html.style.props["--sp"] === undefined };""", '{ page: "transactional" }'))
+    assert r == {"condensed": True, "sp": True, "root": True}
 
 
 # ---- focus, visibility, clean up -------------------------------------------------------------------------------------------
