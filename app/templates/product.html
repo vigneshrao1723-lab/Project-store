@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile, fx_back, fx_panel, fx %}
+{% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_words %}
 {% block title %}{{ p.title }}{% endblock %}
 {% block description %}{{ p.tagline }}{% endblock %}
 {% block content %}
 <div class="wrap">
   <p class="crumbs"><a href="{{ url_for('shop.catalogue') }}">Catalogue</a> / <a href="{{ url_for('shop.catalogue', category=p.category.slug) }}">{{ p.category.name }}</a></p>
   <article class="product">
-    <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}" {{ fx('rise') }}><div class="plate-cover">{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
+    <div class="plate" data-motion="plate" data-motion-kind="{{ p.category.cover_kind }}" {{ fx('rise') }}><div class="plate-cover" {{ fx('clip') }}>{{ fx_back() }}{{ cover(p) }}{{ fx_panel(p.category.cover_kind) }}</div>
       <dl class="spec">
         <div><dt>Kit number</dt><dd class="num">{{ p.code }}</dd></div>
         <div><dt>Field</dt><dd>{{ p.category.name }}</dd></div>
@@ -14,7 +14,7 @@
     </div>
     <div data-motion="product-info">
       <h1>{{ p.title }}</h1>
-      <p class="lede">{{ p.tagline }}</p>
+      <p class="lede" {{ fx('words') }}>{{ fx_words(p.tagline) }}</p>
 
       <div class="buy" data-motion="buybox" data-product="{{ p.id }}">
         <div class="price-big">{{ p.price_paise | inr }}</div>
@@ -73,7 +73,7 @@
   {% if related %}
   <section class="section flush-top" data-reveal>
     <div class="section-head" {{ fx('rise') }}><h2 class="h2">More in {{ p.category.name }}</h2></div>
-    <div class="grid" data-motion-group="tiles" {{ fx('cascade') }}>{% for r in related %}{{ tile(r, loop.index0) }}{% endfor %}</div>
+    <div class="grid fx-zoomc" data-motion-group="tiles" {{ fx('cascade') }}>{% for r in related %}{{ tile(r, loop.index0) }}{% endfor %}</div>
   </section>
   {% endif %}
 </div>

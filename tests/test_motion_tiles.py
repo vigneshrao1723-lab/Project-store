@@ -85,7 +85,7 @@ def test_plates_on_home_and_product_pages_carry_the_kind_and_the_purchase_box_ha
     assert 'data-motion="hero-plate"' in hero and 'data-motion-kind="' in hero and 'aria-label=' in hero
     assert home.count('<div class="plate-cover">') == 1
     product = buyer.get(f"/p/{rag.slug}").get_data(as_text=True)
-    assert re.search(r'<div class="plate" data-motion="plate" data-motion-kind="\w+"(?: data-fx="rise")?><div class="plate-cover">', product)
+    assert re.search(r'<div class="plate" data-motion="plate" data-motion-kind="\w+"(?: data-fx="rise")?><div class="plate-cover"(?: data-fx="clip")?>', product)
     buy = product[product.index('<div class="buy"'):product.index('<dl class="def"')]
     assert "fx-" not in buy and "mk-" not in buy and "data-reveal" not in buy
     assert buy.count("<form") == 1 and 'data-add-to-cart' in buy

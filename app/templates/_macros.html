@@ -34,8 +34,8 @@
 </svg></span>{% endmacro %}
 
 {% macro tile(p, i=0) %}
-<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}" data-motion="tile" data-motion-kind="{{ p.category.cover_kind }}" data-motion-index="{{ i }}">
-  <div class="tile-cover" data-motion="tile-cover">{{ fx_back() }}{{ cover(p) }}{% if p.available %}{{ fx_panel(p.category.cover_kind) }}{% endif %}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
+<a class="tile{% if not p.available %} is-out{% endif %}" href="{{ url_for('shop.product', slug=p.slug) }}" data-motion="tile" data-motion-kind="{{ p.category.cover_kind }}" data-motion-index="{{ i }}" {{ fx('tilt') }}>
+  <div class="tile-cover" data-motion="tile-cover" {{ fx('clip') }}>{{ fx_back() }}{{ cover(p) }}{% if p.available %}{{ fx_panel(p.category.cover_kind) }}{% endif %}{% if not p.available %}<span class="out-flag">{% if p.stock == 0 and p.price_paise %}Not available yet{% else %}Sold out{% endif %}</span>{% endif %}</div>
   <div class="tile-body">
     <h3>{{ p.title }}</h3>
     <p class="tagline">{{ p.tagline }}</p>
@@ -97,3 +97,15 @@
 {% macro fx(kind) %}data-fx="{{ kind }}"{% endmacro %}
 
 {% macro fx_count(n) %}<span class="cnt" data-fx="count" data-to="{{ n }}"><span class="cnt-size">{{ n }}</span><span class="cnt-live" aria-hidden="true">{{ n }}</span></span>{% endmacro %}
+
+{# More words of the scroll vocabulary (all through fx(), see docs/ARCHITECTURE.md):
+     from-left from-right zoom flip   single-block entrances      <figure {{ fx('from-left') }}>
+     clip                             wipe-reveal for covers       <div class="plate-cover" {{ fx('clip') }}>
+     lines                            a headline line by line      <h1 {{ fx('lines') }}>{{ fx_lines('One line,', 'two lines.') }}</h1>
+     words                            copy word by word            <p {{ fx('words') }}>{{ fx_words('Up to thirty words are animated.') }}</p>
+     hscroll                          a sideways shelf driven by vertical scroll
+     draw                             an SVG line that draws as you scroll (--d)
+     marquee                          a slow CSS-only ticker
+     tilt  magnetic                   pointer feedback, fine pointers only                                #}
+{% macro fx_lines() %}{% for l in varargs %}<span class="ln"><span>{{ l }}</span></span> {% endfor %}{% endmacro %}
+{% macro fx_words(text, limit=30) %}{% set ws = text.split() %}{% for w in ws[:limit] %}<span class="w">{{ w }}</span> {% endfor %}{{ ws[limit:] | join(' ') }}{% endmacro %}

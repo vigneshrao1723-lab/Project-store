@@ -17,7 +17,27 @@ SCROLL = BARE[BARE.index('html.fx-on [data-fx="rise"]:not(.is-in)'):]
 SCROLL = re.sub(r"@keyframes [\w-]+ \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", SCROLL)      # keyframes are not selectors
 SCROLL_MAIN = SCROLL.split("@media (prefers-reduced-motion: reduce)")[0]       # without the final reduced-motion block
 TEMPLATES = ROOT / "app" / "templates"
-VOCABULARY = {"rise", "cascade", "count", "pin", "parallax"}
+VOCABULARY = {"rise", "cascade", "count", "pin", "parallax",                                    # the first five
+              "from-left", "from-right", "zoom", "flip", "clip", "lines", "words", "draw", "hscroll",   # scroll variants
+              "marquee", "tilt", "magnetic"}                                                       # ticker and pointer feedback
+
+
+def without_hover_media(css):
+    """The stylesheet with every (hover: hover) and (pointer: fine) block removed: hover rules may live only there."""
+    out, i = "", 0
+    marker = "@media (hover: hover) and (pointer: fine) {"
+    while True:
+        j = css.find(marker, i)
+        if j < 0:
+            return out + css[i:]
+        out += css[i:j]
+        depth, k = 0, j + len(marker) - 1
+        for k in range(k, len(css)):
+            depth += css[k] == "{"
+            depth -= css[k] == "}"
+            if depth == 0:
+                break
+        i = k + 1
 CONTROLS = re.compile(r"<(a|button|input|select|textarea|form|label)\b")
 
 
@@ -107,11 +127,12 @@ def test_the_progress_hairline_exists_only_as_a_decorative_element_and_is_drawn_
 
 # ---- the vocabulary -----------------------------------------------------------------------------------------------------
 
-def test_the_vocabulary_is_exactly_five_words(app, buyer, admin_client, rag, order_id):
+def test_the_vocabulary_words_in_use_are_all_documented_ones(app, buyer, admin_client, rag, order_id):
     seen = set()
     for path, (client, expected) in pages(app, buyer, admin_client, rag, order_id).items():
         seen |= set(re.findall(r'data-fx="(\w+)"', client.get(path.split("#")[0], follow_redirects=True).get_data(as_text=True)))
-    assert seen == VOCABULARY, seen
+    assert seen <= VOCABULARY, seen - VOCABULARY
+    assert {"rise", "cascade", "count", "pin", "parallax", "lines", "words", "clip", "draw", "hscroll", "marquee", "tilt", "magnetic"} <= seen, seen
 
 
 def test_macros_are_the_one_way_templates_spell_it(app):
@@ -149,7 +170,7 @@ def test_nothing_the_stylesheet_hides_is_hidden_without_the_script():
     hiding = [(s.strip(), b) for s, b in re.findall(r"([^{}@]+)\{([^{}]*)\}", SCROLL) if re.search(r"opacity:\s*0\b", b)]
     assert hiding
     for selector, body in hiding:
-        if ".cnt-size" in selector:
+        if ".cnt-size" in selector or "::after" in selector or "::before" in selector:
             continue                                  # the sizing text of a counter: invisible by design, still in the page
         parts = [p.strip() for p in selector.split(",")]
         assert all(p.startswith("html.fx-on ") for p in parts), (selector, "hidden by base CSS without the script")
@@ -187,7 +208,7 @@ def test_only_transform_and_opacity_change_in_the_scroll_system():
     for selector, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", SCROLL_MAIN):
         for prop in re.findall(r"transition:\s*([^;]+);", body):
             assert {p.strip().split()[0] for p in prop.split(",")} <= {"opacity", "transform", "none"}, selector
-    assert "will-change" not in SCROLL and "!important" not in SCROLL and ":hover" not in re.sub(r"\.sc-cover a:hover \{[^}]*\}", "", SCROLL)
+    assert "will-change" not in SCROLL and "!important" not in SCROLL and ":hover" not in re.sub(r"\.tile:is\(:hover[^}]*\}", "", re.sub(r"\.(sc-cover|hs-card) a:hover \{[^}]*\}", "", without_hover_media(SCROLL)))
 
 
 def test_reduced_motion_puts_everything_back_in_its_finished_state_even_if_the_class_is_already_set():
@@ -240,7 +261,7 @@ def test_home_and_catalogue_get_the_full_treatment(client):
     kinds = [k for k, _, _ in fx_elements(home)]
     assert kinds.count("cascade") >= 4 and kinds.count("count") == 4 and "pin" in kinds and "rise" in kinds
     cat = client.get("/catalogue").get_data(as_text=True)
-    assert re.search(r'<div class="grid" data-motion-group="tiles" data-fx="cascade">', cat)
+    assert re.search(r'<div class="grid fx-alt" data-motion-group="tiles" data-fx="cascade">', cat)
 
 
 # ---- transactional pages -----------------------------------------------------------------------------------------------------

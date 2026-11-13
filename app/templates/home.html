@@ -1,15 +1,21 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count %}
+{% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count, fx_lines, fx_words %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
+<nav class="rail" aria-hidden="true"><ol>{% for i in range(8) %}<li></li>{% endfor %}</ol></nav>
 {# facts (test count, coverage) come from app/facts.json through the context processor; every other figure here is counted live. #}
 <section class="hero" data-motion="hero">
+  <div class="hero-art" aria-hidden="true">
+    <span class="px px-1" {{ fx('parallax') }}><svg viewBox="0 0 220 220" width="220" height="220" fill="none" stroke="currentColor" stroke-width="1.4">{% for r in range(5) %}{% for c in range(5) %}<circle cx="{{ 20 + c * 45 }}" cy="{{ 20 + r * 45 }}" r="{{ 3 if (r + c) % 2 else 6 }}"/>{% endfor %}{% endfor %}</svg></span>
+    <span class="px px-2" {{ fx('parallax') }}><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="70" height="70" fill="#F5D90A"/><rect x="34" y="34" width="70" height="70" fill="none" stroke="#1B2A41" stroke-width="2"/></svg></span>
+    <span class="px px-3" {{ fx('parallax') }}><svg viewBox="0 0 160 40" width="160" height="40" fill="none" stroke="#1B2A41" stroke-width="2"><path d="M4 20h40M24 4v32"/><path d="M70 20h86" stroke-dasharray="6 6"/></svg></span>
+  </div>
   <div class="wrap hero-grid">
     <div data-motion="hero-copy">
-      <h1 class="h1">Real engineering projects, ready to run and ready to explain.</h1>
-      <p class="lede">Every kit comes with the working source, a setup guide and the architecture notes, written by the student who built it.</p>
+      <h1 class="h1" {{ fx('lines') }}>{{ fx_lines('Real', 'engineering', 'projects,', 'ready to run', 'and ready to', 'explain.') }}</h1>
+      <p class="lede" {{ fx('words') }}>{{ fx_words('Every kit comes with the working source, a setup guide and the architecture notes, written by the student who built it.') }}</p>
       <div class="hero-actions">
-        <a class="btn" data-press href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a>
+        <a class="btn" data-press href="{{ url_for('shop.catalogue') }}" {{ fx('magnetic') }}>Browse the catalogue</a>
         <a href="#how">How buying works</a>
       </div>
     </div>
@@ -31,10 +37,16 @@
 
 {% set n_projects = categories | sum(attribute=1) %}
 {% set fields = categories | selectattr(1) | list %}
+<section class="stack-band" aria-label="What the store is built with">
+  <div class="marquee" {{ fx('marquee') }}>
+    {% for copy in range(2) %}<ul class="plain mq-row"{% if copy %} aria-hidden="true"{% endif %}>{% for t in ['Flask', 'MySQL', 'Docker', 'GitHub Actions', 'pytest', 'SQLAlchemy', 'Razorpay'] %}<li>{{ t }}</li>{% endfor %}</ul>{% endfor %}
+  </div>
+</section>
+
 <section class="story" aria-labelledby="story-h">
   <div class="wrap">
     <h2 class="h2" id="story-h" {{ fx('rise') }}>The store in plain numbers</h2>
-    <div class="story-grid" {{ fx('cascade') }}>
+    <div class="story-grid fx-zoomc" {{ fx('cascade') }}>
       <article class="fx-card fx-wide">
         <h3>Your copy is held while you pay</h3>
         <p>Checkout reserves what you chose. If the hold runs out before the payment arrives, the copies go back on the shelf.</p>
@@ -82,10 +94,21 @@
 </section>
 {% endif %}
 
+{% if latest | length >= 2 %}
+<section class="shelf" {{ fx('hscroll') }} aria-labelledby="shelf-h">
+  <div class="hs-stage fx-stage">
+    <div class="wrap hs-head"><h2 class="h2" id="shelf-h">The whole shelf, side by side</h2><p class="muted">Scroll and the shelf slides along. On a phone, swipe it.</p></div>
+    <ul class="plain hs-track">
+      {% for p in latest %}<li class="hs-card"><a href="{{ url_for('shop.product', slug=p.slug) }}"><span class="sc-art">{{ cover(p) }}</span><span class="sc-cap"><span>{{ p.title }}</span><span class="num">{{ p.price_paise | inr }}</span></span></a></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
+
 <section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head" {{ fx('rise') }}><h2 class="h2">Browse by field</h2></div>
-    <div class="index" {{ fx('cascade') }}>
+    <div class="index fx-alt" {{ fx('cascade') }}>
       {% for cat, n in categories %}
         <a href="{{ url_for('shop.catalogue', category=cat.slug) }}">{{ cat.name }}<span class="n">{{ n }} {{ 'project' if n == 1 else 'projects' }}</span></a>
       {% endfor %}
@@ -96,14 +119,23 @@
 <section class="section" data-reveal>
   <div class="wrap">
     <div class="section-head" {{ fx('rise') }}><h2 class="h2">On the shelf</h2><a href="{{ url_for('shop.catalogue') }}">See all projects</a></div>
-    <div class="grid" data-motion-group="tiles" {{ fx('cascade') }}>{% for p in latest %}{{ tile(p, loop.index0) }}{% endfor %}</div>
+    <div class="grid fx-alt" data-motion-group="tiles" {{ fx('cascade') }}>{% for p in latest %}{{ tile(p, loop.index0) }}{% endfor %}</div>
   </div>
 </section>
 
 <section class="section" id="how" data-reveal>
   <div class="wrap">
     <div class="section-head" {{ fx('rise') }}><h2 class="h2">How buying works</h2></div>
-    <ol class="plain steps" {{ fx('cascade') }}>
+    <div class="tl-wrap" {{ fx('draw') }}>
+      <ol class="plain tl">
+        <li><h3>Choose</h3><p>Open a project and read what is in the kit.</p></li>
+        <li><h3>Reserve stock</h3><p>Checkout holds your copy for {{ reservation_minutes }} minutes.</p></li>
+        <li><h3>Pay</h3><p>The amount is worked out on the server.</p></li>
+        <li><h3>Download</h3><p>The link appears on your order page once payment is confirmed.</p></li>
+      </ol>
+      <svg class="tl-line" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="tl-base" pathLength="100" d="M0 2H100"/><path class="tl-draw" pathLength="100" d="M0 2H100"/></svg>
+    </div>
+    <ol class="plain steps fx-flipc" {{ fx('cascade') }}>
       <li><h3>Pick a project</h3><p>Open its page to see the stack, what's in the kit and how many copies are left.</p></li>
       <li><h3>Pay at checkout</h3><p>Your copy is held for {{ reservation_minutes }} minutes while you pay with Razorpay, so nobody can take it from under you.</p></li>
       <li><h3>Download from your orders</h3><p>The link appears on your order page the moment the payment is confirmed.</p></li>

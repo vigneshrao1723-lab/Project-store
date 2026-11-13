@@ -50,7 +50,7 @@ def show_exactly(n):
 def test_the_catalogue_renders_every_tile_inside_one_grid(app, client, n):
     show_exactly(n)
     html = client.get("/catalogue").get_data(as_text=True)
-    assert html.count('<div class="grid"') == 1          # the grid also carries data-motion-group now
+    assert html.count('<div class="grid fx-alt"') == 1          # the grid also carries data-motion-group now
     assert len(re.findall(r'<a class="tile[ "]', html)) == n
 
 

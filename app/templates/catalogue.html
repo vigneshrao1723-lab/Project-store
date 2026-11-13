@@ -32,7 +32,7 @@
       </form>
     </div>
     {% if result.items %}
-      <div class="grid" data-motion-group="tiles" {{ fx('cascade') }}>{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
+      <div class="grid fx-alt" data-motion-group="tiles" {{ fx('cascade') }}>{% for p in result.items %}{{ tile(p, loop.index0) }}{% endfor %}</div>
       {{ pager(result, 'shop.catalogue', q=q or None, category=category or None, sort=sort if sort != 'new' else None) }}
     {% else %}
       <div class="empty">

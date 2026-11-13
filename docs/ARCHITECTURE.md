@@ -100,6 +100,23 @@ One vocabulary, one script, one observer, one animation-frame loop. Pages do not
 | `pin` | A tall section holds a scene on screen. The script writes `--p` (0 to 1) on the section while it is near the screen; children marked `.fx-move` turn that into sideways slides and growth. The section's height comes from `--pin-h`; add `.pin-lg` to pin on screens 900 px wide and up only, never on phones, or `.pin-soft` to never pin (the progress then follows how far the section has come up the screen). The home showcase is `.pin-soft`: a sticky stage costs frame time in software compositing, and measured at 4x CPU throttle the pinned version missed 16 ms p95 while the unpinned one does not. | `<section class="scene pin-lg" {{ fx('pin') }}><div class="fx-stage">...<figure class="fx-move">` |
 | `parallax` | A few pixels of drift against the scroll. The script writes `--py` (-1 to 1) while the element is near the screen. Transform only. | `<div class="sc-art" {{ fx('parallax') }}>{{ cover(p) }}</div>` |
 
+**Variants.** More words in the same vocabulary, each a named effect that can be switched off by listing its word in `OFF` at the top of `fx-scroll.js` (the script then treats it as already in place and adds `fx-off-<word>` to `<html>` for CSS-only effects):
+
+| Word | What it does | Example |
+|---|---|---|
+| `from-left`, `from-right`, `zoom`, `flip` | A single block enters from a side, grows, or flips down. For a cascade's children, put `.fx-alt` (alternate sides), `.fx-zoomc` or `.fx-flipc` on the parent. | `<div class="hs-head" {{ fx('from-left') }}>` |
+| `clip` | A cover is wiped in from the top by `clip-path` while its drawing settles from 1.08x. | `<div class="plate-cover" {{ fx('clip') }}>` |
+| `lines` | A headline comes up line by line out of a mask. Lines are explicit, so a responsive wrap never splits one. | `<h1 {{ fx('lines') }}>{{ fx_lines('Real engineering projects,', 'ready to run.') }}</h1>` |
+| `words` | Copy fades up word by word (the macro numbers at most 30 words). | `<p {{ fx('words') }}>{{ fx_words(p.tagline) }}</p>` |
+| `draw` | An SVG line draws as the block crosses the screen (`--d`, 0 to 1) and the steps along it light up. | `<div class="tl-wrap" {{ fx('draw') }}>...<path pathLength="100" class="tl-draw"/>` |
+| `hscroll` | A sideways shelf. A plain swipe row on phones, in `fx-lite` and without the script; on large screens it is pinned and the track slides with the vertical scroll. | `<section class="shelf" {{ fx('hscroll') }}><div class="hs-stage fx-stage"><ul class="hs-track">` |
+| `marquee` | A slow CSS-only ticker; pauses on hover, stops for reduced motion, a plain wrapped list without the script. | `<div class="marquee" {{ fx('marquee') }}>` |
+| `tilt`, `magnetic` | Pointer feedback on fine pointers only: tiles lean up to 6 degrees with a flat yellow disc following the pointer; a primary button leans up to 6 px toward the pointer. Written straight onto the one element under the pointer. | `<a class="tile" {{ fx('tilt') }}>`, `<a class="btn" {{ fx('magnetic') }}>` |
+
+Other pieces that are not words: the section rail (`<nav class="rail">`, desktop only, fills as the home page's sections go by), three parallax layers of line-art in the home hero (`.px-1`, `.px-2`, `.px-3` set their speed with `--pm`), and cross-document view transitions (`@view-transition { navigation: auto }` with a named cover that travels from the card you point at to the product page; ignored by browsers without support).
+
+**Adaptive quality.** `html.fx-lite` turns off only the heaviest items: pinned sticky stages become scroll-linked (and the sideways shelf becomes a swipe row), and big parallax stops. The script sets it when `navigator.hardwareConcurrency <= 4`, `navigator.deviceMemory <= 4`, or the first 500 ms of frames average under 45 fps. `?fx=lite` or `?fx=full` in the address forces it either way. Everyone else gets every effect; the budget is measured at normal speed (p95 at most 16.7 ms), and the 4x CPU throttle is only a stress diagnostic.
+
 **Defaults are visible.** The page as the server renders it has no hidden state, no taller sections and no sticky stages. Every hiding rule in `motion3.css` starts with `html.fx-on`, a class the script adds only after it has checked that reduced motion is off and `IntersectionObserver` exists. Anything already on screen at that moment gets `.is-in` first, so nothing flashes. With no script, a blocked script, reduced motion or no observer, the page is simply finished. A focused element is never left hidden: `focusin` brings in its `data-fx` ancestors, and shows a pinned scene whole.
 
 **Page classes.** `base.html` puts `data-page` on `<body>` from `{% block page_class %}`:

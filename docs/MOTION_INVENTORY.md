@@ -29,10 +29,10 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Payment replay guard | order detail | `ps-paid-` | app/static/js/fx-pay.js |
 | Rise: section heads | home, product | `{{ fx('rise') }}` | app/templates/home.html |
 | Rise: cover plate | product | `data-motion-kind="{{ p.category.cover_kind }}" {{ fx('rise') }}` | app/templates/product.html |
-| Cascade: story cards | home | `story-grid" {{ fx('cascade') }}` | app/templates/home.html |
-| Cascade: browse by field | home | `class="index" {{ fx('cascade') }}` | app/templates/home.html |
+| Cascade: story cards | home | `story-grid fx-zoomc" {{ fx('cascade') }}` | app/templates/home.html |
+| Cascade: browse by field | home | `class="index fx-alt" {{ fx('cascade') }}` | app/templates/home.html |
 | Cascade: shelf tiles | home | `data-motion-group="tiles" {{ fx('cascade') }}` | app/templates/home.html |
-| Cascade: how buying works | home | `class="plain steps" {{ fx('cascade') }}` | app/templates/home.html |
+| Cascade: how buying works | home | `class="plain steps fx-flipc" {{ fx('cascade') }}` | app/templates/home.html |
 | Cascade: catalogue grid | catalogue | `data-motion-group="tiles" {{ fx('cascade') }}` | app/templates/catalogue.html |
 | Cascade: product details | product | `<dl class="def" {{ fx('cascade') }}>` | app/templates/product.html |
 | Cascade: what is in the kit | product | `<ul {{ fx('cascade') }}>` | app/templates/product.html |
@@ -64,3 +64,25 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Order detail rows | order detail | `<tbody {{ fx('cascade') }}>` | app/templates/order_detail.html |
 | Shared tokens | all | `--fx-stagger` | app/static/css/motion3.css |
 | Page class machinery | all | `data-page=` | app/templates/base.html |
+| Headline line by line | home | `{{ fx('lines') }}` | app/templates/home.html |
+| Copy word by word | home, product | `{{ fx('words') }}` | app/templates/home.html |
+| Product tagline word by word | product | `{{ fx_words(p.tagline) }}` | app/templates/product.html |
+| Alternating card entrances (from left and right) | home, catalogue | `fx-alt` | app/static/css/motion3.css |
+| Zooming card entrances | home, product | `fx-zoomc` | app/static/css/motion3.css |
+| Flipping card entrances | home | `fx-flipc` | app/static/css/motion3.css |
+| Single-block entrances from a side, zoom, flip | any | `[data-fx="from-left"]:not(.is-in)` | app/static/css/motion3.css |
+| Clip-path wipe with scale-down for covers | home, catalogue, product | `{{ fx('clip') }}` | app/templates/_macros.html |
+| Product cover clip | product | `class="plate-cover" {{ fx('clip') }}` | app/templates/product.html |
+| Drawn "How buying works" timeline | home | `{{ fx('draw') }}` | app/templates/home.html |
+| Timeline line drawing | home | `stroke-dashoffset: calc(100 * (1 - var(--d)))` | app/static/css/motion3.css |
+| Sideways shelf driven by vertical scroll | home | `{{ fx('hscroll') }}` | app/templates/home.html |
+| Tech-stack marquee | home | `{{ fx('marquee') }}` | app/templates/home.html |
+| Tile tilt and pointer spotlight | home, catalogue, product | `{{ fx('tilt') }}` | app/templates/_macros.html |
+| Magnetic primary button | home | `{{ fx('magnetic') }}` | app/templates/home.html |
+| Section rail | home | `<nav class="rail"` | app/templates/home.html |
+| Section rail fill | home | `--rs` | app/static/js/fx-scroll.js |
+| Hero parallax, three layers | home | `px px-3` | app/templates/home.html |
+| View transitions between pages | all | `@view-transition { navigation: auto; }` | app/static/css/motion3.css |
+| Cover shared between card and product page | catalogue, product | `view-transition-name: cover` | app/static/css/motion3.css |
+| Adaptive quality list of switches | all | `const OFF = [];` | app/static/js/fx-scroll.js |
+| Settled arrivals lose their delay | all | `is-settled` | app/static/js/fx-scroll.js |

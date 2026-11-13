@@ -16,6 +16,7 @@
   /* the scroll system's tokens: every section transition uses these and nothing else */
   --fx-dist: 14px; --fx-ease: cubic-bezier(.2, .7, .2, 1); --fx-stagger: 60ms; --fx-dur: 460ms;
   --fx-ease-in: cubic-bezier(.55, 0, .8, .3);
+  --fx-side: 56px; --fx-dur-slow: 720ms; --fx-stagger-word: 28ms;
 }
 .is-animating { will-change: transform, opacity; }
 
@@ -146,7 +147,7 @@ html.fx-on [data-fx="rise"].is-instant, html.fx-on [data-fx="cascade"] > .is-ins
 .cnt-live { position: absolute; left: 0; top: 0; }
 
 /* parallax: a few pixels of drift against the scroll, transform only */
-[data-fx="parallax"] { transform: translate3d(0, calc(var(--py, 0) * var(--fx-dist) * -.6), 0); }
+[data-fx="parallax"] { transform: translate3d(0, calc(var(--py, 0) * var(--fx-dist) * var(--pm, -.6)), 0); }
 html.fx-lite [data-fx="parallax"] { transform: none; }         /* adaptive quality: big parallax is one of the things fx-lite turns off */
 
 /* pin: a scene held on screen while the reader scrolls through a taller section. --p is how far through. */
@@ -249,4 +250,137 @@ html.fx-on [data-fx="pin"]:not(.pin-soft) .sc-hint { display: block; }
   .sc-cue i { animation: none; }
   [data-fx="parallax"] { transform: none; }
   html.fx-on .fx-progress { display: none; }
+}
+
+/* ---------- 4. Variants -------------------------------------------------------------------------------------------
+   More words for the same vocabulary. Each one is a named variant: list its word in OFF at the top of fx-scroll.js to
+   turn it off. Every hiding rule still starts with html.fx-on. */
+
+/* once an element has finished arriving its stagger delay is dropped, so hover feedback is never late */
+html.fx-on [data-fx="cascade"] > .is-settled, html.fx-on [data-fx="rise"].is-settled { transition-delay: 0s; transition-duration: 180ms; }
+
+/* from-left from-right zoom flip: single blocks; the .fx-alt .fx-zoomc .fx-flipc classes do the same for a cascade's children */
+html.fx-on [data-fx="from-left"]:not(.is-in) { opacity: 0; transform: translate3d(calc(var(--fx-side) * -1), 0, 0); }
+html.fx-on [data-fx="from-right"]:not(.is-in) { opacity: 0; transform: translate3d(var(--fx-side), 0, 0); }
+html.fx-on [data-fx="zoom"]:not(.is-in) { opacity: 0; transform: scale(.9); }
+html.fx-on [data-fx="flip"]:not(.is-in) { opacity: 0; transform: perspective(900px) rotateX(-16deg) translate3d(0, var(--fx-dist), 0); transform-origin: 50% 0; }
+html.fx-on :is([data-fx="from-left"], [data-fx="from-right"], [data-fx="zoom"], [data-fx="flip"]) { transition: opacity var(--fx-dur) var(--fx-ease), transform var(--fx-dur) var(--fx-ease); }
+html.fx-on .fx-alt[data-fx="cascade"] > *:not(.is-in):nth-child(odd) { transform: translate3d(calc(var(--fx-side) * -1), 0, 0); }
+html.fx-on .fx-alt[data-fx="cascade"] > *:not(.is-in):nth-child(even) { transform: translate3d(var(--fx-side), 0, 0); }
+html.fx-on .fx-zoomc[data-fx="cascade"] > *:not(.is-in) { transform: scale(.9); }
+html.fx-on .fx-flipc[data-fx="cascade"] > *:not(.is-in) { transform: perspective(900px) rotateX(-16deg) translate3d(0, var(--fx-dist), 0); transform-origin: 50% 0; }
+
+/* lines: a headline comes up line by line out of a mask */
+.ln { display: block; overflow: hidden; padding-bottom: .12em; margin-bottom: -.12em; }
+.ln > span { display: block; }
+html.fx-on [data-fx="lines"]:not(.is-in) .ln > span { transform: translate3d(0, 110%, 0); }
+html.fx-on [data-fx="lines"] .ln > span { transition: transform var(--fx-dur-slow) var(--fx-ease); transition-delay: calc(var(--i, 0) * var(--fx-stagger)); }
+
+/* words: copy fades up word by word (the macro numbers at most 30 of them) */
+.w { display: inline-block; }
+html.fx-on [data-fx="words"]:not(.is-in) .w { opacity: 0; transform: translate3d(0, .5em, 0); }
+html.fx-on [data-fx="words"] .w { transition: opacity var(--fx-dur) var(--fx-ease), transform var(--fx-dur) var(--fx-ease); transition-delay: calc(var(--i, 0) * var(--fx-stagger-word)); }
+
+/* clip: covers wipe in from the top while their drawing settles from 8% larger (clip-path is paint-only) */
+html.fx-on [data-fx="clip"]:not(.is-in) { clip-path: inset(0 0 100% 0); }
+html.fx-on [data-fx="clip"]:not(.is-in) > .cover { transform: scale(1.08); }
+html.fx-on [data-fx="clip"] { transition: clip-path var(--fx-dur-slow) var(--fx-ease); }
+html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
+
+/* draw: an SVG line that draws as the block crosses the screen (--d, 0 to 1), lighting each step as it reaches it */
+.tl-wrap { position: relative; margin-bottom: 2.4rem; --d: 1; }
+.tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 3vw, 36px); margin: 0; padding-top: 2.1rem; position: relative; z-index: 1; }
+.tl li { --t: 0; position: relative; opacity: clamp(.35, calc(.35 + (var(--d) - var(--t)) * 9), 1); }
+.tl li:nth-child(2) { --t: .26; } .tl li:nth-child(3) { --t: .52; } .tl li:nth-child(4) { --t: .78; }
+.tl li::before { content: ""; position: absolute; left: 0; top: -1.55rem; width: 1.1rem; height: 1.1rem; background: var(--mark); border: 2px solid var(--ink); }
+.tl h3 { margin-bottom: .3rem; font-size: 1.1rem; font-stretch: 108%; }
+.tl p { margin: 0; color: var(--ink-2); font-size: .95rem; }
+.tl-line { position: absolute; left: 0; top: calc(1.1rem - 3px); width: 100%; height: 6px; overflow: visible; z-index: 0; }
+.tl-line path { fill: none; stroke-width: 3; vector-effect: non-scaling-stroke; }
+.tl-base { stroke: var(--rule); }
+.tl-draw { stroke: var(--ink); stroke-dasharray: 100; stroke-dashoffset: calc(100 * (1 - var(--d))); }
+@media (max-width: 700px) { .tl { grid-template-columns: 1fr; } .tl-line { display: none; } .tl li::before { top: .35rem; left: -1.6rem; } .tl { padding-left: 1.6rem; padding-top: 0; } }
+
+/* hscroll: a sideways shelf. It is a plain swipe row everywhere by default (phones, fx-lite, no script); with the
+   script on a large screen it is pinned and the track slides as the reader scrolls (--p, with --hs the distance). */
+[data-fx="hscroll"] { position: relative; border-top: 1px solid var(--rule); --p: 1; --hs: 0px; --fx-top: 0px; }
+.hs-stage { padding-block: clamp(24px, 4vw, 48px); overflow-x: auto; scroll-snap-type: x mandatory; }
+.hs-head { padding-bottom: 1.2rem; }
+.hs-head p { margin: 0; }
+.hs-track { display: flex; gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0 var(--gutter); width: max-content; }
+.hs-card { flex: none; width: min(78vw, 24rem); scroll-snap-align: start; }
+.hs-card a { display: block; background: var(--paper-2); border: 1.5px solid var(--ink); text-decoration: none; }
+.hs-card a:hover { background: var(--paper-2); }
+@media (min-width: 900px) {
+  html.fx-on:not(.fx-lite) [data-fx="hscroll"] { height: var(--hs-h, auto); }
+  html.fx-on:not(.fx-lite) [data-fx="hscroll"] .hs-stage { contain: layout paint; position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; display: flex; flex-direction: column; justify-content: center; scroll-snap-type: none; }
+  html.fx-on:not(.fx-lite) [data-fx="hscroll"] .hs-track { transform: translate3d(calc(var(--p) * var(--hs) * -1), 0, 0); }
+  html.fx-on:not(.fx-lite) [data-fx="hscroll"].is-focus .hs-track { transform: none; }
+  html.fx-on:not(.fx-lite) [data-fx="hscroll"].is-focus .hs-stage { overflow-x: auto; }
+}
+
+/* marquee: a slow ticker of what the store is built with. CSS only; it pauses on hover and stops for reduced motion. */
+.stack-band { border-bottom: 1px solid var(--rule); background: var(--paper-2); overflow: hidden; }
+.marquee { display: flex; }
+.mq-row { display: flex; flex: none; gap: 2.2rem; margin: 0; padding: .8rem 2.2rem .8rem 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.mq-row li::before { content: ""; display: inline-block; width: .5rem; height: .5rem; background: var(--mark); margin-right: .7rem; }
+html.fx-on:not(.fx-off-marquee) .mq-row { animation: fx-marquee 38s linear infinite; }
+@keyframes fx-marquee { to { transform: translate3d(-100%, 0, 0); } }
+@media (hover: hover) and (pointer: fine) { html.fx-on .marquee:hover .mq-row { animation-play-state: paused; } }
+@media (prefers-reduced-motion: reduce) { .mq-row { animation: none; flex-wrap: wrap; } .mq-row[aria-hidden="true"] { display: none; } }
+html:not(.fx-on) .mq-row { flex-wrap: wrap; }
+html:not(.fx-on) .mq-row[aria-hidden="true"] { display: none; }
+
+/* tilt: tiles lean up to 6 degrees toward the pointer and a flat yellow disc follows it. Fine pointers only. */
+@media (hover: hover) and (pointer: fine) {
+  [data-fx="tilt"] { position: relative; overflow: hidden; transition: transform 180ms var(--fx-ease); }
+  [data-fx="tilt"]::after { content: ""; position: absolute; left: 0; top: 0; width: 220px; height: 220px; border-radius: 50%; background: var(--mark); opacity: 0; pointer-events: none;
+    transform: translate3d(calc(var(--mx, 0px) - 110px), calc(var(--my, 0px) - 110px), 0); transition: opacity 200ms linear; }
+  [data-fx="tilt"].is-tilting::after { opacity: .16; }
+  [data-fx="tilt"].is-tilting { transform: perspective(800px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translate3d(0, -3px, 0); }
+  /* magnetic: a primary button leans up to 6 px toward the pointer */
+  [data-fx="magnetic"] { transform: translate3d(var(--tx, 0px), var(--ty, 0px), 0); transition: background .12s, color .12s, opacity var(--motion-fast) linear, transform 160ms var(--fx-ease); }
+}
+
+/* the section rail: a thin line and dots on the right that fill as the sections of the home page go by (large screens) */
+.rail { display: none; }
+@media (min-width: 1100px) {
+  html.fx-on body[data-page="browse"] .rail { display: block; position: fixed; z-index: 25; right: 16px; top: 50%; translate: 0 -50%; pointer-events: none; --n: 8; }
+}
+.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; position: relative; }
+.rail ol::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--rule); }
+.rail ol::after { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--ink); transform-origin: 50% 0; transform: scaleY(clamp(0, calc(var(--rs, 0) / (var(--n) - 1)), 1)); }
+.rail li { --k: 0; --lit: clamp(0, calc(var(--rs, 0) - var(--k) + .5), 1); position: relative; z-index: 1; width: 9px; height: 9px; border: 1.5px solid var(--ink); background: var(--paper); }
+.rail li::after { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: var(--lit); }
+.rail li:nth-child(2) { --k: 1; } .rail li:nth-child(3) { --k: 2; } .rail li:nth-child(4) { --k: 3; } .rail li:nth-child(5) { --k: 4; }
+.rail li:nth-child(6) { --k: 5; } .rail li:nth-child(7) { --k: 6; } .rail li:nth-child(8) { --k: 7; }
+
+/* hero: three layers of line-art drifting at different speeds behind the headline (--pm is each layer's speed) */
+.hero { position: relative; overflow-x: clip; }
+.hero-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; color: var(--rule); }
+.hero-grid { position: relative; z-index: 1; }
+.px { position: absolute; display: block; }
+.px-1 { --pm: -.8; right: 4%; top: 6%; opacity: .7; }
+.px-2 { --pm: -2.4; left: 46%; bottom: 8%; opacity: .9; }
+.px-3 { --pm: 3.2; left: 5%; bottom: 14%; opacity: .8; }
+@media (max-width: 899px) { .px-1 { right: -40px; top: 2%; opacity: .45; } .px-2 { left: auto; right: 6%; bottom: 3%; opacity: .6; } .px-3 { display: none; } }
+
+/* view transitions: navigation between pages cross-fades, and a project's cover travels from the card you point at
+   to the product page (progressive enhancement: browsers without support ignore all of this) */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 180ms; }
+  .product .plate-cover { view-transition-name: cover; }
+  .tile:is(:hover, :focus-within, :active) .tile-cover { view-transition-name: cover; }
+  ::view-transition-group(cover) { animation-duration: 420ms; animation-timing-function: var(--fx-ease); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* if the setting changes while a page is open, every variant is back in its finished state */
+  html.fx-on :is([data-fx="from-left"], [data-fx="from-right"], [data-fx="zoom"], [data-fx="flip"], [data-fx="clip"]) { opacity: 1; transform: none; clip-path: none; transition: none; }
+  html.fx-on :is(.fx-alt, .fx-zoomc, .fx-flipc)[data-fx="cascade"] > * { opacity: 1; transform: none; }
+  html.fx-on [data-fx="lines"] .ln > span, html.fx-on [data-fx="words"] .w { opacity: 1; transform: none; transition: none; }
+  html.fx-on [data-fx="hscroll"] { height: auto; }
+  .tl li { opacity: 1; } .tl-draw { stroke-dashoffset: 0; }
+  [data-fx="tilt"].is-tilting, [data-fx="magnetic"] { transform: none; }
 }

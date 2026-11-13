@@ -43,7 +43,7 @@ function world(opts = {}) {
     const html = make("html", { scrollHeight: 4000 });
     html.classList = { s: rootClasses, add(c) { rootClasses.add(c); }, remove(c) { rootClasses.delete(c); } };
     const win = {
-      matchMedia: () => ({ matches: !!opts.calm }), innerHeight: 800, pageYOffset: 0, location: { search: opts.search || "" },
+      matchMedia: (q) => ({ matches: String(q).indexOf("hover") >= 0 ? !!opts.fine : !!opts.calm }), innerHeight: 800, pageYOffset: 0, location: { search: opts.search || "" },
       addEventListener: (t, f, o) => { (listeners[t] = listeners[t] || []).push({ f, o }); },
       removeEventListener: (t, f) => { removed.push(t); const l = listeners[t] || []; const i = l.findIndex((x) => x.f === f); if (i >= 0) l.splice(i, 1); },
     };
@@ -51,7 +51,7 @@ function world(opts = {}) {
     const doc = {
       hidden: false, body, documentElement: html,
       querySelector: (s) => (dom[s] || [])[0] || null,
-      querySelectorAll: (s) => dom[s] || [],
+      querySelectorAll: (s) => (s === "[data-fx]" ? [...(dom['[data-fx="rise"], [data-fx="count"]'] || []), ...(dom['[data-fx="cascade"]'] || []), ...(dom['[data-fx="pin"]'] || []), ...(dom['[data-fx="parallax"]'] || []), ...(dom.extra || [])] : dom[s] || []),
       addEventListener: (t, f) => { (listeners["doc:" + t] = listeners["doc:" + t] || []).push({ f }); },
       removeEventListener: (t, f) => { removed.push("doc:" + t); const l = listeners["doc:" + t] || []; const i = l.findIndex((x) => x.f === f); if (i >= 0) l.splice(i, 1); },
     };
@@ -64,7 +64,7 @@ function world(opts = {}) {
       parseFloat, Math, Number, String, Set, Map, Array, Object,
     };
     w.win = win; w.doc = doc; w.html = html;
-    vm.runInNewContext(src, sandbox);
+    vm.runInNewContext(opts.off ? src.replace("const OFF = [];", "const OFF = " + JSON.stringify(opts.off) + ";") : src, sandbox);
   };
   w.advance = (ms) => { const end = now + ms; for (let g = 0; g < 4000; g++) { now = Math.min(end, now + (opts.frameMs || 16)); const q = queue; queue = []; q.forEach((f) => f(now)); if (now >= end) break; } };
   w.pending = () => queue.length;
@@ -367,3 +367,119 @@ def test_a_slow_first_half_second_switches_lite_on_and_a_fast_one_does_not():
       w.advance(1200);
       const result = { c: [...w.rootClasses].sort() };"""))
     assert fast == {"c": ["fx-on"]}
+
+
+# ---- variants: words, lines, draw, hscroll, tilt, magnetic, the rail, switching one off ------------------------------------
+
+VARIANTS = """
+  const w = world(OPTS);
+  const word = (i) => w.make("w" + i, {});
+  const words = [0, 1, 2, 3].map(word);
+  const lede = w.make("lede", { dataset: { fx: "words" }, top: 1500, querySelectorAll: (s) => (s === ".w" ? words : []) });
+  const lns = [0, 1, 2].map((i) => w.make("ln" + i, {}));
+  const h1 = w.make("h1", { dataset: { fx: "lines" }, top: 150, querySelectorAll: (s) => (s === ".ln" ? lns : []) });
+  const clip = w.make("clip", { dataset: { fx: "clip" }, top: 1700 });
+  const left = w.make("left", { dataset: { fx: "from-left" }, top: 1900 });
+  const tl = w.make("tl", { dataset: { fx: "draw" }, top: 1000, height: 300 });
+  const tile = w.make("tile", { dataset: { fx: "tilt" }, top: 100 });
+  const btn = w.make("btn", { dataset: { fx: "magnetic" }, top: 100 });
+  tile.getBoundingClientRect = () => ({ top: 100, left: 100, width: 200, height: 100, bottom: 200 });
+  btn.getBoundingClientRect = () => ({ top: 100, left: 100, width: 100, height: 40, bottom: 140 });
+  const dots = [0, 1, 2, 3].map((i) => w.make("dot" + i, {}));
+  const rail = w.make("rail", { querySelectorAll: (s) => (s === "li" ? dots : []) });
+  const secs = [0, 1, 2, 3].map((i) => w.make("sec" + i, { top: i * 600 - 300, height: 600 }));
+  POINTERSETUP
+  w.run({ extra: [lede, h1, clip, left, tl, tile, btn], ".rail": [rail], "main > section": secs, ".site-header": [] });
+"""
+
+POINTER = """
+  const fire = (el, type, ev) => ((el.__ls || {})[type] || []).forEach((f) => f(ev));
+  [tile, btn].forEach((el) => { el.__ls = {}; el.addEventListener = (t, f) => { (el.__ls[t] = el.__ls[t] || []).push(f); }; });
+"""
+
+
+def variants(extra, opts="{}"):
+    return VARIANTS.replace("OPTS", opts).replace("POINTERSETUP", POINTER) + extra
+
+
+def test_words_and_lines_are_numbered_for_the_stylesheet_and_a_headline_on_screen_plays_its_entrance_after_fx_on():
+    r = run_node(variants("""
+      const result = { words: words.map((x) => x.style.props["--i"]), lines: lns.map((x) => x.style.props["--i"]),
+        h1: h1.classList.s.has("is-in"), lede: lede.classList.s.has("is-in"), on: [...w.rootClasses] };"""))
+    assert r["words"] == ["0", "1", "2", "3"] and r["lines"] == ["0", "1", "2"]
+    assert r["h1"] is True and r["lede"] is False and r["on"] == ["fx-on"]       # on screen: revealed (after fx-on); below: waits
+
+
+def test_words_and_clips_and_sideways_entrances_come_in_when_they_arrive():
+    r = run_node(variants("""
+      w.fire([lede, clip, left].map((t) => ({ target: t, isIntersecting: true })));
+      const result = { c: [lede, clip, left].map((x) => x.classList.s.has("is-in")) };"""))
+    assert r == {"c": [True, True, True]}
+
+
+def test_a_drawn_line_follows_the_block_across_the_screen():
+    r = run_node(variants("""
+      const at = (top) => { tl.top = top; w.fire([{ target: tl, isIntersecting: true }]); w.advance(32); return parseFloat(tl.style.props["--d"]); };
+      const result = { d: [900, 600, 300, 50, -200].map(at) };"""))
+    d = r["d"]
+    assert d[0] == 0 and 0 < d[1] < d[2] < d[3] <= 1 and d[4] == 1, d
+
+
+def test_pointer_effects_are_attached_only_for_fine_pointers():
+    count = "const result = { n: Object.keys(tile.__ls).length + Object.keys(btn.__ls).length };"
+    assert run_node(variants(count, "{ fine: false }"))["n"] == 0
+    assert run_node(variants(count, "{ fine: true }"))["n"] > 0
+
+
+def test_tilt_leans_at_most_6_degrees_and_a_disc_follows_the_pointer_and_everything_resets_on_leave():
+    r = run_node(variants("""
+      fire(tile, "pointerenter", {}); fire(tile, "pointermove", { clientX: 300, clientY: 100 });
+      const corner = { rx: tile.style.props["--rx"], ry: tile.style.props["--ry"], mx: tile.style.props["--mx"], my: tile.style.props["--my"], on: tile.classList.s.has("is-tilting") };
+      fire(tile, "pointermove", { clientX: 5000, clientY: -5000 });
+      const far = { rx: tile.style.props["--rx"], ry: tile.style.props["--ry"] };
+      fire(tile, "pointerleave", {});
+      const result = { corner, far, after: { rx: tile.style.props["--rx"], ry: tile.style.props["--ry"], on: tile.classList.s.has("is-tilting") } };""", "{ fine: true }"))
+    assert r["corner"] == {"rx": "6.000", "ry": "6.000", "mx": "200px", "my": "0px", "on": True}, r
+    assert r["far"] == {"rx": "6.000", "ry": "6.000"}                                 # clamped at 6 degrees however far the pointer goes
+    assert r["after"] == {"rx": "0.000", "ry": "0.000", "on": False}
+
+
+def test_a_magnetic_button_leans_at_most_6px_and_lets_go():
+    r = run_node(variants("""
+      fire(btn, "pointerenter", {}); fire(btn, "pointermove", { clientX: 9999, clientY: -9999 });
+      const far = [btn.style.props["--tx"], btn.style.props["--ty"]];
+      fire(btn, "pointerleave", {});
+      const result = { far, after: [btn.style.props["--tx"], btn.style.props["--ty"]] };""", "{ fine: true }"))
+    assert r == {"far": ["6px", "-6px"], "after": ["0px", "0px"]}
+
+
+def test_the_rail_fills_as_sections_go_by_and_lives_on_its_own_node():
+    r = run_node(variants("""
+      const at = (y) => { secs.forEach((s, i) => { s.top = i * 600 - y; }); w.dispatch("scroll"); w.advance(32); return parseFloat(rail.style.props["--rs"]); };
+      const result = { rs: [0, 300, 900, 1500, 99999].map(at), rootWrites: w.writes.filter((x) => x[0] === "html").length };"""))
+    rs = r["rs"]
+    assert rs[0] <= rs[1] < rs[2] < rs[3] <= rs[4] <= 4 and r["rootWrites"] == 0, rs
+
+
+def test_switching_a_variant_off_in_the_one_list_leaves_it_already_in_place_and_marks_the_root():
+    r = run_node(variants("""
+      const result = { off: [...w.rootClasses].sort(), clip: clip.classList.s.has("is-in"), left: left.classList.s.has("is-in"),
+        tilt: Object.keys(tile.__ls).length, observed: [...w.io().targets].map((x) => x.name).sort() };""", '{ off: ["clip", "tilt", "from-left"], fine: true }'))
+    assert r["off"] == ["fx-off-clip", "fx-off-from-left", "fx-off-tilt", "fx-on"]
+    assert r["clip"] is True and r["left"] is True and r["tilt"] == 0
+    assert "clip" not in r["observed"] and "left" not in r["observed"] and "lede" in r["observed"]
+
+
+def test_a_finished_arrival_loses_its_stagger_delay_so_hover_is_never_late():
+    r = run_node(variants("""
+      clip.classList.add("is-in");
+      w.dispatch("doc:transitionend", { target: clip, propertyName: "clip-path" });
+      const early = clip.classList.s.has("is-settled");
+      left.classList.add("is-in"); w.dispatch("doc:transitionend", { target: left, propertyName: "opacity" });
+      const result = { early, left: left.classList.s.has("is-settled") };"""))
+    assert r == {"early": False, "left": True}
+
+
+def test_the_off_list_is_one_constant_at_the_top_of_the_script():
+    src = JS.read_text(encoding="utf-8")
+    assert src.count("const OFF = [];") == 1 and src.index("const OFF") < src.index("const body = document.body")
