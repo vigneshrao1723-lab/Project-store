@@ -16,9 +16,13 @@
    (data-page="none") do not run it; admin pages run only the one-shot words (no scenes, no pointer effects). */
 (() => {
   "use strict";
-  // TO TURN A VARIANT OFF: list its data-fx word here, e.g. ["tilt", "magnetic"]. It is then treated as already in
-  // place (and gets an fx-off-<word> class on <html> for the CSS-only effects that check it). One place, no other edits.
+  // TO TURN AN EFFECT OFF: list its name here, e.g. ["tilt", "magnetic", "toasts"]. A data-fx word is then treated as
+  // already in place; every name also becomes an fx-off-<name> class on <html>, which the stylesheets and fx-ui.js
+  // check for the effects that are not data-fx words. One list for the whole site. The names are in docs/ARCHITECTURE.md:
+  //   words:   rise from-left from-right zoom flip clip lines words count cascade pin hscroll parallax draw tilt magnetic marquee
+  //   others:  rail stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift
   const OFF = [];
+  OFF.forEach((n) => document.documentElement.classList.add("fx-off-" + n));
 
   const body = document.body;
   const page = body && body.dataset.page;
@@ -27,7 +31,6 @@
   if (!("IntersectionObserver" in window)) return;
 
   const root = document.documentElement;
-  OFF.forEach((n) => root.classList.add("fx-off-" + n));
   // adaptive quality: a weak device (few cores, little memory, or measured under 45 fps for half a second) gets fx-lite,
   // which turns off only the heaviest effects (pinned sticky stages become scroll-linked, the sideways shelf becomes a
   // swipe row, big parallax stops). ?fx=lite or ?fx=full in the address forces either way, for testing.
@@ -98,7 +101,11 @@
         const p = stuck ? (top - r.top) / Math.max(1, sec.offsetHeight - stage.offsetHeight) : (0.9 * vh - r.top) / (0.6 * vh);
         return { p, top };
       },
-      apply({ p, top: t }) { if (sec.__top !== t) { sec.__top = t; sec.style.setProperty("--fx-top", t + "px"); } put(sec, "--p", clamp(p)); },
+      apply({ p, top: t }) {
+        if (sec.__top !== t) { sec.__top = t; sec.style.setProperty("--fx-top", t + "px"); }
+        put(sec, "--p", clamp(p));
+        if (sec.__pre !== p < 0.2) { sec.__pre = p < 0.2; sec.classList.toggle("is-pre", sec.__pre); }       // before the scene starts, its headline is truly hidden
+      },
       stale() { stale = true; },
     };
   }

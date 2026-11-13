@@ -483,3 +483,10 @@ def test_a_finished_arrival_loses_its_stagger_delay_so_hover_is_never_late():
 def test_the_off_list_is_one_constant_at_the_top_of_the_script():
     src = JS.read_text(encoding="utf-8")
     assert src.count("const OFF = [];") == 1 and src.index("const OFF") < src.index("const body = document.body")
+
+
+def test_a_pinned_scene_that_has_not_started_is_marked_so_its_headline_is_hidden_for_real_and_unmarked_once_it_has():
+    r = run_node(pin("""
+      const at2 = (top) => { sec.top = top; w.fire([{ target: sec, isIntersecting: true }]); w.advance(32); return sec.classList.s.has("is-pre"); };
+      const result = { before: at2(75), started: at2(75 - 1195 * 0.4), later: at2(75 - 1195) };"""))
+    assert r == {"before": True, "started": False, "later": False}

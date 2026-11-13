@@ -6,6 +6,7 @@
   "use strict";
   const calm = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const root = document.documentElement;
+  const off = (name) => root.classList.contains("fx-off-" + name);      // the one list of switches is OFF in fx-scroll.js
   const timers = [], observers = [];
   const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
 
@@ -13,6 +14,7 @@
   const posting = new Set();
   document.addEventListener("submit", (e) => {
     const form = e.target;
+    if (off("forms")) return;
     if (e.defaultPrevented || !form || form.tagName !== "FORM") return;       // the add-to-cart form handles itself (and disables its button)
     if (posting.has(form)) { e.preventDefault(); return; }
     posting.add(form);
@@ -28,17 +30,17 @@
   });
 
   if (!calm) {
-    root.classList.add("fx-ui");
+    if (!off("toasts")) root.classList.add("fx-ui");
 
     // ---- flash messages are toasts: success and info ones leave after six seconds, errors stay until the page changes --
-    document.querySelectorAll(".flashes .flash").forEach((el) => {
+    if (!off("toasts")) document.querySelectorAll(".flashes .flash").forEach((el) => {
       if (el.classList.contains("flash-error")) return;
       later(() => { el.classList.add("is-leaving"); later(() => { el.hidden = true; }, 380); }, 6000);
     });
 
     // ---- downloads: a press says the link is being prepared ---------------------------------------------------------
     document.addEventListener("click", (e) => {
-      const a = e.target.closest && e.target.closest(".delivery a");
+      const a = !off("downloads") && e.target.closest && e.target.closest(".delivery a");
       if (!a) return;
       a.classList.add("is-preparing"); a.setAttribute("aria-busy", "true");
       later(() => { a.classList.remove("is-preparing"); a.removeAttribute("aria-busy"); }, 1400);
@@ -47,7 +49,7 @@
     // ---- cart: removed rows slide away, changed figures tick ---------------------------------------------------------
     const cart = document.querySelector("[data-cart]");
     const lines = cart && cart.querySelector(".lines");
-    if (lines) {
+    if (lines && !off("cart")) {
       const tick = (el) => { el.classList.remove("is-tick"); void el.offsetWidth; el.classList.add("is-tick"); };
       const gone = new MutationObserver((muts) => muts.forEach((m) => m.removedNodes.forEach((n) => {
         if (n.nodeType !== 1 || !n.matches(".line:not(.is-ghost)")) return;

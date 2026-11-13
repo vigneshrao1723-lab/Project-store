@@ -106,7 +106,7 @@ def test_the_new_stylesheet_is_linked_for_every_page(client, admin_client):
 
 def test_nothing_in_the_interface_layer_hides_a_control_or_depends_on_the_script_to_be_visible():
     for selector, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", re.sub(r"@keyframes [\w-]+ \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", BARE)):
-        assert not re.search(r"opacity:\s*0\b|visibility:\s*hidden|display:\s*none", body) or "drift" in selector or ".stp-line" in selector or ".otl-line" in selector, (selector, body)
+        assert not re.search(r"opacity:\s*0\b|visibility:\s*hidden|display:\s*none", body) or "drift" in selector or ".stp-line" in selector or ".otl-line" in selector or "fx-off-" in selector, (selector, body)
     assert "pointer-events: none" in BARE and "!important" not in BARE and "will-change" not in BARE
     # toasts leave the page's flow only when the script that dismisses them is running
     for selector, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", BARE):
@@ -287,3 +287,35 @@ def test_everything_is_disconnected_on_pagehide():
       w.fire("w:pagehide", {});
       const result = { all: w.observers.every((o) => o.disconnected), n: w.observers.length };""")
     assert r == {"all": True, "n": 2}
+
+
+# ---- one list of switches -------------------------------------------------------------------------------------------------------
+
+def test_every_switch_name_in_the_script_comment_does_something_somewhere():
+    scroll = (ROOT / "app" / "static" / "js" / "fx-scroll.js").read_text(encoding="utf-8")
+    others = "rail stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift".split()
+    assert all(name in scroll for name in others)
+    ui_css, ui_js = BARE, JS.read_text(encoding="utf-8")
+    page_css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
+    for name in others:
+        assert f"fx-off-{name}" in ui_css or f'off("{name}")' in ui_js, name
+    for word in "tilt magnetic marquee".split():
+        assert word in scroll
+    assert "fx-off-marquee" in page_css
+
+
+def test_fx_ui_reads_the_same_list_through_the_root_classes_so_there_is_only_one():
+    js = JS.read_text(encoding="utf-8")
+    assert 'contains("fx-off-" + name)' in js and "const OFF" not in js
+
+
+def test_switching_toasts_forms_cart_and_downloads_off_leaves_them_plain():
+    r = run_node("""
+      const w = world({ dom: { ".flashes .flash": [{ classList: { contains: () => false, add() { throw new Error("moved"); } } }] } });
+      w.html.classList.add("fx-off-toasts"); w.html.classList.add("fx-off-forms");
+      w.html.classList.contains = (c) => w.html.classList.s.has(c);
+      w.run();
+      const btn = w.el(); btn.classList.add("btn"); const form = { tagName: "FORM", querySelector: () => btn };
+      w.fire("submit", { target: form, defaultPrevented: false, preventDefault() {} });
+      const result = { ui: w.html.classList.s.has("fx-ui"), spinning: btn.classList.s.has("is-loading") };""")
+    assert r == {"ui": False, "spinning": False}

@@ -97,7 +97,16 @@ html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp 900ms var(--fx
   .admin .table tbody tr:hover { background: var(--panel); }
 }
 
-/* ---- admin: figures count up and rows fade in (the same one-shot words as everywhere), a row lights on hover ---- */
+/* ---- switches: the OFF list in fx-scroll.js adds fx-off-<name> to <html>; each of these puts one effect back to plain ---- */
+html.fx-off-stepper .stp, html.fx-off-timeline .otl, html.fx-off-drift .drift { display: none; }
+html.fx-off-bob .empty-cart { animation: none; }
+html.fx-off-shake .field.has-error .inp { animation: none; }
+html.fx-off-inputs .inp .ul, html.fx-off-inputs .inp .ok { display: none; }
+html.fx-off-focus-ring :focus-visible { animation: none; }
+html.fx-off-press .btn:active, html.fx-off-press .stepper button:active, html.fx-off-press .linkish:active { transform: none; }
+html.fx-off-wipe .nav a::after, html.fx-off-wipe .site-footer a::after, html.fx-off-wipe .crumbs a::after { display: none; }
+@media (hover: hover) and (pointer: fine) { html.fx-off-lift .fx-card:hover, html.fx-off-lift .hs-card a:hover, html.fx-off-lift .sc-cover a:hover, html.fx-off-lift .summary:hover, html.fx-off-lift .delivery:hover { transform: none; } }
+html.fx-off-rail .rail { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .stp li.is-arriving .stp-line::after, .otl li.is-linked .otl-line::after, .btn.is-loading::after, .delivery a.is-preparing::after,

@@ -191,7 +191,7 @@ def test_nothing_the_stylesheet_hides_is_hidden_without_the_script():
     for selector, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", SCROLL):
         if re.search(r"(^|[;\s])(height|position)\s*:\s*(var\(--pin-h|calc\(100vh|sticky)", body):
             assert "html.fx-on" in selector, selector
-    assert "visibility: hidden" not in SCROLL and "display: none; }" in SCROLL
+    assert "visibility: hidden" not in re.sub(r'\[data-fx="pin"\]\.is-pre[^{]*\{[^}]*\}', "", SCROLL) and "display: none; }" in SCROLL      # the one exception is a state the script sets
 
 
 def test_the_script_is_what_turns_the_system_on_so_the_server_never_renders_a_hidden_state(app, buyer, admin_client, rag, order_id):
