@@ -364,7 +364,8 @@ p.stat-value { margin: 0; font-weight: 700; }
 @media (max-width: 520px) { .two-fields { grid-template-columns: 1fr; } }
 
 .contact-choice { border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem .4rem; margin: 0 0 1.4rem; background: var(--panel); }
-.contact-choice legend { font: 700 .95rem var(--font-display); padding: 0 .4rem; }
+.contact-choice legend { font: 700 .95rem var(--font-display); padding: 0; float: left; width: 100%; margin: 0 0 .6rem; }   /* inside the panel: a two-line legend never straddles the border */
+.contact-choice legend + .seg { clear: both; display: flex; width: fit-content; }
 .seg { display: inline-flex; border: 2px solid var(--muted); border-radius: 99px; padding: 3px; margin: .4rem 0 1.1rem; }
 .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .seg label { cursor: pointer; padding: .45rem 1.1rem; border-radius: 99px; font: 700 .95rem var(--font-display); color: var(--white); }
