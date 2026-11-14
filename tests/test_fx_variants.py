@@ -137,7 +137,7 @@ def test_tilt_and_magnetic_exist_only_for_fine_pointers_and_stay_within_6_degree
 
 def test_the_spotlight_is_a_flat_disc_not_a_gradient():
     assert "gradient" not in VARIANTS and "box-shadow" not in VARIANTS and "filter:" not in VARIANTS and "blur" not in VARIANTS
-    assert re.search(r'\[data-fx="tilt"\]::after \{[^}]*border-radius: 50%[^}]*background: var\(--mark\)', VARIANTS)
+    assert re.search(r'\[data-fx="tilt"\]::after \{[^}]*border-radius: 50%[^}]*background: var\(--amber\)', VARIANTS)
 
 
 def test_the_marquee_is_css_only_pauses_on_hover_and_stops_for_reduced_motion():

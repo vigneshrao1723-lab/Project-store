@@ -1,5 +1,7 @@
 import json
+import re
 from pathlib import Path
+from urllib.parse import quote
 
 from flask import current_app, request
 from flask_login import current_user
@@ -17,6 +19,18 @@ FACTS = json.loads((Path(__file__).parent / "facts.json").read_text(encoding="ut
 FX_OFF = json.loads((Path(__file__).parent / "fx.json").read_text(encoding="utf-8"))["off"]
 
 
+def _favicon():
+    """The tab icon as a data URI, painted with the palette read from tokens.css, so no colour is written twice."""
+    css = (Path(__file__).parent / "static" / "css" / "tokens.css").read_text(encoding="utf-8")
+    tok = dict(re.findall(r"--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})", css))
+    svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%s'/>"
+           "<path d='M6 6h13l7 7v13H6z' fill='%s'/></svg>") % (tok["violet"], tok["amber"])
+    return "data:image/svg+xml," + quote(svg, safe="/:=' ")
+
+
+FAVICON = _favicon()
+
+
 def register_context(app):
     @app.context_processor
     def inject():
@@ -29,4 +43,4 @@ def register_context(app):
         return {"csrf_token": stable_csrf_token, "cart_count": int(count or 0), "nav_categories": cats,
                 "gateway_mode": payments.mode(),
                 "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
-                "facts": FACTS, "fx_off": FX_OFF}
+                "facts": FACTS, "fx_off": FX_OFF, "favicon_href": FAVICON}

@@ -1,0 +1,29 @@
+/* Design tokens: the only place a colour is written down. Every other stylesheet, template and script refers to these
+   by name (a test fails on a hex literal anywhere else), and scripts/check_contrast.py checks the pairs in use.
+   Dark first, one theme: every token sits on the bare :root. The five brand colours come first, then the neutrals
+   tinted toward them. The old token names (paper, ink, mark, green, red ...) are mapped to these in docs/ARCHITECTURE.md. */
+:root {
+  color-scheme: dark;
+
+  /* brand palette */
+  --amber: #FFAB00;    /* primary action, key numbers; text on it is --ink */
+  --harley: #DD2E18;   /* critical fills; text on it is --white */
+  --white: #FFFFFF;    /* body text on dark */
+  --sunset: #FF5841;   /* links, accents, focus ring, section labels; text on it is --ink */
+  --violet: #C53678;   /* status pills, chips, bars, big shapes; text on it is --white */
+
+  /* neutrals */
+  --night: #14070F;    /* page background */
+  --panel: #1F0C18;    /* cards */
+  --panel-2: #2A1221;  /* raised and hover */
+  --line: #4A2438;     /* hairlines (decoration only, never the sole edge of a control) */
+  --muted: #D9C3CE;    /* secondary text */
+  --ink: #1A0B14;      /* text on amber and sunset */
+
+  /* the same colours as space-separated numbers, for rgb(var(--night-rgb) / .9) (kept in step with the hex values by a test) */
+  --night-rgb: 20 7 15;
+  --panel-rgb: 31 12 24;
+  --amber-rgb: 255 171 0;
+  --sunset-rgb: 255 88 65;
+  --violet-rgb: 197 54 120;
+}

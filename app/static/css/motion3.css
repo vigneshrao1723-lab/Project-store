@@ -86,24 +86,24 @@
 .result svg { overflow: visible; flex: none; }
 .rs-ring { stroke-width: 1.5; opacity: .45; }
 .rs-disc { stroke: none; }
-.rs-draw { stroke: #fff; stroke-width: 5; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: 30; stroke-dashoffset: 0; }
-.result-success .rs-ring { stroke: var(--green); }
-.result-success .rs-disc { fill: var(--green); }
-.result-failure .rs-ring { stroke: var(--red); }
-.result-failure .rs-disc { fill: var(--red); }
-.rs-arc { stroke: var(--red); stroke-width: 4; stroke-dasharray: 6 94; stroke-dashoffset: 0; }
+.rs-draw { stroke: var(--white); stroke-width: 5; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: 30; stroke-dashoffset: 0; }
+.result-success .rs-ring { stroke: var(--amber); }
+.result-success .rs-disc { fill: var(--violet); }
+.result-failure .rs-ring { stroke: var(--harley); }
+.result-failure .rs-disc { fill: var(--harley); }
+.rs-arc { stroke: var(--harley); stroke-width: 4; stroke-dasharray: 6 94; stroke-dashoffset: 0; }
 .rs-ring, .rs-disc, .rs-arc, .rs-pulse { transform-box: fill-box; transform-origin: center; }
 .rs-pulse { fill: none; stroke: none; stroke-width: 2; }
 .rs-sweep { position: absolute; left: 0; right: 0; bottom: -16px; height: 2px; opacity: 0; transform-origin: 0 50%; transform: scaleX(0); }
-.result-success .rs-sweep { background: var(--green); }
-.result-failure .rs-sweep { background: var(--red); }
+.result-success .rs-sweep { background: var(--amber); }
+.result-failure .rs-sweep { background: var(--harley); }
 
 .result[data-play]:not(.is-played) .rs-disc { animation: rs-disc calc(440ms * var(--pay-k)) var(--fx-ease) both; }
 .result[data-play]:not(.is-played) .rs-ring { animation: rs-ring calc(380ms * var(--pay-k)) var(--fx-ease) calc(260ms * var(--pay-k)) both; }
 .result[data-play]:not(.is-played) .rs-sweep { animation: rs-sweep calc(720ms * var(--pay-k)) var(--fx-ease) both; }
 .result[data-play]:not(.is-played) .rs-pulse { animation: rs-pulse calc(720ms * var(--pay-k)) ease-out calc(760ms * var(--pay-k)) both; }
-.result-success[data-play]:not(.is-played) .rs-pulse { stroke: var(--green); }
-.result-failure[data-play]:not(.is-played) .rs-pulse { stroke: var(--red); }
+.result-success[data-play]:not(.is-played) .rs-pulse { stroke: var(--amber); }
+.result-failure[data-play]:not(.is-played) .rs-pulse { stroke: var(--harley); }
 .result-success[data-play]:not(.is-played) .rs-draw { animation: rs-draw calc(420ms * var(--pay-k)) var(--fx-ease) calc(440ms * var(--pay-k)) both; }
 .result-failure[data-play]:not(.is-played) .rs-x1 { animation: rs-draw calc(240ms * var(--pay-k)) var(--fx-ease) calc(440ms * var(--pay-k)) both; }
 .result-failure[data-play]:not(.is-played) .rs-x2 { animation: rs-draw calc(240ms * var(--pay-k)) var(--fx-ease) calc(600ms * var(--pay-k)) both; }
@@ -170,25 +170,25 @@ html.fx-on:not(.fx-lite) [data-fx="pin"]:not(.pin-lg):not(.pin-soft) .fx-stage {
 
 /* ---- shared page furniture ---- */
 .fx-progress { display: none; }
-html.fx-on body[data-page="browse"] .fx-progress { display: block; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 2px; background: var(--ink); pointer-events: none;
+html.fx-on body[data-page="browse"] .fx-progress { display: block; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 2px; background: var(--amber); pointer-events: none;
   transform-origin: 0 50%; transform: scaleX(var(--sp, 0)); }
 .site-header .wordmark { transform-origin: 0 50%; }
 html.fx-on .site-header .wordmark { transition: transform var(--fx-dur) var(--fx-ease); }
 html.fx-on .site-header.is-condensed .wordmark { transform: scale(.88); }
 
 /* ---- the home page: story cards and the cover showcase ---- */
-.story { padding-block: clamp(36px, 6vw, 72px); border-top: 1px solid var(--rule); }
+.story { padding-block: clamp(36px, 6vw, 72px); border-top: 1px solid var(--line); }
 .story .h2 { margin-bottom: 1.6rem; }
 .story-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 2vw, 20px); }
-.fx-card { background: var(--paper-2); border: 1.5px solid var(--ink); padding: 1.2rem 1.3rem 1.3rem; }
+.fx-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem 1.3rem 1.3rem; }
 .fx-wide { grid-column: span 2; }
 .fx-card h3 { font-size: 1.1rem; font-stretch: 108%; margin-bottom: .5rem; }
-.fx-card p { margin: 0; color: var(--ink-2); font-size: .98rem; }
-.fx-stat { border-top: 6px solid var(--ink); }
-.fx-stat .fx-n { color: var(--ink); font: 800 clamp(2.4rem, 5vw, 3.6rem)/1 var(--font-display); letter-spacing: -.02em; margin-bottom: .5rem; }
-.fx-stat .fx-l { font: 600 .92rem/1.35 var(--font-display); color: var(--ink-2); }
+.fx-card p { margin: 0; color: var(--muted); font-size: .98rem; }
+.fx-stat { border-top: 6px solid var(--amber); }
+.fx-stat .fx-n { color: var(--amber); font: 800 clamp(2.4rem, 5vw, 3.6rem)/1 var(--font-display); letter-spacing: -.02em; margin-bottom: .5rem; }
+.fx-stat .fx-l { font: 600 .92rem/1.35 var(--font-display); color: var(--muted); }
 
-.showcase { border-top: 1px solid var(--rule); --pin-h: 300vh; overflow-x: clip; }      /* covers start off to the sides; clip them without making a scroll container */      /* .pin-soft: the covers slide in as the section passes, without holding the screen */
+.showcase { border-top: 1px solid var(--line); --pin-h: 300vh; overflow-x: clip; }      /* covers start off to the sides; clip them without making a scroll container */      /* .pin-soft: the covers slide in as the section passes, without holding the screen */
 .showcase-stage { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 1rem; max-width: var(--wrap); margin-inline: auto; padding: clamp(24px, 5vw, 48px) var(--gutter); }
 .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 2vw, 20px); width: 100%; max-width: calc((100vh - 230px) * 1.19); margin-inline: auto; }
 .sc-cover { --e: clamp(0, calc((var(--p) - var(--s)) * 4.5), 1); }       /* the covers are all in by the end of the first scene */
@@ -196,31 +196,32 @@ html.fx-on .site-header.is-condensed .wordmark { transform: scale(.88); }
 .sc-1 { --s: .04; --dir: 1; }
 .sc-2 { --s: .08; --dir: -1; }
 .sc-3 { --s: .12; --dir: 1; }
-.sc-cover a { display: block; background: var(--paper-2); border: 1.5px solid var(--ink); text-decoration: none; }
-.sc-cover a:hover { background: var(--paper-2); }
-.sc-art .cover { aspect-ratio: 4/3; width: 100%; height: auto; border-bottom: 1.5px solid var(--ink); }
+.sc-cover a { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: var(--white); }
+.sc-cover a:hover { background: var(--panel-2); border-color: var(--sunset); }
+.sc-art .cover { aspect-ratio: 4/3; width: 100%; height: auto; border-bottom: 1.5px solid var(--line); }
 .sc-cap { display: flex; justify-content: space-between; gap: .8rem; padding: .55rem .8rem; font: 700 .88rem/1.3 var(--font-display); }
-.sc-head { display: grid; --e: 1; background: var(--ink); color: var(--paper); padding: 1.1rem 1.4rem 1.3rem; border-bottom: 6px solid var(--mark);
+.sc-head { display: grid; --e: 1; background: var(--violet); color: var(--white); padding: 1.1rem 1.4rem 1.3rem; border-bottom: 6px solid var(--amber); border-radius: 12px;
   opacity: var(--e); transform: translate3d(0, calc((1 - var(--e)) * var(--fx-dist) * 1.3), 0); }
-.sc-head h2 { color: var(--paper); margin-bottom: .4rem; }
-.sc-head p { margin: 0; color: var(--panel); font-size: .98rem; }
+.sc-head h2 { color: var(--white); margin-bottom: .4rem; }
+.sc-head p { margin: 0; color: var(--white); font-size: .98rem; }
 /* three scenes: the headline and the 01 / 02 / 03 counter change together as the reader scrolls; each scene fades up,
    holds, and gives way to the next (the last one stays). --a is where a scene starts, --b where it starts to leave. */
 .sc-line, .sc-num b { --in: clamp(0, calc((var(--p) - var(--a)) * 9), 1); --out: clamp(0, calc((var(--b) - var(--p)) * 12), 1); opacity: min(var(--in), var(--out)); }
-.sc-line { grid-area: 1 / 1; background: var(--ink); transform: translate3d(0, calc((1 - var(--in)) * var(--fx-dist)), 0); }
+.sc-line { grid-area: 1 / 1; background: var(--violet); border-radius: 12px; transform: translate3d(0, calc((1 - var(--in)) * var(--fx-dist)), 0); }
 .sc-l1, .sc-n1 { --a: -1; --b: .36; }
 .sc-l2, .sc-n2 { --a: .3; --b: .7; }
 .sc-l3, .sc-n3 { --a: .64; --b: 9; }
-.sc-count { margin: 0; position: absolute; left: var(--gutter); bottom: 1.4rem; font: 800 .95rem var(--font-display); letter-spacing: .12em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.sc-count { margin: 0; position: absolute; left: var(--gutter); bottom: 1.4rem; font: 800 .95rem var(--font-display); letter-spacing: .12em; font-variant-numeric: tabular-nums; color: var(--white); }
 .sc-num { display: inline-grid; }
 .sc-num b { grid-area: 1 / 1; font-weight: 800; }
 /* a "Scroll" cue at the foot of the stage, gone once the reader has started */
 .sc-cue { display: none; margin: 0; position: absolute; left: 50%; bottom: 1.4rem; translate: -50% 0; flex-direction: column; align-items: center; gap: .35rem;
-  font: 700 .72rem var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-2); opacity: clamp(0, calc(1 - var(--p) * 10), 1); }
-.sc-cue i { display: block; width: 2px; height: 26px; background: var(--ink); transform-origin: 50% 0; animation: fx-cue 1.6s var(--fx-ease) infinite; }
+  font: 700 .72rem var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); opacity: clamp(0, calc(1 - var(--p) * 10), 1); }
+.sc-cue i { display: block; width: 2px; height: 26px; background: var(--amber); transform-origin: 50% 0; animation: fx-cue 1.6s var(--fx-ease) infinite; }
 html.fx-on .sc-cue { display: flex; }
+.sc-cue, .sc-hint { background: rgb(var(--night-rgb) / .8); padding: .35rem .9rem; border-radius: 99px; }
 @keyframes fx-cue { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
-.sc-hint { display: none; margin: 0; position: absolute; left: 50%; top: 1.4rem; translate: -50% 0; text-align: center; font: 700 .85rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); opacity: clamp(0, calc(1 - var(--p) * 7), 1); }
+.sc-hint { display: none; margin: 0; position: absolute; left: 50%; top: 1.4rem; translate: -50% 0; text-align: center; font: 700 .85rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); opacity: clamp(0, calc(1 - var(--p) * 7), 1); }
 html.fx-on [data-fx="pin"]:not(.pin-soft) .sc-hint { display: block; }
 @media (max-width: 899px) { html.fx-on .sc-hint, html.fx-on .sc-cue { display: none; } .sc-count { position: static; margin-top: .6rem; } }
 @media (min-width: 900px) {
@@ -233,16 +234,16 @@ html.fx-on [data-fx="pin"]:not(.pin-soft) .sc-hint { display: block; }
 
 /* ---- the product page: its own cover, with the stack and the price sliding in beside it. Pinned on large screens
    only, for under one screen of extra scrolling. ---- */
-.scene { --pin-h: 170vh; margin-block: clamp(24px, 4vw, 48px); border-block: 1px solid var(--rule); overflow-x: clip; }
+.scene { --pin-h: 170vh; margin-block: clamp(24px, 4vw, 48px); border-block: 1px solid var(--line); overflow-x: clip; }
 .scene-stage { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: center; padding: 1.2rem 0; }
 .scene .sc-mid { margin: 0; --sd: .1; }
-.scene .sc-mid .sc-art { border: 1.5px solid var(--ink); background: var(--paper-2); }
+.scene .sc-mid .sc-art { border: 1.5px solid var(--line); background: var(--panel); }
 .scene .sc-mid .cover { aspect-ratio: 4/3; width: 100%; height: auto; }
 .scene figcaption { padding: .5rem .2rem 0; font: 700 .9rem/1.3 var(--font-display); }
 .sc-side { align-self: center; }
 .sc-side .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
 .sc-price { font: 800 clamp(1.8rem, 3vw, 2.4rem)/1 var(--font-display); margin: 0 0 .3rem; }
-.sc-note { margin: 0; font: 600 .92rem var(--font-display); color: var(--ink-2); }
+.sc-note { margin: 0; font: 600 .92rem var(--font-display); color: var(--muted); }
 @media (min-width: 900px) {
   .scene-stage { grid-template-columns: minmax(0, 1fr) minmax(0, min(46rem, 52%)) minmax(0, 1fr); gap: clamp(16px, 3vw, 40px); max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gutter); height: 100%; }
   .scene .sc-l { --dir: -.7; --s: .05; }
@@ -302,25 +303,25 @@ html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
 .tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 3vw, 36px); margin: 0; padding-top: 2.1rem; position: relative; z-index: 1; }
 .tl li { --t: 0; position: relative; --lit: clamp(.35, calc(.35 + (var(--d) - var(--t)) * 9), 1); }       /* only the marker dims: the words stay at full contrast */
 .tl li:nth-child(2) { --t: .26; } .tl li:nth-child(3) { --t: .52; } .tl li:nth-child(4) { --t: .78; }
-.tl li::before { content: ""; position: absolute; left: 0; top: -1.55rem; width: 1.1rem; height: 1.1rem; background: var(--mark); border: 2px solid var(--ink); opacity: var(--lit); }
+.tl li::before { content: ""; position: absolute; left: 0; top: -1.55rem; width: 1.1rem; height: 1.1rem; background: var(--amber); border: 2px solid var(--amber); opacity: var(--lit); }
 .tl h3 { margin-bottom: .3rem; font-size: 1.1rem; font-stretch: 108%; }
-.tl p { margin: 0; color: var(--ink-2); font-size: .95rem; }
+.tl p { margin: 0; color: var(--muted); font-size: .95rem; }
 .tl-line { position: absolute; left: 0; top: calc(1.1rem - 3px); width: 100%; height: 6px; overflow: visible; z-index: 0; }
 .tl-line path { fill: none; stroke-width: 3; vector-effect: non-scaling-stroke; }
-.tl-base { stroke: var(--rule); }
-.tl-draw { stroke: var(--ink); stroke-dasharray: 100; stroke-dashoffset: calc(100 * (1 - var(--d))); }
+.tl-base { stroke: var(--line); }
+.tl-draw { stroke: var(--amber); stroke-dasharray: 100; stroke-dashoffset: calc(100 * (1 - var(--d))); }
 @media (max-width: 700px) { .tl { grid-template-columns: 1fr; } .tl-line { display: none; } .tl li::before { top: .35rem; left: -1.6rem; } .tl { padding-left: 1.6rem; padding-top: 0; } }
 
 /* hscroll: a sideways shelf. It is a plain swipe row everywhere by default (phones, fx-lite, no script); with the
    script on a large screen it is pinned and the track slides as the reader scrolls (--p, with --hs the distance). */
-[data-fx="hscroll"] { position: relative; border-top: 1px solid var(--rule); --p: 1; --hs: 0px; --fx-top: 0px; }
+[data-fx="hscroll"] { position: relative; border-top: 1px solid var(--line); --p: 1; --hs: 0px; --fx-top: 0px; }
 .hs-stage { padding-block: clamp(24px, 4vw, 48px); overflow-x: auto; scroll-snap-type: x mandatory; }
 .hs-head { padding-bottom: 1.2rem; }
 .hs-head p { margin: 0; }
 .hs-track { display: flex; gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0 var(--gutter); width: max-content; }
 .hs-card { flex: none; width: min(78vw, 24rem); scroll-snap-align: start; }
-.hs-card a { display: block; background: var(--paper-2); border: 1.5px solid var(--ink); text-decoration: none; }
-.hs-card a:hover { background: var(--paper-2); }
+.hs-card a { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: var(--white); }
+.hs-card a:hover { background: var(--panel-2); border-color: var(--sunset); }
 @media (min-width: 900px) {
   html.fx-on:not(.fx-lite) [data-fx="hscroll"] { height: var(--hs-h, auto); }
   html.fx-on:not(.fx-lite) [data-fx="hscroll"] .hs-stage { contain: layout paint; position: sticky; top: var(--fx-top); height: calc(100vh - var(--fx-top)); overflow: hidden; display: flex; flex-direction: column; justify-content: center; scroll-snap-type: none; }
@@ -330,10 +331,10 @@ html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
 }
 
 /* marquee: a slow ticker of what the store is built with. CSS only; it pauses on hover and stops for reduced motion. */
-.stack-band { border-bottom: 1px solid var(--rule); background: var(--paper-2); overflow: hidden; }
+.stack-band { border-bottom: 1px solid var(--line); background: rgb(var(--panel-rgb) / .96); overflow: hidden; }
 .marquee { display: flex; }
-.mq-row { display: flex; flex: none; gap: 2.2rem; margin: 0; padding: .8rem 2.2rem .8rem 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
-.mq-row li::before { content: ""; display: inline-block; width: .5rem; height: .5rem; background: var(--mark); margin-right: .7rem; }
+.mq-row { display: flex; flex: none; gap: 2.2rem; margin: 0; padding: .8rem 2.2rem .8rem 0; font: 700 .85rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.mq-row li::before { content: ""; display: inline-block; width: .5rem; height: .5rem; background: var(--amber); margin-right: .7rem; }
 html.fx-on:not(.fx-off-marquee) .mq-row { animation: fx-marquee calc(38s / var(--marquee-speed, 1)) linear infinite; }
 @keyframes fx-marquee { to { transform: translate3d(-100%, 0, 0); } }
 @media (hover: hover) and (pointer: fine) { html.fx-on .marquee:hover .mq-row { animation-play-state: paused; } }
@@ -344,7 +345,7 @@ html:not(.fx-on) .mq-row[aria-hidden="true"] { display: none; }
 /* tilt: tiles lean up to 6 degrees toward the pointer and a flat yellow disc follows it. Fine pointers only. */
 @media (hover: hover) and (pointer: fine) {
   [data-fx="tilt"] { position: relative; overflow: hidden; transition: transform 180ms var(--fx-ease); }
-  [data-fx="tilt"]::after { content: ""; position: absolute; left: 0; top: 0; width: 220px; height: 220px; border-radius: 50%; background: var(--mark); opacity: 0; pointer-events: none;
+  [data-fx="tilt"]::after { content: ""; position: absolute; left: 0; top: 0; width: 220px; height: 220px; border-radius: 50%; background: var(--amber); opacity: 0; pointer-events: none;
     transform: translate3d(calc(var(--mx, 0px) - 110px), calc(var(--my, 0px) - 110px), 0); transition: opacity 200ms linear; }
   [data-fx="tilt"].is-tilting::after { opacity: .16; }
   [data-fx="tilt"].is-tilting { transform: perspective(800px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translate3d(0, -3px, 0); }
@@ -358,16 +359,16 @@ html:not(.fx-on) .mq-row[aria-hidden="true"] { display: none; }
   html.fx-on body[data-page="browse"] .rail { display: block; position: fixed; z-index: 25; right: 16px; top: 50%; translate: 0 -50%; pointer-events: none; --n: 8; }
 }
 .rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; position: relative; }
-.rail ol::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--rule); }
-.rail ol::after { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--ink); transform-origin: 50% 0; transform: scaleY(clamp(0, calc(var(--rs, 0) / (var(--n) - 1)), 1)); }
-.rail li { --k: 0; --lit: clamp(0, calc(var(--rs, 0) - var(--k) + .5), 1); position: relative; z-index: 1; width: 9px; height: 9px; border: 1.5px solid var(--ink); background: var(--paper); }
-.rail li::after { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: var(--lit); }
+.rail ol::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--line); }
+.rail ol::after { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1.5px; background: var(--amber); transform-origin: 50% 0; transform: scaleY(clamp(0, calc(var(--rs, 0) / (var(--n) - 1)), 1)); }
+.rail li { --k: 0; --lit: clamp(0, calc(var(--rs, 0) - var(--k) + .5), 1); position: relative; z-index: 1; width: 9px; height: 9px; border: 1.5px solid var(--sunset); background: var(--night); }
+.rail li::after { content: ""; position: absolute; inset: 0; background: var(--amber); opacity: var(--lit); }
 .rail li:nth-child(2) { --k: 1; } .rail li:nth-child(3) { --k: 2; } .rail li:nth-child(4) { --k: 3; } .rail li:nth-child(5) { --k: 4; }
 .rail li:nth-child(6) { --k: 5; } .rail li:nth-child(7) { --k: 6; } .rail li:nth-child(8) { --k: 7; }
 
 /* hero: three layers of line-art drifting at different speeds behind the headline (--pm is each layer's speed) */
 .hero { position: relative; overflow-x: clip; }
-.hero-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; color: var(--rule); }
+.hero-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; color: var(--muted); }
 .hero-grid { position: relative; z-index: 1; }
 .px { position: absolute; display: block; }
 .px-1 { --pm: -.8; right: 4%; top: 6%; opacity: .7; }

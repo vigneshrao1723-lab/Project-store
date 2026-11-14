@@ -2,6 +2,7 @@
 {% from "_macros.html" import status, result_mark, fx, stepper, order_timeline %}
 {% block title %}Order {{ order.public_id }}{% endblock %}
 {% block page_class %}account{% endblock %}
+{% block bg %}{{ 'gl' if order.status == 'paid' else 'css' }}{% endblock %}
 {% block content %}
 <div class="wrap w-820">
   {% if order.status == 'paid' %}{{ stepper(3) }}{% elif order.status == 'pending' %}{{ stepper(2) }}{% endif %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block bg %}gl{% endblock %}
 {% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count, fx_lines, fx_words %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
@@ -7,8 +8,8 @@
 <section class="hero" data-motion="hero">
   <div class="hero-art" aria-hidden="true">
     <span class="px px-1" {{ fx('parallax') }}><svg viewBox="0 0 220 220" width="220" height="220" fill="none" stroke="currentColor" stroke-width="1.4">{% for r in range(5) %}{% for c in range(5) %}<circle cx="{{ 20 + c * 45 }}" cy="{{ 20 + r * 45 }}" r="{{ 3 if (r + c) % 2 else 6 }}"/>{% endfor %}{% endfor %}</svg></span>
-    <span class="px px-2" {{ fx('parallax') }}><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="70" height="70" fill="#F5D90A"/><rect x="34" y="34" width="70" height="70" fill="none" stroke="#1B2A41" stroke-width="2"/></svg></span>
-    <span class="px px-3" {{ fx('parallax') }}><svg viewBox="0 0 160 40" width="160" height="40" fill="none" stroke="#1B2A41" stroke-width="2"><path d="M4 20h40M24 4v32"/><path d="M70 20h86" stroke-dasharray="6 6"/></svg></span>
+    <span class="px px-2" {{ fx('parallax') }}><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="70" height="70" class="art-hl"/><rect x="34" y="34" width="70" height="70" fill="none" class="art-ln" stroke-width="2"/></svg></span>
+    <span class="px px-3" {{ fx('parallax') }}><svg viewBox="0 0 160 40" width="160" height="40" fill="none" class="art-ln" stroke-width="2"><path d="M4 20h40M24 4v32"/><path d="M70 20h86" stroke-dasharray="6 6"/></svg></span>
   </div>
   <div class="wrap hero-grid">
     <div data-motion="hero-copy">

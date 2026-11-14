@@ -23,5 +23,5 @@ Flask + SQLAlchemy + MySQL store selling the owner's engineering projects. Razor
 ## Conventions
 - Business logic goes in app/services/, routes stay thin.
 - No inline <script>; the Content-Security-Policy forbids it. Put JS in app/static/js/.
-- Design: graph-paper green-grey, ink blue (#1B2A41), one highlighter yellow (#F5D90A). Archivo + Source Serif 4, self-hosted. Do not add gradients, emoji icons, purple, or card shadows. Keep copy plain and specific.
+- Design: warm dark palette, tokens in app/static/css/tokens.css only (amber #FFAB00, harley #DD2E18, white, sunset #FF5841, violet #C53678, plus the night/panel/line/muted/ink neutrals); never write a colour anywhere else (a test fails on a hex literal). Text on amber and sunset is --ink; white text only on harley, violet and the dark neutrals; violet and harley are fills, never text colours (scripts/check_contrast.py enforces it). Glossy gradients and the 3D background are allowed, on the pages that carry them (home, sign in, register, the paid order page) and as the static gradient elsewhere; admin has neither. Cards over the background are the panel colour at 90% or more. Archivo + Source Serif 4, self-hosted. Keep the line-art identity of covers and icons. No emoji icons. Keep copy plain and specific.
 - Commit small, one task per commit, message in imperative mood.

@@ -20,10 +20,12 @@ Each is a CSS custom property in `fx-tuning.css`, named after the effect it belo
 | `--loader-ms` | `1000ms` | **loader.** How long the intro loader stays before it fades out (the scene inside is unchanged; a 2s failsafe still hides it). | 600ms to 1600ms |
 | `--cart-anim-ms` | `1000` | **cart-button.** Length of the Add to cart sequence in ms (a plain number; the script reads it too). | 600 to 1600 |
 | `--pay-anim-ms` | `1400` | **pay-mark.** Length of the payment tick or cross sequence in ms (a plain number). | 900 to 2200 |
+| `--bg-speed` | `1` | **bg3d.** How fast the 3D background drifts (also scaled by `--fx-speed`): `0` freezes it, `2` doubles it. | 0.3 to 1.6 |
+| `--bg-brightness` | `.75` | **bg3d.** How bright the glossy solid is. Lower it if text feels busy over it. | 0.4 to 0.9 |
 | `--marquee-speed` | `1` | **marquee.** Ticker speed: `0.5` half speed, `2` double. | 0.4 to 2 |
 
 Examples of one-line edits: "tilt too strong" is `--tilt-max: 3;`; "everything feels slow" is `--fx-speed: 1.3;`;
-"the covers fly in from too far" is `--cover-slide-distance: 40vw;`.
+"the covers fly in from too far" is `--cover-slide-distance: 40vw;`; "the background is too bright" is `--bg-brightness: .55;`; "turn the 3D off" is `{ "off": ["bg3d"] }`.
 
 ## Switches (on/off)
 
@@ -48,7 +50,7 @@ The server writes it into `<html data-fx-off="tilt marquee">`, so the switch wor
 | `hscroll` | pinned sideways shelf (becomes a swipe row) |
 | `marquee` | stack ticker |
 | `tilt` | tile tilt |
-| `spotlight` | the yellow disc that follows the pointer on tiles |
+| `spotlight` | the amber disc that follows the pointer on tiles |
 | `magnetic` | magnetic buttons |
 | `rail` | section rail |
 | `parallax` | all parallax layers |
@@ -67,6 +69,7 @@ The server writes it into `<html data-fx-off="tilt marquee">`, so the switch wor
 | `hairline`, `header`, `footer` | scroll-progress line, condensed header, footer rise |
 | `inputs`, `shake`, `forms` | field underline and tick, error shake, posting spinner |
 | `downloads`, `drift` | download "preparing" state, drifting art behind sign in and register |
+| `bg3d` | the 3D WebGL background (canvas and scrim); the still CSS gradient underneath stays |
 | `ghost` | the hero headline's blur-to-sharp arrival |
 | `page-fade` | the short page fade-in used where view transitions are unsupported |
 

@@ -2,12 +2,13 @@
 {% from "_macros.html" import field, fx %}
 {% block title %}Create an account{% endblock %}
 {% block page_class %}transactional{% endblock %}
+{% block bg %}gl{% endblock %}
 {% block content %}
 <div class="wrap page-pad auth-wrap">
   <div class="drift" aria-hidden="true">
     <span class="d1"><svg viewBox="0 0 180 180" width="180" height="180" fill="none" stroke="currentColor" stroke-width="1.5">{% for r in range(4) %}{% for c in range(4) %}<circle cx="{{ 22 + c * 45 }}" cy="{{ 22 + r * 45 }}" r="{{ 3 if (r + c) % 2 else 7 }}"/>{% endfor %}{% endfor %}</svg></span>
-    <span class="d2"><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="64" height="64" fill="#F5D90A"/><rect x="34" y="34" width="64" height="64" fill="none" stroke="#1B2A41" stroke-width="2"/></svg></span>
-    <span class="d3"><svg viewBox="0 0 120 40" width="120" height="40" fill="none" stroke="#1B2A41" stroke-width="2"><path d="M4 20h30M19 6v28"/><path d="M52 20h64" stroke-dasharray="6 6"/></svg></span>
+    <span class="d2"><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="64" height="64" class="art-hl"/><rect x="34" y="34" width="64" height="64" fill="none" class="art-ln" stroke-width="2"/></svg></span>
+    <span class="d3"><svg viewBox="0 0 120 40" width="120" height="40" fill="none" class="art-ln" stroke-width="2"><path d="M4 20h30M19 6v28"/><path d="M52 20h64" stroke-dasharray="6 6"/></svg></span>
   </div>
 <div class="auth">
   <h1 {{ fx('rise') }}>Create an account</h1>

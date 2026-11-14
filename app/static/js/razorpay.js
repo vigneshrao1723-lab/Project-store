@@ -19,7 +19,7 @@
       name: "Project Store",
       description: "Order " + d.publicId,
       prefill: { name: d.name, email: d.email, contact: d.phone },
-      theme: { color: "#1B2A41" },
+      theme: { color: getComputedStyle(document.documentElement).getPropertyValue("--violet").trim() },   // the palette token (Razorpay needs a hex string)
       handler: (resp) => {
         form.razorpay_order_id.value = resp.razorpay_order_id;
         form.razorpay_payment_id.value = resp.razorpay_payment_id;

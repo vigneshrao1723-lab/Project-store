@@ -127,3 +127,7 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Page fade where view transitions are unsupported | all | `@keyframes fx-page-in` | app/static/css/motion3-ui.css | page-fade |
 | Empty orders line-art idle loop | orders | `empty-art empty-orders` | app/templates/orders.html | bob |
 | Empty search line-art idle loop | catalogue | `empty-art empty-search` | app/templates/catalogue.html | bob |
+| 3D background canvas (home, sign in, register, paid order) | home, login, register, order detail | `data-bg3d` | app/templates/base.html | bg3d |
+| 3D background shader: warped noise lit as a glossy solid | home, login, register, order detail | `float fbm(vec2 p)` | app/static/js/fx-bg.js | bg3d |
+| 3D background rides the one scroll loop | home, login, register, order detail | `window.fxBg.tick(now)` | app/static/js/fx-scroll.js | bg3d |
+| Warm gradient fallback that drifts under the canvas | all | `@keyframes bg-drift` | app/static/css/main.css | bg3d |

@@ -118,7 +118,7 @@ def test_the_layers_never_take_pointer_input_and_stay_inside_the_cover():
     for selector in (".fx-back", ".fx-panel"):
         decl = re.search(r"(?m)^" + re.escape(selector) + r"\s*\{([^}]*)\}", SECTION, re.S).group(1)
         assert "position: absolute" in decl and "pointer-events: none" in decl, selector
-    assert re.search(r"\.tile-cover \{ position: relative; border-bottom: 1px solid var\(--ink\); overflow: hidden; \}", CSS)
+    assert re.search(r"\.tile-cover \{ position: relative; border-bottom: 1px solid var\(--line\); overflow: hidden; \}", CSS)
     assert ".plate-cover { position: relative; overflow: hidden; }" in SECTION
 
 

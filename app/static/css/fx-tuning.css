@@ -15,6 +15,8 @@
   --loader-ms: 1000ms;           /* loader: how long the intro loader stays before it fades out. Good range 600ms to 1600ms (a 2s failsafe hides it). */
   --cart-anim-ms: 1000;          /* cart-button: length of the Add to cart sequence in ms (a number, not a length). Good range 600 to 1600. */
   --pay-anim-ms: 1400;           /* pay-mark: length of the payment tick/cross sequence in ms (a number). Good range 900 to 2200. */
+  --bg-speed: 1;                 /* bg3d: how fast the 3D background drifts (also scaled by --fx-speed). 0 = frozen, 2 = double. Good range 0.3 to 1.6. */
+  --bg-brightness: .75;          /* bg3d: how bright the glossy solid is. Lower it if text feels busy on top. Good range 0.4 to 0.9. */
   --marquee-speed: 1;            /* marquee: ticker speed. 0.5 = half speed, 2 = double. Good range 0.4 to 2. */
 
   /* derived: do not edit */
@@ -86,3 +88,7 @@ html[data-fx-off~="drift"] .drift span { animation: none !important; }
 html[data-fx-off~="focus-ring"] :focus-visible { animation: none !important; }
 html[data-fx-off~="wipe"] .nav a::after, html[data-fx-off~="wipe"] .site-footer a::after, html[data-fx-off~="wipe"] .crumbs a::after { transition: none !important; }
 html[data-fx-off~="lift"] .fx-card, html[data-fx-off~="lift"] .hs-card a, html[data-fx-off~="lift"] .sc-cover a, html[data-fx-off~="lift"] .summary, html[data-fx-off~="lift"] .delivery { transition: none !important; transform: none !important; }
+
+/* switch for the 3D background: the canvas and its scrim go, the CSS gradient underneath stays */
+html[data-fx-off~="bg3d"] .bg3d, html[data-fx-off~="bg3d"] .bg-scrim { display: none !important; }
+html[data-fx-off~="bg3d"] body::before { animation: none !important; }

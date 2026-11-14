@@ -13,7 +13,9 @@
    class the stylesheet's hidden states depend on. Whatever is already on screen at that moment is revealed in the same
    step, so nothing flashes. A focused element is never left hidden. The scroll and resize listeners are passive, the
    loop stops while the tab is hidden or there is nothing to do, and everything is undone on pagehide. Error pages
-   (data-page="none") do not run it; admin pages run only the one-shot words (no scenes, no pointer effects). */
+   (data-page="none") do not run it; admin pages run only the one-shot words (no scenes, no pointer effects).
+   The 3D background (fx-bg.js) has no loop of its own: this loop calls window.fxBg.tick(now) each frame and keeps running
+   while it answers true. */
 (() => {
   "use strict";
   // TO TURN AN EFFECT OFF: list its name here, e.g. ["tilt", "magnetic", "toasts"]. A data-fx word is then treated as
@@ -245,6 +247,7 @@
       if (t >= 1) counting.splice(i, 1);
     }
     if (counting.length) schedule();
+    if (window.fxBg && window.fxBg.tick(now)) schedule();     // the 3D background rides this same loop (fx-bg.js has none of its own)
   }
   function schedule() { if (!raf && !document.hidden) raf = requestAnimationFrame(frame); }
 
@@ -268,6 +271,7 @@
   document.addEventListener("transitionend", onEnd);
   window.addEventListener("pagehide", () => {
     io.disconnect(); cancelAnimationFrame(raf); raf = 0; live.clear(); settle.clear(); counting.length = 0;
+    if (window.fxBg) window.fxBg.stop();
     cleanups.forEach((fn) => fn());
     window.removeEventListener("scroll", schedule); window.removeEventListener("resize", onResize);
     document.removeEventListener("visibilitychange", onVisible); document.removeEventListener("focusin", onFocus);

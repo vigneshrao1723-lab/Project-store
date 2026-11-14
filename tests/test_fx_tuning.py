@@ -20,10 +20,10 @@ NEUTRALISING = re.compile(r"animation: none|transition: none|transform: none|dis
 
 # ---- knobs -----------------------------------------------------------------------------------------------------------------
 
-def test_the_twelve_knobs_exist_with_their_defaults_and_are_all_named_after_an_effect():
+def test_the_fourteen_knobs_exist_with_their_defaults_and_are_all_named_after_an_effect():
     names = [k[0] for k in KNOBS]
     assert names == ["--fx-speed", "--fx-dist", "--fx-stagger", "--fx-ease", "--tilt-max", "--magnet-max", "--parallax-strength",
-                     "--cover-slide-distance", "--loader-ms", "--cart-anim-ms", "--pay-anim-ms", "--marquee-speed"]
+                     "--cover-slide-distance", "--loader-ms", "--cart-anim-ms", "--pay-anim-ms", "--bg-speed", "--bg-brightness", "--marquee-speed"]
     defaults = {k: v.strip() for k, v, _ in KNOBS}
     assert defaults["--fx-speed"] == "1" and defaults["--tilt-max"] == "6" and defaults["--magnet-max"] == "6"
     assert defaults["--fx-dist"] == "14px" and defaults["--fx-stagger"] == "60ms" and defaults["--cover-slide-distance"] == "60vw"
@@ -70,7 +70,7 @@ def test_the_twenty_named_effects_are_all_switchable():
 
 
 def test_every_effect_in_the_inventory_names_a_switch_that_exists():
-    assert len(ALL_ROWS) >= 100
+    assert len(ALL_ROWS) >= 100       # grows only
     for effect, page, hook, file, switch in ALL_ROWS:
         assert switch == "-" or switch in SWITCHES, (effect, switch)
     covered = {r[4] for r in ALL_ROWS} - {"-"}

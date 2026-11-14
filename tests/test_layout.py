@@ -27,7 +27,7 @@ def test_the_product_grid_container_paints_no_background():
 
 def test_each_tile_draws_its_own_hairline_so_empty_cells_stay_empty():
     declarations = rule(".tile")
-    assert re.search(r"border:\s*1px solid var\(--ink\)", declarations)
+    assert re.search(r"border:\s*1px solid var\(--line\)", declarations)
     assert re.search(r"margin:\s*0 -1px -1px 0", declarations)          # neighbouring borders overlap into one line
 
 
