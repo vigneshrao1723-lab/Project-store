@@ -37,7 +37,7 @@ Every number below comes from a command you can run.
 
 | Claim | How to check it |
 |---|---|
-| 1,066 tests pass on SQLite, 3 skip without MySQL (CI runs those against MySQL) | `pytest` |
+| 1,070 tests pass on SQLite, 3 skip without MySQL (CI runs those against MySQL) | `pytest` |
 | Line coverage of `app/` is 96% (2,328 statements, 87 missed), measured on that same run | `pytest --cov=app --cov-report=term-missing` |
 | 302 of those tests are the security suite, one file per audit item | `pytest tests/security` |
 | CI runs four jobs on every push and pull request: `test` (SQLite, then MySQL for the concurrency and migration tests), `security` (`pip-audit`, `bandit` at medium severity and above, lock files match the pins), `build` (Docker image plus a smoke test) and `deploy` (main only: pushes the image to GitHub Container Registry) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |

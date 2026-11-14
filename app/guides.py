@@ -2,9 +2,11 @@
 
 Sources read on 14 Nov 2026:
 * quantum-resistant-secure-communication: that repository's README.md (Technology Stack, Testing, Installation /
-  Setup, Running the Application).
-* advanced-rag-knowledge-assistant: that repository has no README or code yet, only empty design documents and an
-  .env.example listing the settings it will need; every step that cannot be confirmed says "see the project README".
+  Setup, Running the Application), crypto/kyber.py (ML-KEM-768), crypto/rsa.py (2048), crypto/aes.py (AES-256-GCM)
+  and benchmark/benchmark_key_exchange.py (its usage lines).
+* advanced-rag-knowledge-assistant: that repository's README.md (Quickstart, Running tests, evaluation harness),
+  docs/AI_SETUP.md (local model, speech model, troubleshooting) and .env.example. (A first draft was written from an
+  older, empty copy of the repository; it was replaced once the real one was found.)
 * project-store-platform: this repository's README.md.
 * smart-home-soc-fpga: the kit description in seed.py only (the project is not finished).
 
@@ -46,35 +48,56 @@ The tests need the PostgreSQL database and `DATABASE_URL` from step 5; each test
 pytest -q
 ```
 
+# Run the benchmark
+The key exchange is ML-KEM-768 (Kyber768) by default; RSA-2048 is there for the classical comparison. The benchmark times both, on the raw primitives and through the real session path, and writes the results as JSON:
+```
+python -m benchmark.benchmark_key_exchange
+python -m benchmark.benchmark_key_exchange --iterations 500 --output results.json
+```
+Sample results are in `benchmark/results/key_exchange.json`. ML-KEM runs in pure Python (kyber-py) and RSA in compiled code, so compare sizes freely but read timings as this implementation's, not the algorithms'.
+
 # Common problems
 - "sqlite is not supported": point `DATABASE_URL` at PostgreSQL.
 - The server will not start and mentions the JWT secret: set `JWT_SECRET_KEY` in `.env`.
 - Import errors when starting the server: run it from the project root with `python -m server.server`, not as a file path.
 - TLS errors on connect: run `python scripts/generate_dev_certs.py` again.
-- Key exchange: the default is Kyber768 (ML-KEM-768); RSA-2048 can be selected for the classical comparison. Benchmarks: see the project README.
 """,
 
     "advanced-rag-knowledge-assistant": """# What you need
-- See the project README for the exact Python version and system packages.
-- API keys for a language model and an embedding service. The project's settings name them `LLM_API_KEY` and `EMBEDDING_API_KEY`.
-- A database URL and a secret key (`DATABASE_URL`, `SECRET_KEY`).
-- Settings for file storage (`STORAGE_PROVIDER`, `STORAGE_BUCKET`) and, for voice, speech keys (`STT_API_KEY`, `TTS_API_KEY`).
+- Docker Desktop (or Docker with Compose). Everything else runs in containers.
+- Disk space for the free local language model (the Ollama image is about 3 to 4 GB, the model about 1.9 GB), and about 460 MB more for voice.
+- No paid API key: embedding, reranking, speech and the default language model all run locally.
 
 # Set it up
-1. Unpack the kit and open a terminal in the project folder.
-2. Copy `.env.example` to `.env` and fill in the settings listed above.
-3. Install the dependencies: see the project README.
+1. Unpack the kit or clone it, and open a terminal in the project folder.
+2. Copy the settings file: `cp .env.example .env`. For anything beyond a throwaway local run, set `SECRET_KEY` to a real value (`openssl rand -hex 32`).
+3. Start the stack (PostgreSQL with pgvector, Redis, Mailpit, the backend and the frontend). Database migrations run on start-up:
+```
+docker compose -f infra/compose/docker-compose.yml up --build
+```
+4. Install the free local language model once (Ollama). Until then the chat shows a banner and will not answer. With an NVIDIA GPU put `USE_GPU=1` in front of the command; to use a model server you already run, set `LLM_BASE_URL` and `LLM_MODEL` in `.env` instead:
+```
+infra/scripts/setup-local-llm.sh
+```
+5. For voice, install the speech model once: `infra/scripts/setup-local-stt.sh`
 
 # Run it
-See the project README for the command that starts the app.
+1. Open http://localhost:3000, register and sign in.
+2. Create a workspace, then upload a PDF, DOCX, TXT, Markdown or CSV file (up to 50 MiB) on the Documents page and wait for it to show `READY`.
+3. Open Chat and ask a question. Click a numbered citation to see the exact source text. Try "Ask by voice" and "Play answer".
 
 # Run the tests
-See the project README.
+```
+cd backend && uv run pytest -q
+cd frontend && npm run test -- --run
+```
+The backend tests need a reachable PostgreSQL. The retrieval evaluation: `cd backend && uv run python ../eval/scripts/run_retrieval_evaluation.py`
 
 # Common problems
-- Answers fail straight away: check `LLM_API_KEY` and `EMBEDDING_API_KEY` in `.env`.
-- Uploads fail: check `STORAGE_PROVIDER` and `STORAGE_BUCKET`.
-- Anything else: see the project README, or use the contact form and we will help.
+- "No AI model is set up": run `infra/scripts/setup-local-llm.sh`, or set `LLM_BASE_URL` and `LLM_MODEL`.
+- "model server cannot be reached": start Ollama with `docker compose -f infra/compose/docker-compose.yml --profile llm up -d ollama`.
+- "took too long": the model is slow on this CPU; use the GPU option, a smaller model, or raise `LLM_TIMEOUT_SECONDS`.
+- A document stays `FAILED`: the Documents page shows the reason; check the file type and size.
 """,
 
     "project-store-platform": """# What you need

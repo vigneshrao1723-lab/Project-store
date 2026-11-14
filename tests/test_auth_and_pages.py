@@ -26,7 +26,7 @@ def test_hidden_products_are_not_public(client, rag):
 
 def test_search_matches_title_and_technology(client):
     assert b"Quantum-Resistant" in client.get("/catalogue?q=kyber").data
-    assert b"FAISS" in client.get("/catalogue?q=faiss").data or b"Advanced RAG" in client.get("/catalogue?q=faiss").data
+    assert b"Advanced RAG" in client.get("/catalogue?q=pgvector").data      # the RAG kit's real stack (v1.3 copy check)
     assert b"No projects match" in client.get("/catalogue?q=zzzzzz").data
 
 
