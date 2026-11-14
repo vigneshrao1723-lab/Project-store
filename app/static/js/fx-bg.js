@@ -70,7 +70,7 @@
       const speed = Math.max(0, num("--bg-speed", 1) * num("--fx-speed", 1));
       const glow = Math.min(1, Math.max(0.3, num("--bg-brightness", 0.75)));
       let t = 0, last = 0, frames = 0, sum = 0, dead = false, still = off || reduced;
-      const STILL_T = 11;                                     // the moment the still frame shows
+      const STILL_T = 6;                                      // the moment the still frame shows (the prototype looks its best around six seconds in); animation starts from 0, as the prototype does
 
       const size = () => {
         const w = Math.max(2, Math.floor(window.innerWidth * scale)), h = Math.max(2, Math.floor(window.innerHeight * scale));
@@ -89,7 +89,7 @@
       cv.addEventListener("webglcontextlost", (e) => { e.preventDefault(); dead = true; cv.classList.remove("on"); root.classList.remove("bg-gl"); }, false);
       window.addEventListener("pagehide", () => window.removeEventListener("resize", onResize), { once: true });
 
-      t = STILL_T; draw();                                    // first frame at once, so the canvas is never blank
+      t = still ? STILL_T : 0; draw();                        // first frame at once, so the canvas is never blank
       cv.classList.add("on");
       root.classList.add("bg-gl");                            // the CSS gradient underneath stops drifting while the canvas covers it
 

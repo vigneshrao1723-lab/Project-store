@@ -131,7 +131,7 @@ A warm 3D background sits behind some pages. Four parts, from the bottom up:
 
 1. **The CSS gradient** on `body::before` (fixed, `z-index: -2`): three radial gradients in violet, sunset and amber over `--night`. It is always there, it is the fallback for everything below, and it drifts slowly (a `transform`-only animation) only on pages that carry the canvas and only until the canvas is running. Admin has no gradient (`body[data-bg="none"]`).
 2. **The canvas** (`<canvas class="bg3d" data-bg3d aria-hidden="true">`, fixed, `z-index: -1`, `pointer-events: none`) drawn by `app/static/js/fx-bg.js`: domain-warped noise lit like a glossy iridescent solid, ported from the owner's approved prototype with the colours read from the tokens. No library; the shader is a string in the module, so the Content-Security-Policy is unchanged.
-3. **The scrim** (`.bg-scrim`): a left-to-right dark gradient over the canvas (an even 85% on phones, where text runs the full width) so a headline over it stays above 4.5:1.
+3. **The scrim** (`.bg-scrim`): a left-to-right dark gradient over the canvas (an even 82% at 900 px and under, where the text runs the full width) so a headline over it stays above 4.5:1.
 4. **Veils and cards**: text that is not on a card sits on the page colour at 92% (home sections) or on a panel card at 90% or more (sign in, register, the paid order page, every tile and plate). Cards are never more transparent than that.
 
 **Where.** `<body data-bg>` is set by `{% block bg %}`: `gl` (canvas) on home, sign in, register and a *paid* order page; `css` (gradient only) everywhere else, including catalogue, product, cart, checkout, pay, orders and errors; `none` on admin.
