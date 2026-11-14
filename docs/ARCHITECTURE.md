@@ -110,17 +110,17 @@ One theme, dark first (`color-scheme: dark`), every colour written once in `app/
 
 | Old | Was used for | Now |
 |---|---|---|
-| `--paper` #E8EDE7 | page background | `--night` |
-| `--paper-2` #F3F6F1 | cards, inputs, summary boxes | `--panel` (`--panel-2` on hover) |
-| `--panel` #DCE4DD | cover backdrop, admin row hover | `--panel-2` |
-| `--ink` #1B2A41 | text | `--white` |
+| `--paper` | page background | `--night` |
+| `--paper-2` | cards, inputs, summary boxes | `--panel` (`--panel-2` on hover) |
+| `--panel` | cover backdrop, admin row hover | `--panel-2` |
+| `--ink` | text | `--white` |
 | | strong borders | `--line` for decoration, `--muted` for inputs, steppers, tabs |
 | | dark fills (buttons, badges, bars) | `--amber` with `--ink` text; bars `--violet` |
-| `--ink-2` #44546A | secondary text | `--muted` |
-| `--rule` #B4C2B8 | hairlines | `--line` |
-| `--mark` #F5D90A | highlighter, hover fill, banners | `--amber` (action, key numbers, banners), `--sunset` (hover), `--violet` (big shapes, the big error code) |
-| `--green` #1F6B47 | success | `--amber` (ring, ticks, borders), `--violet` (paid pill, tick disc) |
-| `--red` #A3261C | errors | `--harley` fill with white text; `--sunset` for text on dark |
+| `--ink-2` | secondary text | `--muted` |
+| `--rule` | hairlines | `--line` |
+| `--mark` | highlighter, hover fill, banners | `--amber` (action, key numbers, banners), `--sunset` (hover), `--violet` (big shapes, the big error code) |
+| `--green` | success | `--amber` (ring, ticks, borders), `--violet` (paid pill, tick disc) |
+| `--red` | errors | `--harley` fill with white text; `--sunset` for text on dark |
 | `#fff` literals | text on fills, the tick stroke | `--white` |
 
 The design rule "no gradients, shadows or photos" of v1.0.0 and v1.1.0 is overridden for this release (decided by the owner): the warm glossy background and a soft glow on card hover are allowed; the line-art identity of the covers and icons is kept and recoloured.
