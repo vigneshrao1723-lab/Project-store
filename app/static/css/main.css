@@ -387,6 +387,7 @@ p.stat-value { margin: 0; font-weight: 700; }
 .guide-body ol, .guide-body ul { padding-left: 1.3rem; margin: 0 0 .8rem; }
 .guide-body pre { background: var(--night); border: 1px solid var(--line); border-radius: 8px; padding: .7rem .9rem; overflow-x: auto; font-size: .88rem; }
 .guide-body code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+.guide-body :not(pre) > code { overflow-wrap: anywhere; }     /* a long URL in a sentence wraps instead of widening the panel */
 .guide-sec { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
 
 .invoice { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(18px, 4vw, 40px); max-width: 860px; }
