@@ -5,7 +5,7 @@
 <h1>Order message {{ m.id }}</h1>
 <dl class="def">
   <div><dt>Order</dt><dd><a href="{{ url_for('admin.order_detail', public_id=m.order.public_id) }}">{{ m.order.public_id }}</a></dd></div>
-  <div><dt>Channel</dt><dd>{{ m.channel | capitalize }}</dd></div>
+  <div><dt>Channel</dt><dd>{{ 'WhatsApp' if m.channel == 'whatsapp' else 'Email' }}</dd></div>
   <div><dt>To</dt><dd>{{ m.to_value or 'removed' }}</dd></div>
   <div><dt>Status</dt><dd>{{ m.status | replace('_', ' ') | capitalize }}{% if m.last_error %} ({{ m.last_error }}){% endif %}, {{ m.attempts }} attempt{{ '' if m.attempts == 1 else 's' }}</dd></div>
   {% if m.subject %}<div><dt>Subject</dt><dd>{{ m.subject }}</dd></div>{% endif %}

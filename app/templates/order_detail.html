@@ -29,7 +29,7 @@
     <section class="msg-status" aria-labelledby="msg-h">
       <h2 id="msg-h">Invoice and setup guide</h2>
       {% if order.contact_channel %}
-      <p class="ui">Chosen contact: <strong>{{ order.contact_channel | capitalize }}</strong> {{ masked_contact }}</p>
+      <p class="ui">Chosen contact: <strong>{{ 'WhatsApp' if order.contact_channel == 'whatsapp' else 'Email' }}</strong> {{ masked_contact }}</p>
       {% for m in order.messages %}<p class="ui msg-line msg-{{ m.status }}" role="status"><span class="msg-dot" aria-hidden="true"></span>{{ status_text(m) }}</p>{% else %}<p class="ui msg-line" role="status"><span class="msg-dot" aria-hidden="true"></span>Queued</p>{% endfor %}
       {% else %}
       <p class="ui">No message was asked for with this order. Everything is on this page.</p>

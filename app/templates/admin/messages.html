@@ -32,7 +32,7 @@
   <tr>
     <td data-label="Created" class="num">{{ m.created_at.strftime('%d %b, %H:%M') }}</td>
     <td data-label="Order"><a href="{{ url_for('admin.order_detail', public_id=m.order.public_id) }}">{{ m.order.public_id }}</a></td>
-    <td data-label="To">{{ m.channel | capitalize }} {{ mask(m.channel, m.to_value) if m.to_value else 'removed' }}</td>
+    <td data-label="To">{{ 'WhatsApp' if m.channel == 'whatsapp' else 'Email' }} {{ mask(m.channel, m.to_value) if m.to_value else 'removed' }}</td>
     <td data-label="Status"><span class="status s-msg-{{ m.status }}">{{ m.status | replace('_', ' ') | capitalize }}</span>{% if m.last_error %}<br><span class="muted fs-sm">{{ m.last_error }}</span>{% endif %}</td>
     <td data-label="Open"><a href="{{ url_for('admin.outbox_message', message_id=m.id) }}">Open</a></td>
   </tr>
