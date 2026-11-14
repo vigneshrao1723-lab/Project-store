@@ -131,3 +131,7 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | 3D background shader: warped noise lit as a glossy solid | home, login, register, order detail | `float fbm(vec2 p)` | app/static/js/fx-bg.js | bg3d |
 | 3D background rides the one scroll loop | home, login, register, order detail | `window.fxBg.tick(now)` | app/static/js/fx-scroll.js | bg3d |
 | Warm gradient fallback that drifts under the canvas | all | `@keyframes bg-drift` | app/static/css/main.css | bg3d |
+| Phone timeline: the vertical line draws from the top (v1.3) | home (phones) | `transform-origin: 50% 0; transform: scaleY(var(--d));` | app/static/css/motion3.css | draw |
+| The draw switch also stills the phone line (v1.3) | home (phones) | `html[data-fx-off~="draw"] .tl-wrap .steps::after` | app/static/css/fx-tuning.css | draw |
+| Cascade: "Get in touch" form and contact panel (v1.3) | home, contact | `<div class="contact" {{ fx('cascade') }}>` | app/templates/_contact.html | cascade |
+| Magnetic "Send message" button (v1.3) | home, contact | `send-btn" type="submit" {{ fx('magnetic') }}` | app/templates/_contact.html | magnetic |

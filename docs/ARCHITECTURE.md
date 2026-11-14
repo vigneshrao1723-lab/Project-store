@@ -6,11 +6,13 @@ Project Store is a server-rendered Flask application with a JSON REST API, backe
 
 ```
 Browser ──► Flask app (gunicorn, 3 workers)
-             ├─ blueprints: shop, auth, cart, checkout, account, admin, api (/api/v1), webhooks
-             ├─ services:   orders (state machine + stock), cart, catalog, payments, products, login_throttle, rate_limit
+             ├─ blueprints: shop, auth, cart, checkout, account, admin, api (/api/v1), webhooks, contact, orderdocs
+             ├─ services:   orders (state machine + stock), cart, catalog, payments, products, login_throttle, rate_limit,
+             │              notify (order messages: email / WhatsApp / outbox), guide (setup guide renderer), privacy
              └─ SQLAlchemy ──► MySQL 8
 Razorpay ◄──► checkout.js in the browser, plus a signed webhook back to /webhooks/razorpay
-sweeper container: `flask release-expired` every 60s
+SMTP server / Meta WhatsApp Cloud API ◄── order messages, only when configured (otherwise they wait in the outbox)
+sweeper container: `flask release-expired` and `flask send-messages` every 60s
 ```
 
 Pages are rendered with Jinja and hand-written CSS. The cart and the quantity controls call the same `/api/v1` endpoints that third parties could use, so the API is exercised by the UI and not a side feature.
@@ -25,7 +27,12 @@ Pages are rendered with Jinja and hand-written CSS. The cart and the quantity co
 | `orders`, `order_items` | An order snapshots title and unit price at purchase, so later price edits never rewrite history. |
 | `inventory_log` | Append-only ledger of every stock change (`seed`, `reserve`, `release`, `adjust`). Current stock must always equal the sum of the ledger; a test asserts this. |
 | `login_throttle` | One row per (email, IP) with its recent failed sign-ins and, once blocked, `locked_until`. See "Security notes" below. |
-| `rate_limits` | One row per (limit name, client) with the hits in the current window. Backs the registration, checkout, payment-confirmation and per-address sign-in limits. |
+| `rate_limits` | One row per (limit name, client) with the hits in the current window. Backs the registration, checkout, payment-confirmation and per-address sign-in limits, and the contact-form and order-message limits. |
+| `contact_messages` | Messages from the contact form (v1.3): names, email, subject, message, the consent box and when an admin marked it handled. The IP is not stored. |
+| `orders.contact_channel`, `contact_value`, `contact_consent_at` | Where the buyer asked for the invoice and setup guide (email, or a WhatsApp number in E.164) and when they consented. Empty when they did not ask. |
+| `messages` | The order-message outbox (v1.3): one row per (order, kind, channel), unique together, with the status (`queued`, `sent`, `failed`, `not_configured`), attempts, next attempt time, a short last error and the rendered text. |
+| `contact_optouts` | The do-not-contact list: only a keyed hash of each contact that pressed "stop". |
+| `products.setup_guide`, `guide_edited` | The setup guide shown on the order page, the guide page and in the message; `guide_edited` is set when an admin changes it, and `flask seed` never overwrites an edited guide. |
 
 The schema is created and changed only by the Alembic migrations in `migrations/`. `docker-entrypoint.sh` runs `flask db upgrade` before the app starts; `create_all` is used only by the tests. A test fails if the models and the migrations ever disagree. Databases built by the old `create_all` start-up are adopted at revision `0001` by `flask adopt-legacy-db` and then upgraded, so they keep their data.
 
@@ -216,6 +223,38 @@ Every number someone is likely to want to change is a CSS custom property in `st
 
 Any single effect can be switched off by listing its name in `app/fx.json` (`{"off": ["tilt"]}`). The context processor writes the list to `<html data-fx-off="...">` before first paint, so CSS-only effects switch off with no script, and `fx-scroll.js` and `fx-ui.js` skip the effects they own. `docs/MOTION_TUNING.md` lists every knob and every switch name with a good range; `docs/MOTION_INVENTORY.md` lists every effect with the switch that turns it off, and a test fails if a listed effect disappears from its file.
 
+## Contact form (v1.3)
+
+`GET /contact` and the "Get in touch" block on the home page render the same component (`_contact.html`): a form on the left and a violet panel on the right with the phone, email, city and Connect buttons. Every detail comes from `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB` and `CONTACT_LINKEDIN` (`app/context.py`); an empty one is not shown, and the repository holds no phone number or email (a test scans for them). There is no map, only a line-art pin, so the page makes no third-party request.
+
+`POST /contact` (`app/blueprints/contact.py`) is CSRF-protected and parsed by `validation.contact_form`: required fields, length caps that match the columns, no line breaks in one-line fields (no header injection), a valid email, and a consent box. A hidden `website` field is a honeypot: a bot that fills it is thanked and nothing is stored. Limits: 10 an hour per address and 3 an hour per sender email (keyed by a hash). A good message is stored in `contact_messages`, the owner is emailed if SMTP is set, and the visitor sees "Thanks, we will reply soon". Admin → Messages lists them newest first with "mark handled". Logs never carry the name, email or message.
+
+## Order messages (v1.3)
+
+At checkout the buyer chooses Email or WhatsApp, gives one address (the email is prefilled; a WhatsApp number is normalised to E.164 with +91 as the default) and must tick "Send my invoice and setup guide to this contact". The order stores the channel, the value and the consent time. A checkout that asks for messages is limited to 10 a day per address and 5 a day per account.
+
+```
+mark_paid() == "paid" ──► notify.after_payment(order)        (after the payment is committed; every error is swallowed)
+                             ├─ queue_order_paid: one `messages` row per (order, kind, channel), unique together
+                             └─ deliver: opted out? daily cap (3 a contact)? ──► render ──► EmailChannel | WhatsAppChannel
+                                          not configured ──► status not_configured (the admin can read it and send it by hand)
+                                          send error     ──► failed, retried by `flask send-messages` after 2, 4, 8, 16 minutes, 5 tries
+```
+
+* **Idempotent.** The redirect, the webhook and the API can all confirm the same payment; the unique key means one message, not three.
+* **Never in the payment's way.** Delivery runs after `mark_paid` has committed, and `after_payment` catches everything, so a slow or failing mail server cannot fail or roll back a payment.
+* **Channels** (`app/services/notify/channels.py`): `EmailChannel` is `smtplib` with STARTTLS; `WhatsAppChannel` posts one approved template (six variables) to the Meta Cloud API and checks that the number is `+` and 8 to 15 digits before any call. Header values have CR and LF removed. With neither configured, the outbox is the channel.
+* **One message** holds a short thank-you note, the invoice, the setup guide for each project and where to download (it says honestly when a link is not ready yet). The order page always shows the invoice and the guides as well, and says exactly what happened to the message ("Sent to j***@gmail.com", "Not sent: this store has not switched on email or WhatsApp messages yet", "We could not send this, it is on your order page below").
+* **Signed links.** `/i/<token>` (invoice) and `/g/<token>` (guide) carry an `itsdangerous` token with a per-purpose salt, the order id and its public id, valid for 7 days and only for a paid or refunded order; they answer `Cache-Control: no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`. `/orders/<id>/invoice` serves the owner and admins. The invoice has print styles.
+* **Stop.** Every message ends with `/stop/<token>`; the page asks for a button press (a POST, so link scanners cannot opt people out) and stores only a keyed hash in `contact_optouts`. Nothing more is sent to that contact.
+* **Privacy.** Raw contact values never reach a log line; the order page and the admin show them masked. `flask anonymise-order PS-XXXXXXX` (`services/privacy.py`) removes the name and contact from an order and its messages.
+
+## Setup guides and catalogue copy (v1.3)
+
+`products.setup_guide` holds a small markdown subset rendered by `services/guide.py`: headings, lists (numbered lists keep their start), code blocks and inline code. The text is escaped first and only those tags are produced, so a guide cannot inject HTML. The seeded guides (`app/guides.py`) were written from each project's own README and code; an admin edits a guide in the product form, which sets `guide_edited`.
+
+The seeded catalogue copy was checked against the projects' code in v1.3 (the messenger uses ML-KEM-768 over TLS; the RAG assistant is FastAPI, PostgreSQL with pgvector and Next.js). `seed.seed_copy_fixes()`, run by `flask seed --if-empty` at every container start, replaces an old seeded field only while it still holds the exact old text, so anything an admin has rewritten stays.
+
 ## Security notes
 
 * CSRF tokens on every form and on every API write (`X-CSRFToken`).
@@ -234,6 +273,7 @@ Any single effect can be switched off by listing its name in `app/fx.json` (`{"o
 * Cover art is built from the product title in `covers.py`, which escapes it with `markupsafe.escape`; `Markup` is applied once, in `app/__init__.py`, to the finished drawing (and carries the bandit `# nosec` with that reason). A test fails if `|safe`, `Markup(` or `render_template_string` appears anywhere else.
 * Docker: MySQL's passwords have no defaults (`${DB_PASSWORD:?}`), the database port is not published, the app connects as the `store` user (never root), the MySQL health check carries no password, and `.dockerignore` keeps `.env*`, bytecode, `.venv`, `.vscode`, `*.db` and source maps out of the image.
 * Fonts are self-hosted, so the page makes no third-party requests apart from Razorpay on the payment page.
+* Contact form and order messages: see their sections above (CSRF, honeypot, per-address and per-email limits, consent, CR/LF stripped from headers, the number checked before any WhatsApp call, signed and expiring links, a stop link, no raw contact in logs).
 * Secrets come from the environment. `.env` is git-ignored.
 
 ## Testing strategy
@@ -248,6 +288,7 @@ Any single effect can be switched off by listing its name in `app/fx.json` (`{"o
 | Migration tests (SQLite, and MySQL in CI) | Migrations build exactly the schema the models describe; every one can be undone; an old `create_all` database is adopted with its data intact |
 | Sign-in limit tests | Block on the 5th failure for 10 minutes, per email and per IP, even for the right password; counts reset on success and after quiet periods; unknown emails block identically |
 | Security suite (`tests/security`) | One file per audit item: headers and CSP, secret and gateway start-up checks, error pages, admin and access control, authentication, XSS, password hashing, rate limits, input validation, CORS, exposed files, dependency locks |
+| Contact and order-message tests (v1.3) | Contact form: success, CSRF, validation, honeypot, both rate limits, XSS and header injection, admin access. Order messages: consent, E.164 numbers, one message per order and channel, sent only after payment and outside its transaction, retries and back-off, the daily cap, the stop link, signed links (tampered, expired, wrong purpose, unpaid order), anonymising, practice mode end to end; email and WhatsApp against local fake servers (`tests/fakes.py`), never a real service |
 | Rate limit, session, validation and one-unpaid-order tests | Window and 429 behaviour, per-user and per-address keys, cookies dying on sign-out, bounds on every input, the second checkout redirected to the unpaid order |
 | Motion, layout and phone tests | The stylesheet rules that keep motion safe (only `transform` and `opacity`, hover only for fine pointers, nothing hidden by default), the markup hooks, the scripts run under Node, and no horizontal overflow at phone widths |
 
@@ -256,9 +297,10 @@ The concurrency tests need real row locks, so they skip on SQLite and run in CI 
 ## Known limits and next steps
 
 * Migrations run when the web container starts. Two web containers starting at once would race; run `flask db upgrade` as a separate step if you scale out.
-* No email. Download links are shown on the order page only.
+* Order messages are built and tested, but **real delivery has not been verified**: email was tested against a local fake SMTP server and WhatsApp against a local fake of the Meta Cloud API. Until the owner sets the SMTP or WhatsApp variables, messages wait in the outbox as "Not configured" and the order page says so (see `docs/NOTIFICATIONS.md`).
+* Replies to a WhatsApp message are not read, so "reply STOP" does nothing; the stop link is the way out.
 * Refunds are tracked, not issued: an admin refunds in the Razorpay dashboard and then marks the order refunded.
 * The sign-in limit is per email and IP, plus a per-address cap across emails. Behind a reverse proxy all visitors share the proxy's address until `ProxyFix` is configured for it.
-* No password reset (there is no email to send it to), and registering an existing email reveals that it is registered (see "Accepted risk" above).
+* No password reset (email is used only for order messages and the owner's contact notice so far), and registering an existing email reveals that it is registered (see "Accepted risk" above).
 * The Razorpay client code and webhook are tested against a mocked API only; they have not run against a live Razorpay account.
 * Cart is for signed-in users only.

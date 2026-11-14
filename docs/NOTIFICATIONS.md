@@ -35,6 +35,7 @@ PUBLIC_BASE_URL=https://your-store-address
 
 4. Rebuild: `docker compose up -d --build --no-deps web sweeper`.
 5. Buy something with the practice gateway using your own email and check that it arrives; the order page should say "Sent to y***@gmail.com".
+6. If it does not arrive, open **Admin → Messages**: the outbox row says why, for example "the mail server refused the login" (the app password or `SMTP_USER` is wrong, or 2-Step Verification is off) or "mail server error (TimeoutError)" (the host or port is wrong, or the network blocks port 587). The sweeper retries after 2, 4, 8 and 16 minutes.
 
 Any SMTP server with STARTTLS works the same way (port 587). The store also emails `CONTACT_EMAIL` when someone uses the contact form, once SMTP is set.
 
@@ -73,7 +74,14 @@ PUBLIC_BASE_URL=https://your-store-address
 
 6. Rebuild: `docker compose up -d --build --no-deps web sweeper`, then buy something with your own WhatsApp number.
 
-If Meta refuses the message the order page says so and Admin → Messages shows the HTTP status and Meta's error code (for example 132001: the template name or language does not match).
+If Meta refuses the message the order page says so and Admin → Messages shows the HTTP status and Meta's error code (for example 132001: the template name or language does not match; 131030: with the test number, the recipient is not on your list of up to five verified numbers). A number that is not `+` and 8 to 15 digits is refused before any call to Meta ("the WhatsApp number is not valid").
+
+## Before you switch either on
+
+* Set `PUBLIC_BASE_URL` to the address buyers use (with `https://` once you have it). Every link in a message is built from it; with the default `http://localhost:8000` the links only work on your own computer.
+* Set `CONTACT_EMAIL` so the contact form can notify you, and `SELLER_NAME` / `SELLER_ADDRESS` for the invoice.
+* Keep the sweeper running (`docker compose ps` shows `sweeper`): it retries failed sends and delivers anything still queued.
+* The variables live in `.env` only. Never commit it, and never paste the app password or the WhatsApp token into an issue or a chat.
 
 ## Known limitations
 

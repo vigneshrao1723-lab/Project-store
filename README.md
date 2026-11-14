@@ -1,6 +1,6 @@
 # Project Store
 
-A store for selling finished engineering projects, built as a full-stack Flask application: sign-in, a searchable catalogue, per-user carts, a checkout that reserves stock inside one database transaction, Razorpay payments, order management, an admin dashboard and a REST API. Docker and GitHub Actions are set up, and the test suite covers the money, stock and security paths.
+A store for selling finished engineering projects, built as a full-stack Flask application: sign-in, a searchable catalogue, per-user carts, a checkout that reserves stock inside one database transaction, Razorpay payments, order management, an invoice and a setup guide for every paid order (sent by email or WhatsApp when switched on), a contact form, an admin dashboard and a REST API. Docker and GitHub Actions are set up, and the test suite covers the money, stock and security paths.
 
 Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design notes are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and the release history is in [CHANGELOG.md](CHANGELOG.md).
 
@@ -17,17 +17,26 @@ Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design note
 | ![Pay page](docs/screenshots/pay.png) | ![Paid order](docs/screenshots/order.png) |
 | **Sign in** | **Your orders** |
 | ![Sign in over the 3D background](docs/screenshots/login.png) | ![Orders](docs/screenshots/orders.png) |
-| **Admin overview** | |
-| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | |
+| **How buying works** | **Get in touch** |
+| ![How buying works: one four-step timeline](docs/screenshots/home-how.png) | ![The contact block on the home page](docs/screenshots/home-contact.png) |
+| **Paid order: invoice and setup guide** | **Invoice** |
+| ![The order page says what happened to the message and shows the guide](docs/screenshots/order-messages.png) | ![Invoice](docs/screenshots/invoice.png) |
+| **Setup guide (signed link)** | **Admin: messages and outbox** |
+| ![Setup guide page](docs/screenshots/guide.png) | ![Admin messages](docs/screenshots/admin-messages.png) |
+| **Admin overview** | **Contact page** |
+| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Contact page](docs/screenshots/contact.png) |
 
-On a 390 px phone: sign in, home, catalogue, product, cart, pay and paid order.
+On a 390 px phone: sign in, home, the timeline, contact, catalogue, product, cart, checkout with WhatsApp, pay and the paid order.
 
 | ![Home at 390 px](docs/screenshots/home-390.png) | ![Catalogue at 390 px](docs/screenshots/catalogue-390.png) | ![Product at 390 px](docs/screenshots/product-390.png) |
 |---|---|---|
 | ![Cart at 390 px](docs/screenshots/cart-390.png) | ![Pay at 390 px](docs/screenshots/pay-390.png) | ![Paid order at 390 px](docs/screenshots/order-390.png) |
-| ![Sign in at 390 px](docs/screenshots/login-390.png) | | |
+| ![Sign in at 390 px](docs/screenshots/login-390.png) | ![How buying works at 390 px: the line runs down the left](docs/screenshots/home-how-390.png) | ![Contact page at 390 px](docs/screenshots/contact-390.png) |
+| ![Checkout with WhatsApp at 390 px](docs/screenshots/checkout-390.png) | ![Message status and setup guide at 390 px](docs/screenshots/order-messages-390.png) | |
 
-The screenshots were taken from a fresh database loaded with the demo seed and two practice purchases, so they show no real customer data. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
+At 1920 px: [home](docs/screenshots/home-1920.png), [how buying works](docs/screenshots/home-how-1920.png), [contact](docs/screenshots/contact-1920.png), [checkout](docs/screenshots/checkout-1920.png).
+
+The screenshots were taken from a fresh scratch database loaded with the demo seed and practice purchases, so they show no real customer data; the phone, email and city in the contact panel are placeholders set only for the screenshots. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
 
 **This is an open-source demo store.** The source is public (MIT), so there is no paywall. The download links in the seeded catalogue are blank, so a paid order's page says "Link coming soon. Contact the store." If you run a store like this for your own work, set private links as described in [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 
@@ -37,8 +46,8 @@ Every number below comes from a command you can run.
 
 | Claim | How to check it |
 |---|---|
-| 1,071 tests pass on SQLite, 3 skip without MySQL (CI runs those against MySQL) | `pytest` |
-| Line coverage of `app/` is 96% (2,328 statements, 87 missed), measured on that same run | `pytest --cov=app --cov-report=term-missing` |
+| 1,075 tests pass on SQLite, 3 skip without MySQL (CI runs those against MySQL) | `pytest` |
+| Line coverage of `app/` is 96% (2,346 statements, 86 missed), measured on that same run | `pytest --cov=app --cov-report=term-missing` |
 | 302 of those tests are the security suite, one file per audit item | `pytest tests/security` |
 | CI runs four jobs on every push and pull request: `test` (SQLite, then MySQL for the concurrency and migration tests), `security` (`pip-audit`, `bandit` at medium severity and above, lock files match the pins), `build` (Docker image plus a smoke test) and `deploy` (main only: pushes the image to GitHub Container Registry) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | The schema is defined only by Alembic migrations, and a test fails if models and migrations disagree | `tests/test_migrations.py` |
@@ -53,11 +62,19 @@ The look is a warm dark palette (amber, harley red, white, sunset, violet over a
 * **Adaptive quality (`fx-lite`).** On a machine with four or fewer cores, four GB of memory or less, or one that renders under 45 frames a second just after load, the pinned stages become scroll-linked and the shelf becomes a swipe row; every other effect stays. `?fx=lite` and `?fx=full` force it. At normal speed pages hold about 7 ms a frame on the test machine; under a 4x CPU throttle the home page does not (about 28 ms), and `fx-lite` does not fix that. See "Measured limit" in the architecture notes.
 * **Tuning.** `app/static/css/fx-tuning.css` holds the speed, distance, stagger, easing, tilt, parallax, loader and payment-mark knobs; `app/fx.json` switches single effects off. [docs/MOTION_TUNING.md](docs/MOTION_TUNING.md) lists both.
 
+## Contact and order messages
+
+* **Get in touch.** A contact block above the footer on the home page and a `/contact` page share one component: a form (name, email, subject, message, consent) and a panel with your phone, email, city and Connect buttons. Every detail comes from `.env` (`CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB`, `CONTACT_LINKEDIN`); anything left empty is not shown. Messages are stored and listed under **Admin → Messages**, and emailed to `CONTACT_EMAIL` once SMTP is set. The form has CSRF, a honeypot, length caps, and limits of 10 an hour per address and 3 an hour per sender email.
+* **Invoice, setup guide and a thank-you note.** At checkout the buyer picks Email or WhatsApp and ticks "Send my invoice and setup guide to this contact". After the payment is confirmed (never at checkout) one message is created per order and channel, outside the payment's transaction, with retries for failures (2, 4, 8, 16 minutes, at most 5 tries), 3 messages a day per contact and a stop link in every message.
+* **Nothing depends on the message.** The paid order page always shows the invoice and the setup guide for each project, and says exactly what happened to the message. The invoice and guide also have signed links that work for 7 days (`/i/...`, `/g/...`).
+* **Out of the box nothing is sent.** With no SMTP or WhatsApp settings the message waits in **Admin → Messages** as "Not configured"; you can open it, send it yourself and mark it sent. To switch on Gmail or the WhatsApp Cloud API, follow [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md).
+
 ## Known limitations
 
 Read these before you rely on the store.
 
-* **No email, and no password reset.** The app sends no mail at all. A user who forgets a password cannot recover the account by themselves. The only built-in tool that sets a password is `flask create-admin`, and it also makes that account an admin, so it is not a customer reset.
+* **Real email and WhatsApp delivery is NOT verified.** Order messages and the owner's contact notice were tested only against a local fake SMTP server and a local fake of the Meta WhatsApp Cloud API; no message has been sent through Gmail or Meta. Until you set the variables in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) and buy something yourself to check, messages stay "Not configured" and the order page tells the buyer so. WhatsApp replies are not read ("reply STOP" does nothing; the stop link works).
+* **No password reset.** The store sends email only for order messages and contact notices (once SMTP is set). A user who forgets a password cannot recover the account by themselves. The only built-in tool that sets a password is `flask create-admin`, and it also makes that account an admin, so it is not a customer reset.
 * **Registering an email that already has an account says so.** That reveals the address is registered. It is an accepted risk, because the proper fix (telling the address's owner by email instead of answering in the page) needs email.
 * **The Razorpay path has been tested with mocks only.** The client code, signature checks, amount/currency/status checks and the webhook are tested against a mocked Razorpay API. This code has never run against a live Razorpay account, test or live mode. In particular, `style-src 'self'` might block styling that Razorpay's checkout script injects (see "Razorpay and style-src" in the architecture notes).
 * **Add to cart needs JavaScript.** The button calls the REST API from the page script. With scripts blocked it reloads the product page and nothing is added; every page still renders in full without scripts, and checkout and payment are plain form posts.
@@ -96,6 +113,7 @@ What the code does today, each item with a test (see [Security notes](docs/ARCHI
   Paste the output after `SECRET_KEY=` in `.env`. Changing it signs everyone out.
 * **`DB_PASSWORD` and `DB_ROOT_PASSWORD`** (Docker): `docker compose` refuses to start without them, because MySQL's accounts are created from them. Use two different long random values (`python -c "import secrets; print(secrets.token_urlsafe(24))"`). They are applied **only when the database volume is first created**. If you already have a volume made with other values, put those same values in `.env`, or change the passwords inside MySQL and then `.env`.
 * **Payments:** set both Razorpay keys, or set `ALLOW_PRACTICE_GATEWAY=true` for demos and local development. With neither, the store takes no orders (see [Payments](#payments)).
+* **Optional, for the contact panel and messages:** `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB`, `CONTACT_LINKEDIN`; `PUBLIC_BASE_URL` (the address used in message links); `SMTP_*` for email and `WHATSAPP_*` for WhatsApp, explained in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md). `SELLER_NAME`, `SELLER_ADDRESS` and `SELLER_GSTIN` appear on the invoice. Each is optional: an empty contact, SMTP or WhatsApp value turns its feature off, `SELLER_NAME` defaults to "Project Store", and `PUBLIC_BASE_URL` must be the address buyers use (in `.env.example` it is `http://localhost:8000`).
 
 `.env` is git-ignored. Never commit it or real keys.
 
