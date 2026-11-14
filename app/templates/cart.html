@@ -9,6 +9,7 @@
   {% if cart.lines %}
   <div class="two-col" data-cart>
     <div class="lines">
+      <h2 class="sr">Projects in your cart</h2>
       {% for l in cart.lines %}
       <div class="line" data-line="{{ l.product_id }}" data-unit="{{ l.unit_paise }}">
         <div>

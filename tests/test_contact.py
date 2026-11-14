@@ -183,3 +183,17 @@ def test_the_message_content_is_never_logged(app, client, caplog):
     caplog.set_level("DEBUG")
     client.post("/contact", data={**GOOD, "message": "my secret phone 9876543210"})
     assert "9876543210" not in caplog.text and "asha@example.com" not in caplog.text
+
+
+def test_headings_follow_the_page_outline(client, admin_client, buyer):
+    """axe (v1.3 gate): /contact needs an h1, the home block stays an h2, the cart's item titles (h3) need an h2 above
+    them, and the outbox table's action column needs a name."""
+    contact = client.get("/contact").get_data(as_text=True)
+    assert re.search(r'<h1 class="h2" id="contact-h">Get in touch</h1>', contact)
+    home = client.get("/").get_data(as_text=True)
+    assert re.search(r'<h2 class="h2" id="contact-h">Get in touch</h2>', home) and 'id="contact-h">Get in touch</h1>' not in home
+    assert buyer.post("/api/v1/cart/items", json={"product_id": 1, "qty": 1}).status_code in (200, 201)
+    cart = buyer.get("/cart").get_data(as_text=True)
+    assert cart.index('<h2 class="sr">Projects in your cart</h2>') < cart.index("<h3>")
+    page = admin_client.get("/admin/messages").get_data(as_text=True)
+    assert "<th></th>" not in page

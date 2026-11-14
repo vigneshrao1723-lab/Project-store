@@ -7,7 +7,8 @@
   <form class="contact-form" method="post" action="{{ url_for('contact.send') }}" novalidate aria-labelledby="contact-h">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="origin" value="{{ origin | default('contact') }}">
-    <h2 class="h2" id="contact-h">Get in touch</h2>
+    {% set hl = 'h2' if origin == 'home' else 'h1' %}
+    <{{ hl }} class="h2" id="contact-h">Get in touch</{{ hl }}>
     <p class="muted contact-lede">A question about a kit, a custom build or an order. We read every message and reply by email.</p>
     <div class="two-fields">
       {{ field('first_name', 'First name', f.get('first_name', ''), e.get('first_name'), autocomplete='given-name') }}
