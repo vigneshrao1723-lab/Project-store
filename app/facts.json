@@ -1,8 +1,8 @@
 {
-  "tests": 990,
+  "tests": 1066,
   "skipped": 3,
   "security_tests": 302,
-  "coverage": 97,
-  "statements": 1690,
-  "missed": 57
+  "coverage": 96,
+  "statements": 2328,
+  "missed": 87
 }

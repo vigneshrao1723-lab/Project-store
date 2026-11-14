@@ -22,13 +22,21 @@ def run(*args):
 
 
 def measure():
-    full = run("--cov=app", "--cov-report=term", "-q")
+    full = run("--cov=app", "--cov-report=term", "-q", "-rf")
     summary = re.search(r"(\d+) passed(?:, (\d+) skipped)?", full)
     total = re.search(r"^TOTAL\s+(\d+)\s+(\d+)\s+(\d+)%", full, re.M)
     if not summary or not total:
         sys.exit("could not read the pytest summary:\n" + full[-1500:])
+    # tests/test_fx_facts.py compares the suite with app/facts.json, so while the file is stale those tests fail and
+    # drop out of "passed". They are counted because they pass once the file is written (main() checks that).
+    # Any other failure means the suite itself is broken, and nothing is written.
+    failed = re.findall(r"^FAILED (\S+?)::", full, re.M)
+    other = sorted({f for f in failed if not f.replace("\\", "/").endswith("tests/test_fx_facts.py")})
+    if other:
+        sys.exit("the suite has failures, facts not written: " + ", ".join(other))
     security = re.search(r"(\d+) tests? collected", run("tests/security", "--collect-only", "-q"))
-    return {"tests": int(summary.group(1)), "skipped": int(summary.group(2) or 0), "security_tests": int(security.group(1)),
+    return {"tests": int(summary.group(1)) + len(failed), "skipped": int(summary.group(2) or 0),
+            "security_tests": int(security.group(1)),
             "coverage": int(total.group(3)), "statements": int(total.group(1)), "missed": int(total.group(2))}
 
 
@@ -50,4 +58,7 @@ if __name__ == "__main__":
     else:
         FACTS.write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8", newline="\n")
         patch_readme(facts)
-        print("wrote", facts)
+        check = run("tests/test_fx_facts.py", "-q")
+        if re.search(r"\d+ failed", check) or not re.search(r"\d+ passed", check):
+            sys.exit("wrote %s but tests/test_fx_facts.py still fails:\n%s" % (facts, check[-1500:]))
+        print("wrote", facts, "and tests/test_fx_facts.py passes")
