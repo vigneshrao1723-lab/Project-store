@@ -1,3 +1,25 @@
+# Contact details and order-message settings, shared by the web container and the sweeper (which retries sends).
+x-notify-env: &notify-env
+  CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+  CONTACT_PHONE: ${CONTACT_PHONE:-}
+  CONTACT_CITY: ${CONTACT_CITY:-}
+  CONTACT_GITHUB: ${CONTACT_GITHUB:-}
+  CONTACT_LINKEDIN: ${CONTACT_LINKEDIN:-}
+  SELLER_NAME: ${SELLER_NAME:-}
+  SELLER_ADDRESS: ${SELLER_ADDRESS:-}
+  SELLER_GSTIN: ${SELLER_GSTIN:-}
+  PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-}
+  WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
+  WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+  WHATSAPP_TEMPLATE_NAME: ${WHATSAPP_TEMPLATE_NAME:-}
+  WHATSAPP_LANG: ${WHATSAPP_LANG:-}
+
 services:
   db:
     image: mysql:8.4
@@ -38,6 +60,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       LOGIN_MAX_ATTEMPTS: ${LOGIN_MAX_ATTEMPTS:-5}
       LOGIN_LOCKOUT_MINUTES: ${LOGIN_LOCKOUT_MINUTES:-10}
+      <<: *notify-env
     ports:
       - "${WEB_PORT:-8000}:8000"
 
@@ -52,11 +75,12 @@ services:
     environment:
       DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      <<: *notify-env
     # This container runs no web server, so the image's HTTP healthcheck would always fail.
     healthcheck:
       disable: true
     entrypoint: ["/bin/sh", "-c"]
-    command: ["while true; do FLASK_APP=wsgi.py flask release-expired; sleep 60; done"]
+    command: ["while true; do FLASK_APP=wsgi.py flask release-expired; FLASK_APP=wsgi.py flask send-messages; sleep 60; done"]
 
 volumes:
   dbdata:

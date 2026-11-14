@@ -8,7 +8,7 @@ from flask_login import current_user
 from sqlalchemy import func
 
 from .extensions import db, stable_csrf_token
-from .models import CartItem, Category
+from .models import CartItem, Category, utcnow
 from .services import payments
 
 
@@ -31,6 +31,21 @@ def _favicon():
 FAVICON = _favicon()
 
 
+def contact_info(cfg):
+    """The owner's contact details, only those set in the environment. Nothing personal is written in the code."""
+    phone = cfg.get("CONTACT_PHONE", "")
+    digits = "".join(ch for ch in phone if ch.isdigit())
+    if digits and len(digits) == 10:                  # a bare Indian mobile number
+        digits = "91" + digits
+    safe_url = lambda u: u if u.startswith(("https://", "http://")) else ""
+    info = {"email": cfg.get("CONTACT_EMAIL", ""), "phone": phone, "city": cfg.get("CONTACT_CITY", ""),
+            "tel": ("+" + digits) if 8 <= len(digits) <= 15 else "",
+            "whatsapp": f"https://wa.me/{digits}" if 8 <= len(digits) <= 15 else "",
+            "github": safe_url(cfg.get("CONTACT_GITHUB", "")), "linkedin": safe_url(cfg.get("CONTACT_LINKEDIN", ""))}
+    info["any"] = any(info[k] for k in ("email", "phone", "city", "github", "linkedin"))
+    return info
+
+
 def register_context(app):
     @app.context_processor
     def inject():
@@ -43,4 +58,5 @@ def register_context(app):
         return {"csrf_token": stable_csrf_token, "cart_count": int(count or 0), "nav_categories": cats,
                 "gateway_mode": payments.mode(),
                 "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
-                "facts": FACTS, "fx_off": FX_OFF, "favicon_href": FAVICON}
+                "facts": FACTS, "fx_off": FX_OFF, "favicon_href": FAVICON,
+                "contact_info": contact_info(current_app.config), "current_year": utcnow().year}

@@ -11,7 +11,21 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p class="muted">Your copies are held for {{ reservation_minutes }} minutes after you continue, while you pay.</p>
       {{ field('billing_name', 'Name on the order', name, autocomplete='name') }}
-      {{ field('phone', 'Phone number', phone, type='tel', autocomplete='tel', hint='Optional. Razorpay can use it to prefill the payment form.', required=False) }}
+      {% set c = contact %}
+      <fieldset class="contact-choice{% if errors.contact_channel %} has-error{% endif %}">
+        <legend>Where should we send your invoice and setup guide?</legend>
+        <div class="seg" role="presentation">
+          <input type="radio" id="ch-email" name="contact_channel" value="email" {% if c.channel != 'whatsapp' %}checked{% endif %}><label for="ch-email">Email</label>
+          <input type="radio" id="ch-wa" name="contact_channel" value="whatsapp" {% if c.channel == 'whatsapp' %}checked{% endif %}><label for="ch-wa">WhatsApp</label>
+        </div>
+        <div class="ch-email">{{ field('contact_email', 'Email address', c.email, errors.contact_email, type='email', autocomplete='email', hint='Prefilled with your account email. Change it if you like.') }}</div>
+        <div class="ch-wa">{{ field('contact_whatsapp', 'WhatsApp number', c.whatsapp, errors.contact_whatsapp, type='tel', autocomplete='tel', hint='A 10-digit Indian mobile number, or the full number with its country code (+44 ...).', required=False) }}</div>
+        <div class="field{% if errors.contact_consent %} has-error{% endif %}">
+          <label class="check"><input type="checkbox" name="contact_consent" {% if c.consent %}checked{% endif %} {% if errors.contact_consent %}aria-invalid="true" aria-describedby="contact_consent-msg"{% endif %}> Send my invoice and setup guide to this contact</label>
+          {% if errors.contact_consent %}<p class="msg" id="contact_consent-msg">{{ errors.contact_consent }}</p>{% endif %}
+          <p class="hint">Sent once, after your payment is confirmed. Every message has a link to stop further messages.</p>
+        </div>
+      </fieldset>
       <button class="btn" type="submit">Continue to payment</button>
     </form>
     <aside class="summary" aria-label="Order summary" {{ fx('cascade') }}>

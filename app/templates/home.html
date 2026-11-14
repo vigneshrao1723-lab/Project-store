@@ -3,7 +3,7 @@
 {% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count, fx_lines, fx_words %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
-<nav class="rail" aria-hidden="true"><ol>{% for i in range(8) %}<li></li>{% endfor %}</ol></nav>
+<nav class="rail" aria-hidden="true"><ol>{% for i in range(9) %}<li></li>{% endfor %}</ol></nav>
 {# facts (test count, coverage) come from app/facts.json through the context processor; every other figure here is counted live. #}
 <section class="hero" data-motion="hero">
   <div class="hero-art" aria-hidden="true">
@@ -130,19 +130,20 @@
   <div class="wrap">
     <div class="section-head" {{ fx('rise') }}><h2 class="h2">How buying works</h2></div>
     <div class="tl-wrap" {{ fx('draw') }}>
-      <ol class="plain tl">
-        <li><h3>Choose</h3><p>Open a project and read what is in the kit.</p></li>
-        <li><h3>Reserve stock</h3><p>Checkout holds your copy for {{ reservation_minutes }} minutes.</p></li>
-        <li><h3>Pay</h3><p>The amount is worked out on the server.</p></li>
-        <li><h3>Download</h3><p>The link appears on your order page once payment is confirmed.</p></li>
+      <ol class="plain steps fx-flipc" {{ fx('cascade') }}>
+        <li><span class="tl-n" aria-hidden="true">1</span><h3>Choose</h3><p>Open a project and read what is in the kit.</p></li>
+        <li><span class="tl-n" aria-hidden="true">2</span><h3>Reserve stock</h3><p>Checkout holds your copy for {{ reservation_minutes }} minutes while you pay.</p></li>
+        <li><span class="tl-n" aria-hidden="true">3</span><h3>Pay</h3><p>The amount is worked out on the server, never taken from the browser.</p></li>
+        <li><span class="tl-n" aria-hidden="true">4</span><h3>Download</h3><p>The link appears on your order page once payment is confirmed.</p></li>
       </ol>
       <svg class="tl-line" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="tl-base" pathLength="100" d="M0 2H100"/><path class="tl-draw" pathLength="100" d="M0 2H100"/></svg>
     </div>
-    <ol class="plain steps fx-flipc" {{ fx('cascade') }}>
-      <li><h3>Pick a project</h3><p>Open its page to see the stack, what's in the kit and how many copies are left.</p></li>
-      <li><h3>Pay at checkout</h3><p>Your copy is held for {{ reservation_minutes }} minutes while you pay, so nobody can take it from under you.</p></li>
-      <li><h3>Download from your orders</h3><p>The link appears on your order page the moment the payment is confirmed.</p></li>
-    </ol>
+  </div>
+</section>
+
+<section class="section contact-section" id="contact" data-reveal>
+  <div class="wrap">
+    {% set origin = 'home' %}{% include "_contact.html" %}
   </div>
 </section>
 {% endblock %}

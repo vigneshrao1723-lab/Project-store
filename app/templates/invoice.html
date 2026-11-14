@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ order.public_id }}{% endblock %}
+{% block description %}Invoice for order {{ order.public_id }}.{% endblock %}
+{% block page_class %}none{% endblock %}
+{% block head_extra %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<div class="wrap page-pad">
+  <article class="invoice" aria-labelledby="inv-h">
+    <header class="inv-head">
+      <div>
+        <p class="wordmark small"><span>{{ seller.name }}</span></p>
+        {% if seller.address %}<p class="inv-addr">{{ seller.address }}</p>{% endif %}
+        {% if seller_email %}<p class="inv-addr">{{ seller_email }}</p>{% endif %}
+        {% if seller.gstin %}<p class="inv-addr">GSTIN {{ seller.gstin }}</p>{% endif %}
+      </div>
+      <div class="inv-meta">
+        <h1 class="h2" id="inv-h">Invoice</h1>
+        <dl class="inv-dl">
+          <div><dt>Order</dt><dd class="num">{{ order.public_id }}</dd></div>
+          <div><dt>Date</dt><dd>{{ (order.paid_at or order.created_at).strftime('%d %b %Y') }}</dd></div>
+          <div><dt>Billed to</dt><dd>{{ order.billing_name }}</dd></div>
+          <div><dt>Payment reference</dt><dd class="num">{{ order.gateway_payment_id or '-' }}</dd></div>
+          <div><dt>Status</dt><dd>{{ 'Paid' if order.status == 'paid' else order.status | capitalize }}</dd></div>
+        </dl>
+      </div>
+    </header>
+    <div class="table-wrap">
+      <table class="table inv-table">
+        <thead><tr><th>Project</th><th class="num">Unit price</th><th class="num">Qty</th><th class="r">Amount</th></tr></thead>
+        <tbody>
+          {% for i in order.items %}
+          <tr><td>{{ i.title }}</td><td class="num">{{ i.unit_price_paise | inr }}</td><td class="num">{{ i.qty }}</td><td class="num r">{{ i.line_paise | inr }}</td></tr>
+          {% endfor %}
+          <tr class="inv-total"><td colspan="3" class="r"><strong>Total paid</strong></td><td class="num r"><strong>{{ order.total_paise | inr }}</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted inv-note">Amounts are in Indian rupees.{% if not seller.gstin %} This is a receipt for a digital project kit; no tax is itemised.{% endif %}</p>
+    <p class="inv-actions no-print">{% if not via_link %}<a href="{{ url_for('account.order_detail', public_id=order.public_id) }}">Back to the order</a>{% endif %}</p>
+  </article>
+</div>
+{% endblock %}

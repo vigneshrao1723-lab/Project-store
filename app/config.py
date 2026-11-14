@@ -6,7 +6,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def _bool(name, default=False):
-    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:                      # unset or empty (docker compose passes empty values through): the default
+        return default
+    return raw in {"1", "true", "yes", "on"}
 
 
 class Config:
@@ -52,11 +55,47 @@ class Config:
         "checkout": (10, 600),
         "verify": (20, 600),
         "login_ip": (20, 600),
+        "contact_ip": (10, 3600),          # the contact form, per address
+        "contact_email": (3, 3600),        # the contact form, per sender email
+        "notify_ip": (10, 86400),          # checkouts that ask for an invoice by email or WhatsApp, per address per day
+        "notify_user": (5, 86400),         # the same, per account per day
     }
 
     # Sign-in is blocked for LOGIN_LOCKOUT_MINUTES after LOGIN_MAX_ATTEMPTS failures from one email + IP.
     LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
     LOGIN_LOCKOUT_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "10"))
+
+    # Contact details shown on the contact block and /contact. Each comes only from the environment; an empty one is
+    # simply not shown. Nothing personal is written in the repository.
+    CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "").strip()
+    CONTACT_PHONE = os.getenv("CONTACT_PHONE", "").strip()
+    CONTACT_CITY = os.getenv("CONTACT_CITY", "").strip()
+    CONTACT_GITHUB = os.getenv("CONTACT_GITHUB", "").strip()
+    CONTACT_LINKEDIN = os.getenv("CONTACT_LINKEDIN", "").strip()
+
+    # Seller details printed on invoices. No tax line is shown unless SELLER_GSTIN is set.
+    SELLER_NAME = os.getenv("SELLER_NAME", "").strip() or "Project Store"
+    SELLER_ADDRESS = os.getenv("SELLER_ADDRESS", "").strip()
+    SELLER_GSTIN = os.getenv("SELLER_GSTIN", "").strip()
+
+    # Order messages (docs/NOTIFICATIONS.md). Email goes over SMTP with STARTTLS; WhatsApp over the Meta Cloud API with
+    # an approved template. With neither configured, messages are kept in the outbox for the admin to read.
+    SMTP_HOST = os.getenv("SMTP_HOST", "").strip()
+    SMTP_PORT = int(os.getenv("SMTP_PORT") or "587")
+    SMTP_USER = os.getenv("SMTP_USER", "").strip()
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM = os.getenv("SMTP_FROM", "").strip()
+    SMTP_STARTTLS = _bool("SMTP_STARTTLS", True)
+    WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+    WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "").strip()
+    WHATSAPP_TEMPLATE_NAME = os.getenv("WHATSAPP_TEMPLATE_NAME", "").strip()
+    WHATSAPP_LANG = os.getenv("WHATSAPP_LANG", "").strip() or "en"
+    WHATSAPP_API_BASE = os.getenv("WHATSAPP_API_BASE", "").strip() or "https://graph.facebook.com/v19.0"
+    # Absolute links inside messages (invoice, guide, order page, stop) start with this, e.g. https://store.example.com
+    PUBLIC_BASE_URL = (os.getenv("PUBLIC_BASE_URL", "").strip() or "http://localhost:8000").rstrip("/")
+    MESSAGE_LINK_DAYS = 7
+    MESSAGE_MAX_ATTEMPTS = 5
+    MESSAGES_PER_CONTACT_PER_DAY = 3
 
     WTF_CSRF_TIME_LIMIT = None
 
@@ -74,3 +113,11 @@ class TestConfig(Config):
     RAZORPAY_KEY_SECRET = ""
     RAZORPAY_WEBHOOK_SECRET = "whsec_test"
     ALLOW_PRACTICE_GATEWAY = True
+    SMTP_HOST = ""
+    WHATSAPP_TOKEN = ""
+    CONTACT_EMAIL = ""
+    CONTACT_PHONE = ""
+    CONTACT_CITY = ""
+    CONTACT_GITHUB = ""
+    CONTACT_LINKEDIN = ""
+    PUBLIC_BASE_URL = "http://localhost"

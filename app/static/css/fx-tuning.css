@@ -37,6 +37,7 @@ html[data-fx-off~="clip"] [data-fx="clip"] { clip-path: none !important; transit
 html[data-fx-off~="clip"] [data-fx="clip"] > .cover { transform: none !important; }
 html[data-fx-off~="draw"] .tl-draw { stroke-dashoffset: 0 !important; }
 html[data-fx-off~="draw"] .tl li::before { opacity: 1 !important; }
+html[data-fx-off~="draw"] .tl-wrap .steps::after { transform: none !important; }
 html[data-fx-off~="hscroll"] [data-fx="hscroll"] { height: auto !important; }
 html[data-fx-off~="hscroll"] .hs-stage { position: static !important; height: auto !important; overflow-x: auto !important; }
 html[data-fx-off~="hscroll"] .hs-track { transform: none !important; }

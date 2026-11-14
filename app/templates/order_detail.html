@@ -26,6 +26,26 @@
         {% endfor %}
       </ul>
     </section>
+    <section class="msg-status" aria-labelledby="msg-h">
+      <h2 id="msg-h">Invoice and setup guide</h2>
+      {% if order.contact_channel %}
+      <p class="ui">Chosen contact: <strong>{{ order.contact_channel | capitalize }}</strong> {{ masked_contact }}</p>
+      {% for m in order.messages %}<p class="ui msg-line msg-{{ m.status }}" role="status"><span class="msg-dot" aria-hidden="true"></span>{{ status_text(m) }}</p>{% else %}<p class="ui msg-line" role="status"><span class="msg-dot" aria-hidden="true"></span>Queued</p>{% endfor %}
+      {% else %}
+      <p class="ui">No message was asked for with this order. Everything is on this page.</p>
+      {% endif %}
+      <p class="doc-links"><a class="btn small ghost" href="{{ url_for('orderdocs.invoice', public_id=order.public_id) }}">Open the invoice</a></p>
+    </section>
+    <section class="guides" aria-labelledby="guide-h">
+      <h2 id="guide-h">Setup guide</h2>
+      {% for title, guide_html, link in guides %}
+      <details class="guide" {% if loop.first %}open{% endif %}>
+        <summary>{{ title }}</summary>
+        <div class="guide-body">{% if guide_html %}{{ guide_html }}{% else %}<p>The setup guide for this project is being written. It will appear here.</p>{% endif %}
+        <p class="muted">{% if link %}Download it from the link above.{% else %}Your download link will appear on this page as soon as it is ready.{% endif %}</p></div>
+      </details>
+      {% endfor %}
+    </section>
   {% elif order.status == 'refund_due' %}
     <div class="flash flash-error">Your payment arrived after the hold had expired and the project sold out. It will be refunded in full to the original payment method.</div>
   {% elif order.status == 'expired' %}

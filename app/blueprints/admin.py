@@ -7,7 +7,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from ..extensions import db
-from ..models import Category, InventoryLog, Order, ORDER_STATUSES, Product, utcnow
+from ..models import Category, ContactMessage, InventoryLog, Message, Order, ORDER_STATUSES, Product, utcnow
+from ..services import notify
 from ..services import orders as order_svc
 from ..services.products import validate_product
 from ..validation import MAX_NOTE, MAX_STOCK_DELTA, InputError, text, whole_number
@@ -61,7 +62,8 @@ def products():
 def _form_data():
     f = request.form
     return {k: f.get(k, "") for k in ("title", "slug", "category_id", "price_rupees", "stock", "tagline",
-                                      "description", "tech", "includes", "delivery_url", "is_active", "featured")}
+                                      "description", "tech", "includes", "delivery_url", "is_active", "featured",
+                                      "setup_guide")}
 
 
 @bp.route("/products/new", methods=["GET", "POST"])
@@ -92,12 +94,14 @@ def product_edit(product_id):
     errors = {}
     data = {"title": p.title, "slug": p.slug, "category_id": str(p.category_id),
             "price_rupees": f"{p.price_paise / 100:g}", "tagline": p.tagline, "description": p.description,
-            "tech": p.tech, "includes": p.includes, "delivery_url": p.delivery_url,
+            "tech": p.tech, "includes": p.includes, "delivery_url": p.delivery_url, "setup_guide": p.setup_guide or "",
             "is_active": "on" if p.is_active else "", "featured": "on" if p.featured else ""}
     if request.method == "POST":
         data = _form_data()
         clean, errors = validate_product(data, existing=p)
         if not errors:
+            if clean.get("setup_guide", p.setup_guide or "") != (p.setup_guide or ""):
+                p.guide_edited = True          # `flask seed` will never overwrite a guide an admin has edited
             for k, v in clean.items():
                 setattr(p, k, v)
             db.session.commit()
@@ -159,3 +163,45 @@ def order_refunded(public_id):
     o = db.session.scalar(db.select(Order).where(Order.public_id == public_id)) or abort(404)
     flash("Marked as refunded." if order_svc.mark_refunded(o.id) else "That order isn't waiting for a refund.", "info")
     return redirect(url_for("admin.order_detail", public_id=public_id))
+
+
+@bp.get("/messages")
+@admin_required
+def messages():
+    """Contact-form messages and the order-message outbox, newest first. Rendered as plain, autoescaped text."""
+    contacts = db.session.scalars(db.select(ContactMessage).order_by(ContactMessage.id.desc()).limit(200)).all()
+    outbox = db.session.scalars(db.select(Message).order_by(Message.id.desc()).limit(200)).all()
+    return render_template("admin/messages.html", contacts=contacts, outbox=outbox, mask=notify.mask)
+
+
+@bp.post("/messages/<int:message_id>/handled")
+@admin_required
+def message_handled(message_id):
+    m = db.session.get(ContactMessage, message_id) or abort(404)
+    m.handled_at = None if m.handled_at else utcnow()
+    db.session.commit()
+    flash("Marked as handled." if m.handled_at else "Marked as not handled.", "info")
+    return redirect(url_for("admin.messages"))
+
+
+@bp.get("/outbox/<int:message_id>")
+@admin_required
+def outbox_message(message_id):
+    m = db.session.get(Message, message_id) or abort(404)
+    if not m.body_text and m.status == "queued":
+        notify.deliver(m)                       # renders it (and sends it if a channel is configured)
+    return render_template("admin/outbox_message.html", m=m, mask=notify.mask)
+
+
+@bp.post("/outbox/<int:message_id>/sent")
+@admin_required
+def outbox_sent(message_id):
+    """The owner sent this message by hand (copied it into email or WhatsApp)."""
+    m = db.session.get(Message, message_id) or abort(404)
+    if m.status in ("not_configured", "failed", "queued"):
+        m.status, m.sent_at, m.next_attempt_at = "sent", utcnow(), None
+        m.last_error = "sent by hand"
+        db.session.commit()
+        flash("Marked as sent by hand.", "info")
+    return redirect(url_for("admin.outbox_message", message_id=m.id))
+

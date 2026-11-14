@@ -135,5 +135,6 @@ def test_successful_sign_ins_do_not_count_toward_the_address_limit(tight, app, u
 
 def test_the_default_limits_leave_room_for_normal_use(app):
     limits = app.config["RATE_LIMITS"]
-    assert set(limits) == {"register", "checkout", "verify", "login_ip"}
+    assert set(limits) == {"register", "checkout", "verify", "login_ip", "contact_ip", "contact_email", "notify_ip",
+                           "notify_user"}
     assert limits["checkout"][0] >= 5 and limits["verify"][0] >= 10 and limits["login_ip"][0] > app.config["LOGIN_MAX_ATTEMPTS"]

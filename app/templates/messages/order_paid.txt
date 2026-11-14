@@ -1,0 +1,22 @@
+Hi {{ first_name }},
+
+Thank you for your order! Your project kit is paid for and ready to set up. Have fun building it.
+
+INVOICE  {{ order.public_id }}
+Date: {{ (order.paid_at or order.created_at).strftime('%d %b %Y') }}
+{% for i in order.items %}- {{ i.title }} x {{ i.qty }} at {{ i.unit_price_paise | inr }} = {{ i.line_paise | inr }}
+{% endfor %}Total paid: {{ order.total_paise | inr }}
+Payment reference: {{ order.gateway_payment_id or '-' }}
+Seller: {{ seller.name }}{% if seller.address %}, {{ seller.address }}{% endif %}{% if seller.gstin %} (GSTIN {{ seller.gstin }}){% endif %}
+Invoice page: {{ links.invoice }}
+
+SETUP GUIDE
+{{ links.guide }}
+{% for title, guide_html, link in guides %}- {{ title }}: {% if link %}download it from your order page.{% else %}your download link will appear on your order page as soon as it is ready.{% endif %}
+{% endfor %}
+WHERE TO DOWNLOAD
+Your order page: {{ links.order }}
+
+The invoice and guide links work for {{ config.MESSAGE_LINK_DAYS }} days. Everything is always on your order page too.
+
+Do not want messages like this? Stop them here: {{ stop_url }}

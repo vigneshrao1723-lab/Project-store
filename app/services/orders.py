@@ -59,7 +59,7 @@ def _log(product, delta, reason, order=None, note=""):
     )
 
 
-def create_order_from_cart(user, billing_name, phone=""):
+def create_order_from_cart(user, billing_name, phone="", contact=None):
     """Turn the user's cart into a pending order and hold the stock. All or nothing."""
     release_expired()
     user_id = user.id       # read it now: after the commit below the user object is expired, and touching it would reload it
@@ -98,6 +98,9 @@ def create_order_from_cart(user, billing_name, phone=""):
             user_id=user.id,
             billing_name=billing_name.strip(),
             phone=phone.strip(),
+            contact_channel=contact[0] if contact else "",
+            contact_value=contact[1] if contact else "",
+            contact_consent_at=utcnow() if contact else None,
             total_paise=sum(products[i.product_id].price_paise * i.qty for i in items),
             expires_at=Order.new_expiry(current_app.config["RESERVATION_MINUTES"]),
         )

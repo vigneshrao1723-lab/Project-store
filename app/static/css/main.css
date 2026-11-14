@@ -143,11 +143,6 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 .stock { color: var(--amber); font-weight: 600; }
 .stock.low { color: var(--sunset); }
 
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 3vw, 40px); counter-reset: s; }
-.steps li { counter-increment: s; border-top: 2px solid var(--violet); padding-top: .9rem; }
-.steps li::before { content: counter(s); display: grid; place-items: center; width: 2rem; height: 2rem; background: var(--amber); color: var(--ink); font: 800 1rem var(--font-display); margin-bottom: .8rem; }
-.steps h3 { margin-bottom: .4rem; font-size: 1.1rem; font-stretch: 108%; }
-.steps p { color: var(--muted); margin: 0; font-size: .98rem; }
 
 /* catalogue */
 .cat-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; padding-block: clamp(28px, 5vw, 56px); }
@@ -285,7 +280,6 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
   .admin-nav { display: flex; border-top: 0; gap: .4rem; flex-wrap: wrap; }
   .admin-nav a { border: 1.5px solid var(--muted); padding: .3rem .8rem; }
   .admin-nav a[aria-current="page"] { box-shadow: none; background: var(--amber); color: var(--ink); padding-left: .8rem; }
-  .steps { grid-template-columns: 1fr; }
   .foot { grid-template-columns: 1fr 1fr; }
   .foot > div:first-child { grid-column: 1 / -1; }
 }
@@ -335,6 +329,88 @@ p.stat-value { margin: 0; font-weight: 700; }
 .pay-items li { padding: .2rem 0; }
 .byline { margin: .4rem 0 0; font-weight: 600; }
 .section.flush-top { padding-top: 0; border: 0; }
+
+/* ===== Contact block (home and /contact), checkout contact choice, order messages, invoice ====================== */
+.contact { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(16px, 3vw, 28px); align-items: stretch; }
+.contact-form { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px, 3.5vw, 36px); }
+.contact-form .h2 { margin-bottom: .5rem; }
+.contact-lede { margin: 0 0 1.4rem; }
+.two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.contact-form textarea { min-height: 9rem; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.send-btn { gap: .6rem; }
+.send-ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.contact-info { position: relative; overflow: hidden; background: var(--violet); color: var(--white); border-radius: 14px; padding: clamp(20px, 3.5vw, 36px); display: flex; flex-direction: column; gap: 1.1rem; }
+.contact-info .h3 { color: var(--white); font-size: 1.3rem; }
+.contact-info a { color: var(--white); text-decoration-thickness: 1px; }
+.contact-info a:hover { color: var(--white); text-decoration-thickness: 2px; }
+.contact-rows { display: grid; gap: 1rem; }
+.contact-rows li { display: flex; gap: .9rem; align-items: center; font: 600 1rem/1.35 var(--font-display); }
+.row-k { display: block; font: 600 .78rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--white); }
+.chip-ico { flex: none; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--amber); color: var(--ink); }
+.chip-ico svg, .connect-btn svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.contact-none { margin: 0; color: var(--white); }
+.connect-h { margin: .4rem 0 0; font: 700 .8rem var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--white); }
+.connect { display: flex; gap: .7rem; flex-wrap: wrap; }
+.connect-btn { display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 50%; background: var(--amber); color: var(--ink); text-decoration: none; transition: transform .15s; }
+.connect-btn:hover { color: var(--ink); background: var(--white); }
+.pin-art { margin-top: auto; width: 100%; max-width: 280px; height: auto; align-self: flex-end; }
+.pin-art .pa-grid { fill: none; stroke: var(--white); stroke-opacity: .25; stroke-width: 1; }
+.pin-art .pa-road { fill: none; stroke: var(--amber); stroke-width: 3; stroke-linecap: round; }
+.pin-art .pa-pin { fill: var(--panel); stroke: var(--amber); stroke-width: 3; }
+.pin-art .pa-dot { fill: var(--amber); }
+.contact-section { border-top: 1px solid var(--line); }
+@media (max-width: 900px) { .contact { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .two-fields { grid-template-columns: 1fr; } }
+
+.contact-choice { border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem .4rem; margin: 0 0 1.4rem; background: var(--panel); }
+.contact-choice legend { font: 700 .95rem var(--font-display); padding: 0 .4rem; }
+.seg { display: inline-flex; border: 2px solid var(--muted); border-radius: 99px; padding: 3px; margin: .4rem 0 1.1rem; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg label { cursor: pointer; padding: .45rem 1.1rem; border-radius: 99px; font: 700 .95rem var(--font-display); color: var(--white); }
+.seg input:checked + label { background: var(--amber); color: var(--ink); }
+.seg input:focus-visible + label { outline: 3px solid var(--amber); outline-offset: 3px; }
+.contact-choice:has(#ch-email:checked) .ch-wa, .contact-choice:has(#ch-wa:checked) .ch-email { display: none; }
+
+.msg-status, .guides { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 1.1rem 1.2rem; margin-block: 1.4rem; }
+.msg-status h2, .guides h2 { font-size: 1.05rem; font-stretch: 100%; margin-bottom: .6rem; }
+.msg-status p { margin: 0 0 .5rem; }
+.msg-line { display: flex; gap: .6rem; align-items: baseline; }
+.msg-dot { flex: none; width: .7rem; height: .7rem; border-radius: 50%; background: var(--muted); }
+.msg-sent .msg-dot { background: var(--amber); }
+.msg-failed .msg-dot { background: var(--harley); }
+.doc-links { margin: .8rem 0 0; }
+.guide { border-top: 1px solid var(--line); padding: .6rem 0; }
+.guide summary { cursor: pointer; font: 700 1rem var(--font-display); }
+.guide-body h3 { font-size: 1rem; margin: 1rem 0 .4rem; }
+.guide-body h4 { font-size: .95rem; margin: .8rem 0 .3rem; }
+.guide-body ol, .guide-body ul { padding-left: 1.3rem; margin: 0 0 .8rem; }
+.guide-body pre { background: var(--night); border: 1px solid var(--line); border-radius: 8px; padding: .7rem .9rem; overflow-x: auto; font-size: .88rem; }
+.guide-body code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+.guide-sec { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
+
+.invoice { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(18px, 4vw, 40px); max-width: 860px; }
+.inv-head { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+.inv-addr { margin: 0; color: var(--muted); font-size: .95rem; }
+.inv-dl { margin: .6rem 0 0; display: grid; gap: .25rem; }
+.inv-dl > div { display: flex; gap: 1rem; justify-content: space-between; font: 500 .92rem var(--font-display); }
+.inv-dl dt { color: var(--muted); }
+.inv-dl dd { margin: 0; font-weight: 700; }
+.inv-note { font-size: .9rem; }
+.msg-body { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: .3rem; color: var(--muted); }
+.msg-pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; font: .9rem/1.5 ui-monospace, Consolas, monospace; color: var(--white); }
+.is-handled { opacity: .72; }
+.s-msg-sent { background: var(--violet); border-color: var(--violet); color: var(--white); }
+.s-msg-failed { background: var(--harley); border-color: var(--harley); color: var(--white); }
+.foot-copy { margin: .2rem 0 0; font-size: .9rem; }
+@media print {
+  .testbar, .site-header, .site-footer, .no-print, .skip, .fx-progress, .loader { display: none !important; }
+  body, body::before { background: none !important; color: black; }
+  body::before { content: none !important; }
+  .invoice { border: 0; background: none; color: black; padding: 0; max-width: none; }
+  .invoice *, .inv-addr, .inv-dl dt, .inv-note, .table th { color: black !important; }
+  .table td, .table th { border-color: black !important; }
+}
 
 /* ===== Cover drawings (app/covers.py writes the classes, the palette paints them) ============================== */
 .cover .cv-bg { fill: var(--panel-2); }

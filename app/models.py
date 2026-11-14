@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from flask import current_app
 from flask_login import UserMixin
-from sqlalchemy import CheckConstraint, UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint, false as sa_false
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extensions import db, login_manager
@@ -152,6 +152,10 @@ class Product(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     featured = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    # How to install, run and test the project: plain text with a small safe markdown subset (services/guide.py).
+    setup_guide = db.Column(db.Text, nullable=True, default="")          # nullable: MySQL allows no default on TEXT
+    # True once an admin has edited the guide, so `flask seed` never overwrites it.
+    guide_edited = db.Column(db.Boolean, nullable=False, default=False, server_default=sa_false())
 
     category = db.relationship("Category", back_populates="products")
 
@@ -216,6 +220,11 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
     expires_at = db.Column(db.DateTime, nullable=False)
     paid_at = db.Column(db.DateTime)
+    # Where the invoice and setup guide go once the order is paid: "email", "whatsapp" or "" (no messages).
+    # contact_value is the raw address or E.164 number; it is never logged and anonymise_order() blanks it.
+    contact_channel = db.Column(db.String(16), nullable=False, default="", server_default="")
+    contact_value = db.Column(db.String(190), nullable=False, default="", server_default="")
+    contact_consent_at = db.Column(db.DateTime)
 
     user = db.relationship("User", back_populates="orders")
     items = db.relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
@@ -265,3 +274,59 @@ class InventoryLog(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     product = db.relationship("Product")
+
+
+class ContactMessage(db.Model):
+    """A message sent with the contact form. Shown to admins as plain text; never logged."""
+
+    __tablename__ = "contact_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(60), nullable=False)
+    last_name = db.Column(db.String(60), nullable=False, default="")
+    email = db.Column(db.String(190), nullable=False)
+    subject = db.Column(db.String(160), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    consent = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+    handled_at = db.Column(db.DateTime)
+
+
+MESSAGE_STATUSES = ("queued", "sent", "failed", "not_configured")
+
+
+class Message(db.Model):
+    """The outbox: one message per order, kind and channel (the unique key makes a repeated payment confirmation
+    a no-op). Delivery happens after the payment has committed, so a failed send can never undo a payment."""
+
+    __tablename__ = "messages"
+    __table_args__ = (UniqueConstraint("order_id", "kind", "channel", name="uq_messages_order_kind_channel"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False, index=True)
+    kind = db.Column(db.String(24), nullable=False)          # "order_paid"
+    channel = db.Column(db.String(16), nullable=False)       # "email" or "whatsapp"
+    to_value = db.Column(db.String(190), nullable=False, default="")     # raw recipient; blanked by anonymise_order
+    to_hash = db.Column(db.String(64), nullable=False, index=True)       # keyed hash of the recipient, kept for limits
+    subject = db.Column(db.String(200), nullable=False, default="")
+    body_text = db.Column(db.Text, nullable=False, default="")
+    body_html = db.Column(db.Text, nullable=False, default="")
+    status = db.Column(db.String(16), nullable=False, default="queued", index=True)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    last_error = db.Column(db.String(200), nullable=False, default="")
+    next_attempt_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+    sent_at = db.Column(db.DateTime)
+
+    order = db.relationship("Order", backref=db.backref("messages", order_by="Message.id"))
+
+
+class ContactOptOut(db.Model):
+    """A contact (email or number) that asked to receive no more messages. Only a keyed hash is stored."""
+
+    __tablename__ = "contact_optouts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    value_hash = db.Column(db.String(64), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+

@@ -58,4 +58,5 @@ def test_a12_the_only_unescaped_html_in_the_codebase_is_the_cover_helper():
         text = f.read_text(encoding="utf-8")
         if re.search(r"\|\s*safe|Markup\(|autoescape\s+false|render_template_string", text):
             files.add(f.relative_to(ROOT).as_posix())
-    assert files == {"app/__init__.py"}, files
+    # the cover helper, and the setup-guide renderer, which escapes every piece first (tests/test_order_messages.py)
+    assert files == {"app/__init__.py", "app/services/guide.py"}, files

@@ -8,6 +8,7 @@
     <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>Overview</a>
     <a href="{{ url_for('admin.orders') }}" {% if request.endpoint and request.endpoint.startswith('admin.order') %}aria-current="page"{% endif %}>Orders</a>
     <a href="{{ url_for('admin.products') }}" {% if request.endpoint and request.endpoint.startswith('admin.product') %}aria-current="page"{% endif %}>Products</a>
+    <a href="{{ url_for('admin.messages') }}" {% if request.endpoint and (request.endpoint.startswith('admin.message') or request.endpoint.startswith('admin.outbox')) %}aria-current="page"{% endif %}>Messages</a>
   </nav>
   <div>{% block admin %}{% endblock %}</div>
 </div>

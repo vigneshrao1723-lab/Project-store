@@ -13,7 +13,7 @@ from ..extensions import db
 from ..models import Order, ORDER_STATUSES, Product, utcnow
 from ..services import cart as cart_svc
 from ..services import orders as order_svc
-from ..services import payments, rate_limit
+from ..services import notify, payments, rate_limit
 from ..services.catalog import search_products
 from ..services.products import validate_product
 from ..validation import MAX_NAME, MAX_NOTE, MAX_PHONE, MAX_STOCK_DELTA, InputError, json_body, text, whole_number
@@ -180,7 +180,8 @@ def verify():
             or not payments.verify_payment(gateway_order_id, payment_id, body.get("signature"))
             or not payments.payment_matches_order(order, payment_id)):
         return error("Payment signature did not verify.", 400)
-    order_svc.mark_paid(order.id, payment_id)
+    if order_svc.mark_paid(order.id, payment_id) == "paid":
+        notify.after_payment(order.id)
     db.session.refresh(order)
     return jsonify(order_json(order))
 

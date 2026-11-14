@@ -91,8 +91,8 @@ def test_the_rail_has_one_dot_for_every_section_of_the_home_page(client):
     main = home[home.index("<main"):home.index("</main>")]
     sections = re.findall(r"<section\b", main)
     rail = re.search(r'<nav class="rail" aria-hidden="true"><ol>(.*?)</ol></nav>', home, re.S).group(1)
-    assert rail.count("<li></li>") == len(sections) == 8
-    assert len(re.findall(r"\.rail li:nth-child\(\d\)", BARE)) >= 7
+    assert rail.count("<li></li>") == len(sections) == 9            # nine since the "Get in touch" section (v1.3)
+    assert len(re.findall(r"\.rail li:nth-child\(\d\)", BARE)) >= 8
 
 
 def test_the_sideways_shelf_lists_real_projects_as_plain_links(client):

@@ -8,6 +8,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Project Store{% endblock %}{% if self.title() | trim != 'Project Store' %} | Project Store{% endif %}</title>
   <meta name="description" content="{% block description %}Finished engineering projects with working source, a setup guide and architecture notes.{% endblock %}">
+  {% block head_extra %}{% endblock %}
   <link rel="icon" href="{{ favicon_href }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
@@ -100,7 +101,7 @@
     <div class="wrap foot">
       <div>
         <p class="wordmark small"><span>Project Store</span></p>
-        <p class="muted">Engineering projects built, tested and sold by Vignesh T, a computer science student in Bengaluru.</p>
+        <p class="muted foot-copy">&copy; {{ current_year }} Project Store</p>
       </div>
       <div>
         <p class="foot-h">Shop</p>
@@ -111,11 +112,9 @@
         </ul>
       </div>
       <div>
-        <p class="foot-h">The maker</p>
+        <p class="foot-h">Help</p>
         <ul class="plain">
-          <li><a href="https://vignesh-t-23-portfolio.vercel.app/" rel="noopener">Portfolio</a></li>
-          <li><a href="https://github.com/vigneshrao1723-lab" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/vignesh-t-33651b397/" rel="noopener">LinkedIn</a></li>
+          <li><a href="{{ url_for('contact.page') }}">Contact</a></li>
         </ul>
       </div>
     </div>

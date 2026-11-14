@@ -48,7 +48,10 @@ def test_a14_the_per_email_login_limit_still_works(client, user):
     assert codes[-1] == 429
 
 
-def test_a14_there_is_no_password_reset_or_contact_form_yet(app):
+def test_a14_there_is_no_password_reset_yet_and_the_contact_form_is_rate_limited(app):
     paths = {r.rule for r in app.url_map.iter_rules()}
-    assert not [p for p in paths if re.search(r"reset|forgot|contact", p)], \
-        "a reset or contact endpoint now exists; it needs a rate limit and a test"
+    assert not [p for p in paths if re.search(r"reset|forgot", p)], \
+        "a reset endpoint now exists; it needs a rate limit and a test"
+    # the contact form arrived in v1.3 with its limits (tests/test_contact.py exercises both)
+    assert "/contact" in paths
+    assert app.config["RATE_LIMITS"]["contact_ip"] == (10, 3600) and app.config["RATE_LIMITS"]["contact_email"] == (3, 3600)

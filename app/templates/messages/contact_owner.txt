@@ -1,0 +1,8 @@
+New message from the contact form (number {{ m.id }}).
+
+From: {{ m.first_name }} {{ m.last_name }}
+Subject: {{ m.subject }}
+
+{{ m.body }}
+
+Reply from Admin -> Messages, or write to the sender from your mail client.

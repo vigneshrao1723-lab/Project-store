@@ -65,6 +65,8 @@ def validate_product(data, existing=None):
     clean["description"] = read("description", MAX_LONG_TEXT, "The description")
     clean["tech"] = read("tech", MAX_TECH, "The tech list")
     clean["includes"] = read("includes", MAX_LONG_TEXT, "The includes list")
+    if "setup_guide" in data:                      # older API clients send no guide; leave it untouched then
+        clean["setup_guide"] = read("setup_guide", MAX_LONG_TEXT, "The setup guide")
     clean["delivery_url"] = read("delivery_url", MAX_URL, "The link")
     if clean["delivery_url"] and not URL_RE.match(clean["delivery_url"]):
         errors.setdefault("delivery_url", "Use a full link starting with http:// or https://, with no spaces.")

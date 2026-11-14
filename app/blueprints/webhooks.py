@@ -5,7 +5,7 @@ from flask import Blueprint, abort, current_app, request
 from ..extensions import db
 from ..models import Order
 from ..services import orders as order_svc
-from ..services import payments
+from ..services import notify, payments
 
 bp = Blueprint("webhooks", __name__, url_prefix="/webhooks")
 
@@ -33,7 +33,8 @@ def razorpay():
                     current_app.logger.warning("Webhook for order %s does not match the order (amount, currency "
                                                "or status); not marking it paid.", order.public_id)
                     return {"ok": False, "reason": "does not match the order"}
-                order_svc.mark_paid(order.id, payment_id)
+                if order_svc.mark_paid(order.id, payment_id) == "paid":
+                    notify.after_payment(order.id)          # after the commit; never raises
     except (ValueError, KeyError, TypeError):
         abort(400)
     return {"ok": True}

@@ -119,3 +119,73 @@ def json_body():
     if not isinstance(body, dict):
         raise InputError("Send a JSON object.", 400)
     return body
+
+
+# ---- contact form and order contact choice (v1.3) -------------------------------------------------------------------
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_FIRST_NAME = 60
+MAX_SUBJECT = 160
+MAX_MESSAGE = 5000
+_LINE_BREAKS = re.compile(r"[\r\n\u2028\u2029\x00]")
+
+
+def has_line_break(value):
+    """True if a one-line field carries a line break (or a NUL): the start of an email header injection."""
+    return bool(_LINE_BREAKS.search(value or ""))
+
+
+def valid_email(value):
+    return bool(value) and len(value) <= MAX_EMAIL and EMAIL_RE.match(value) is not None and not has_line_break(value)
+
+
+def normalise_whatsapp(raw):
+    """An Indian 10-digit mobile number (6 to 9 first) or an international number in +country form, as E.164.
+
+    Spaces, dashes, dots and brackets are ignored. Raises InputError for anything else."""
+    problem = InputError("Enter a 10-digit mobile number, or the full number starting with + and the country code.")
+    value = re.sub(r"[\s\-().]", "", raw or "")
+    if not value or len(value) > 20 or has_line_break(raw or ""):
+        raise problem
+    if value.startswith("00"):
+        value = "+" + value[2:]
+    if value.startswith("+"):
+        digits = value[1:]
+        if not re.fullmatch(r"[1-9]\d{7,14}", digits):
+            raise problem
+        if digits.startswith("91") and not re.fullmatch(r"91[6-9]\d{9}", digits):
+            raise problem
+        return "+" + digits
+    if re.fullmatch(r"0?[6-9]\d{9}", value):
+        return "+91" + value[-10:]
+    if re.fullmatch(r"91[6-9]\d{9}", value):
+        return "+" + value
+    raise problem
+
+
+def contact_form(form):
+    """Check the contact form. Returns (data, errors); errors maps a field to its message."""
+    data = {k: (form.get(k) or "").strip() for k in ("first_name", "last_name", "email", "subject", "message")}
+    data["email"] = data["email"].lower()
+    data["consent"] = form.get("consent") in ("on", "yes", "1", "true")
+    errors = {}
+    for key, label, cap, required in (("first_name", "your first name", MAX_FIRST_NAME, True),
+                                      ("last_name", "your last name", MAX_FIRST_NAME, False),
+                                      ("subject", "a subject", MAX_SUBJECT, True)):
+        if required and not data[key]:
+            errors[key] = f"Enter {label}."
+        elif len(data[key]) > cap:
+            errors[key] = f"Use at most {cap} characters."
+        elif has_line_break(data[key]):
+            errors[key] = "Keep this to one line."
+    if not valid_email(data["email"]):
+        errors["email"] = "Enter a valid email address."
+    if not data["message"]:
+        errors["message"] = "Write your message."
+    elif len(data["message"]) > MAX_MESSAGE:
+        errors["message"] = f"Use at most {MAX_MESSAGE:,} characters."
+    if not data["consent"]:
+        errors["consent"] = "Tick the box so we may reply to you."
+    for key in ("first_name", "last_name", "email", "subject"):
+        data[key] = data[key][:MAX_SUBJECT]
+    data["message"] = data["message"][:MAX_MESSAGE]
+    return data, errors

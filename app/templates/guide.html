@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Setup guide {{ order.public_id }}{% endblock %}
+{% block description %}Setup guide for order {{ order.public_id }}.{% endblock %}
+{% block page_class %}none{% endblock %}
+{% block head_extra %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<div class="wrap page-pad">
+  <article class="guide-page" aria-labelledby="g-h">
+    <h1 class="h2" id="g-h">Setup guide</h1>
+    <p class="muted">For order <span class="num">{{ order.public_id }}</span>. This link works for {{ config.MESSAGE_LINK_DAYS }} days; the same guide is always on your order page.</p>
+    {% for title, guide_html, link in guides %}
+    <section class="guide-sec">
+      <h2 class="h3">{{ title }}</h2>
+      {% if guide_html %}<div class="guide-body">{{ guide_html }}</div>{% else %}<p>The setup guide for this project is being written. It will appear on your order page.</p>{% endif %}
+      <p class="muted">{% if link %}Download the project from your order page.{% else %}Your download link will appear on your order page as soon as it is ready.{% endif %}</p>
+    </section>
+    {% endfor %}
+  </article>
+</div>
+{% endblock %}

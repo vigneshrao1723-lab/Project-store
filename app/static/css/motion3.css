@@ -299,18 +299,29 @@ html.fx-on [data-fx="clip"] { transition: clip-path var(--fx-dur-slow) var(--fx-
 html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
 
 /* draw: an SVG line that draws as the block crosses the screen (--d, 0 to 1), lighting each step as it reaches it */
-.tl-wrap { position: relative; margin-bottom: 2.4rem; --d: 1; }
-.tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 3vw, 36px); margin: 0; padding-top: 2.1rem; position: relative; z-index: 1; }
-.tl li { --t: 0; position: relative; --lit: clamp(.35, calc(.35 + (var(--d) - var(--t)) * 9), 1); }       /* only the marker dims: the words stay at full contrast */
-.tl li:nth-child(2) { --t: .26; } .tl li:nth-child(3) { --t: .52; } .tl li:nth-child(4) { --t: .78; }
-.tl li::before { content: ""; position: absolute; left: 0; top: -1.55rem; width: 1.1rem; height: 1.1rem; background: var(--amber); border: 2px solid var(--amber); opacity: var(--lit); }
-.tl h3 { margin-bottom: .3rem; font-size: 1.1rem; font-stretch: 108%; }
-.tl p { margin: 0; color: var(--muted); font-size: .95rem; }
-.tl-line { position: absolute; left: 0; top: calc(1.1rem - 3px); width: 100%; height: 6px; overflow: visible; z-index: 0; }
+.tl-wrap { position: relative; margin-bottom: 1rem; --d: 1; --g: clamp(16px, 3vw, 40px); --node: 2.4rem; }
+/* one timeline: four equal steps, a number badge on the drawn line, title and one sentence under it, all on one baseline */
+.tl-wrap .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--g); margin: 0; padding: 0; position: relative; z-index: 1; }
+.tl-wrap .steps li { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .55rem; }
+.tl-n { display: grid; place-items: center; width: var(--node); height: var(--node); border-radius: 50%; background: var(--amber); color: var(--ink); font: 800 1.05rem var(--font-display); outline: 6px solid var(--night); }      /* a ring of page colour hides the line behind the badge */
+.tl-wrap .steps h3 { margin: .35rem 0 0; font-size: 1.1rem; font-stretch: 108%; }
+.tl-wrap .steps p { margin: 0; color: var(--muted); font-size: .95rem; max-width: 22ch; }
+/* the line runs from the first badge's centre to the last one's, behind the badges */
+.tl-line { position: absolute; top: calc(var(--node) / 2 - 3px); left: calc((100% - 3 * var(--g)) / 8); width: calc(100% - (100% - 3 * var(--g)) / 4); height: 6px; overflow: visible; z-index: 0; }
 .tl-line path { fill: none; stroke-width: 3; vector-effect: non-scaling-stroke; }
 .tl-base { stroke: var(--line); }
 .tl-draw { stroke: var(--amber); stroke-dasharray: 100; stroke-dashoffset: calc(100 * (1 - var(--d))); }
-@media (max-width: 700px) { .tl { grid-template-columns: 1fr; } .tl-line { display: none; } .tl li::before { top: .35rem; left: -1.6rem; } .tl { padding-left: 1.6rem; padding-top: 0; } }
+/* phones: a vertical timeline with the line on the left; the same --d draws it from the top */
+@media (max-width: 700px) {
+  .tl-wrap .steps { grid-template-columns: 1fr; gap: 1.6rem; padding-left: calc(var(--node) + 1rem); }
+  .tl-wrap .steps li { align-items: flex-start; text-align: left; position: relative; gap: .25rem; }
+  .tl-wrap .steps p { max-width: none; }
+  .tl-n { position: absolute; left: calc(-1 * (var(--node) + 1rem)); top: 0; }
+  .tl-wrap .steps h3 { margin-top: .45rem; }
+  .tl-line { display: none; }
+  .tl-wrap .steps::before, .tl-wrap .steps::after { content: ""; position: absolute; left: calc(var(--node) / 2 - 1.5px); top: calc(var(--node) / 2); bottom: 2.4rem; width: 3px; background: var(--line); }
+  .tl-wrap .steps::after { background: var(--amber); transform-origin: 50% 0; transform: scaleY(var(--d)); }
+}
 
 /* hscroll: a sideways shelf. It is a plain swipe row everywhere by default (phones, fx-lite, no script); with the
    script on a large screen it is pinned and the track slides as the reader scrolls (--p, with --hs the distance). */
@@ -364,7 +375,7 @@ html:not(.fx-on) .mq-row[aria-hidden="true"] { display: none; }
 .rail li { --k: 0; --lit: clamp(0, calc(var(--rs, 0) - var(--k) + .5), 1); position: relative; z-index: 1; width: 9px; height: 9px; border: 1.5px solid var(--sunset); background: var(--night); }
 .rail li::after { content: ""; position: absolute; inset: 0; background: var(--amber); opacity: var(--lit); }
 .rail li:nth-child(2) { --k: 1; } .rail li:nth-child(3) { --k: 2; } .rail li:nth-child(4) { --k: 3; } .rail li:nth-child(5) { --k: 4; }
-.rail li:nth-child(6) { --k: 5; } .rail li:nth-child(7) { --k: 6; } .rail li:nth-child(8) { --k: 7; }
+.rail li:nth-child(6) { --k: 5; } .rail li:nth-child(7) { --k: 6; } .rail li:nth-child(8) { --k: 7; } .rail li:nth-child(9) { --k: 8; }
 
 /* hero: three layers of line-art drifting at different speeds behind the headline (--pm is each layer's speed) */
 .hero { position: relative; overflow-x: clip; }

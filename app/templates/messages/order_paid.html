@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Your order {{ order.public_id }}</title></head>
+<body>
+<p>Hi {{ first_name }},</p>
+<p>Thank you for your order! Your project kit is paid for and ready to set up. Have fun building it.</p>
+<h2>Invoice {{ order.public_id }}</h2>
+<p>Date: {{ (order.paid_at or order.created_at).strftime('%d %b %Y') }}<br>Payment reference: {{ order.gateway_payment_id or '-' }}<br>Seller: {{ seller.name }}{% if seller.address %}, {{ seller.address }}{% endif %}{% if seller.gstin %} (GSTIN {{ seller.gstin }}){% endif %}</p>
+<table cellpadding="6" border="1">
+<tr><th align="left">Project</th><th align="right">Unit price</th><th align="right">Qty</th><th align="right">Amount</th></tr>
+{% for i in order.items %}<tr><td>{{ i.title }}</td><td align="right">{{ i.unit_price_paise | inr }}</td><td align="right">{{ i.qty }}</td><td align="right">{{ i.line_paise | inr }}</td></tr>
+{% endfor %}<tr><td colspan="3" align="right"><strong>Total paid</strong></td><td align="right"><strong>{{ order.total_paise | inr }}</strong></td></tr>
+</table>
+<p><a href="{{ links.invoice }}">Open the invoice</a> (printable)</p>
+<h2>Setup guide</h2>
+{% for title, guide_html, link in guides %}<h3>{{ title }}</h3>
+{% if guide_html %}{{ guide_html }}{% else %}<p>The setup guide for this project is being written. It will appear on your order page.</p>{% endif %}
+<p>{% if link %}Download it from your order page.{% else %}Your download link will appear on your order page as soon as it is ready.{% endif %}</p>
+{% endfor %}
+<p><a href="{{ links.guide }}">Open the setup guide</a></p>
+<h2>Where to download</h2>
+<p><a href="{{ links.order }}">Your order page</a>. The invoice and guide links work for {{ config.MESSAGE_LINK_DAYS }} days; everything is always on your order page too.</p>
+<p>Do not want messages like this? <a href="{{ stop_url }}">Stop them</a>.</p>
+</body></html>

@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}Messages{% endblock %}
+{% block admin %}
+<h1>Messages</h1>
+<h2>From the contact form</h2>
+{% if contacts %}
+<div class="table-wrap">
+<table class="table table-stack msg-table">
+  <thead><tr><th>Received</th><th>From</th><th>Subject and message</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for m in contacts %}
+  <tr class="{{ 'is-handled' if m.handled_at else '' }}">
+    <td data-label="Received" class="num">{{ m.created_at.strftime('%d %b, %H:%M') }}</td>
+    <td data-label="From">{{ m.first_name }} {{ m.last_name }}<br><span class="muted">{{ m.email }}</span></td>
+    <td data-label="Message"><strong>{{ m.subject }}</strong><div class="msg-body">{{ m.body }}</div></td>
+    <td data-label="Status"><form method="post" action="{{ url_for('admin.message_handled', message_id=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small {{ 'ghost' if m.handled_at else '' }}" type="submit">{{ 'Handled, undo' if m.handled_at else 'Mark handled' }}</button></form></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="muted">No contact messages yet.</p>{% endif %}
+
+<h2 class="mt-24">Order messages (outbox)</h2>
+<p class="muted fs-md">One message per paid order and channel. "Not configured" means email or WhatsApp is not switched on: open the message to read it, send it yourself, then mark it sent.</p>
+{% if outbox %}
+<div class="table-wrap">
+<table class="table table-stack">
+  <thead><tr><th>Created</th><th>Order</th><th>To</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for m in outbox %}
+  <tr>
+    <td data-label="Created" class="num">{{ m.created_at.strftime('%d %b, %H:%M') }}</td>
+    <td data-label="Order"><a href="{{ url_for('admin.order_detail', public_id=m.order.public_id) }}">{{ m.order.public_id }}</a></td>
+    <td data-label="To">{{ m.channel | capitalize }} {{ mask(m.channel, m.to_value) if m.to_value else 'removed' }}</td>
+    <td data-label="Status"><span class="status s-msg-{{ m.status }}">{{ m.status | replace('_', ' ') | capitalize }}</span>{% if m.last_error %}<br><span class="muted fs-sm">{{ m.last_error }}</span>{% endif %}</td>
+    <td data-label="Open"><a href="{{ url_for('admin.outbox_message', message_id=m.id) }}">Open</a></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="muted">No order messages yet.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Stop messages{% endblock %}
+{% block page_class %}none{% endblock %}
+{% block head_extra %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<div class="wrap page-pad narrow">
+  <h1 class="h2">Stop messages</h1>
+  {% if done %}
+  <p>This contact is on our do-not-contact list. You will not get any more messages from this store.</p>
+  {% else %}
+  <p>Press the button and we will not send any more invoices, guides or other messages to the contact this message went to.</p>
+  <form method="post" action="{{ url_for('orderdocs.stop_confirm', token=token) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn" type="submit">Stop messages</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

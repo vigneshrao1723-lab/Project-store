@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Contact{% endblock %}
+{% block description %}Get in touch about a project kit, a custom build or an order.{% endblock %}
+{% block page_class %}transactional{% endblock %}
+{% block content %}
+<div class="wrap page-pad">
+  {% set origin = 'contact' %}
+  {% include "_contact.html" %}
+</div>
+{% endblock %}

@@ -66,9 +66,10 @@ def create_app(config=None):
     # cover_svg() escapes everything it was given, so the finished drawing is safe to mark as HTML.
     app.jinja_env.globals["cover"] = lambda p: Markup(cover_svg(p.slug, p.category.cover_kind, p.title))  # nosec B704
 
-    from .blueprints import account, admin, api, auth, cart, checkout, shop, webhooks
+    from .blueprints import account, admin, api, auth, cart, checkout, contact, orderdocs, shop, webhooks
 
-    for bp in (shop.bp, auth.bp, cart.bp, checkout.bp, account.bp, admin.bp, api.bp, webhooks.bp):
+    for bp in (shop.bp, auth.bp, cart.bp, checkout.bp, account.bp, admin.bp, api.bp, webhooks.bp, contact.bp,
+               orderdocs.bp):
         app.register_blueprint(bp)
     csrf.exempt(webhooks.bp)
 
@@ -168,6 +169,24 @@ def register_cli(app):
         user.set_password(password)
         db.session.commit()
         click.echo(f"Admin ready: {user.email}")
+
+    @app.cli.command("send-messages")
+    def send_messages_cmd():
+        """Deliver queued order messages and retry failed ones whose back-off has passed (run from the sweeper)."""
+        from .services import notify
+        click.echo(f"Tried {notify.sweep()} message(s).")
+
+    @app.cli.command("anonymise-order")
+    @click.argument("public_id")
+    def anonymise_order_cmd(public_id):
+        """Remove the buyer's name and contact from one order and its messages."""
+        from .services.privacy import anonymise_order
+        from .models import Order
+        order = db.session.scalar(db.select(Order).where(Order.public_id == public_id))
+        if order is None:
+            raise click.ClickException("No such order.")
+        anonymise_order(order.id)
+        click.echo(f"Order {public_id} anonymised.")
 
     @app.cli.command("release-expired")
     def release_expired_cmd():

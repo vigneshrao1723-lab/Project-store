@@ -5,8 +5,8 @@ from ..extensions import db
 from ..models import Order
 from ..services import cart as cart_svc
 from ..services import orders as order_svc
-from ..services import payments, rate_limit
-from ..validation import MAX_NAME, MAX_PHONE
+from ..services import notify, payments, rate_limit
+from ..validation import MAX_EMAIL, MAX_NAME, MAX_PHONE, InputError, normalise_whatsapp, valid_email
 
 bp = Blueprint("checkout", __name__, url_prefix="/checkout")
 
@@ -30,7 +30,10 @@ def confirm_payment(order, gateway_order_id, payment_id, signature):
             or not payments.verify_payment(gateway_order_id, payment_id, signature)
             or not payments.payment_matches_order(order, payment_id)):
         return None
-    return order_svc.mark_paid(order.id, payment_id)
+    status = order_svc.mark_paid(order.id, payment_id)
+    if status == "paid":
+        notify.after_payment(order.id)          # outside the payment transaction; it never raises
+    return status
 
 
 def _announce(status):
@@ -57,11 +60,13 @@ def start():
         if not cart["lines"]:
             flash("Your cart is empty.", "info")
             return redirect(url_for("cart.view"))
-        return render_template("checkout.html", cart=cart, name=current_user.name, phone="")
+        return render_template("checkout.html", cart=cart, name=current_user.name, phone="",
+                               contact=_contact_defaults(), errors={})
 
     rate_limit.enforce("checkout")
     name = request.form.get("billing_name", "").strip()
     phone = request.form.get("phone", "").strip()
+    contact, errors = _read_contact(request.form)
     problem = None
     if not name:
         problem = "Enter the name for this order."
@@ -69,12 +74,21 @@ def start():
         problem = f"Use at most {MAX_NAME} characters for the name."
     elif len(phone) > MAX_PHONE:
         problem = f"Use at most {MAX_PHONE} characters for the phone number."
+    elif errors:
+        problem = next(iter(errors.values()))
     if problem:
         flash(problem, "error")
-        return render_template("checkout.html", cart=cart, name=name[:MAX_NAME], phone=phone[:MAX_PHONE]), 400
+        return render_template("checkout.html", cart=cart, name=name[:MAX_NAME], phone=phone[:MAX_PHONE],
+                               contact=contact["form"], errors=errors), 400
+    if contact["channel"] == "whatsapp" and not phone:
+        phone = contact["value"]                 # the payment form can prefill it; the free phone field is gone
+    if contact["channel"]:                       # messages were asked for: limit how often, per address and account
+        rate_limit.enforce("notify_ip", rate_limit.ip_key())
+        rate_limit.enforce("notify_user", f"user:{current_user.id}")
 
     try:
-        order = order_svc.create_order_from_cart(current_user, name, phone)
+        order = order_svc.create_order_from_cart(current_user, name, phone,
+                                                 contact=(contact["channel"], contact["value"]) if contact["channel"] else None)
     except order_svc.PendingOrderExists as exc:
         return _to_unpaid_order(exc.order)
     except order_svc.CheckoutError as exc:
@@ -91,6 +105,36 @@ def start():
         flash(str(exc), "error")
         return redirect(url_for("cart.view"))
     return redirect(url_for("checkout.pay", public_id=order.public_id))
+
+
+def _contact_defaults():
+    return {"channel": "email", "email": current_user.email, "whatsapp": "", "consent": False}
+
+
+def _read_contact(form):
+    """The checkout's "send my invoice and setup guide" choice. A form without the choice at all (an older client)
+    asks for no messages. With the choice, the contact must be valid and the consent box ticked."""
+    if "contact_channel" not in form:
+        return {"channel": "", "value": "", "form": _contact_defaults()}, {}
+    channel = form.get("contact_channel", "")
+    shown = {"channel": channel if channel in ("email", "whatsapp") else "email",
+             "email": form.get("contact_email", "").strip()[:MAX_EMAIL],
+             "whatsapp": form.get("contact_whatsapp", "").strip()[:24], "consent": bool(form.get("contact_consent"))}
+    errors, value = {}, ""
+    if channel == "email":
+        value = shown["email"].lower()
+        if not valid_email(value):
+            errors["contact_email"] = "Enter a valid email address for your invoice."
+    elif channel == "whatsapp":
+        try:
+            value = normalise_whatsapp(shown["whatsapp"])
+        except InputError as exc:
+            errors["contact_whatsapp"] = exc.message
+    else:
+        errors["contact_channel"] = "Choose email or WhatsApp."
+    if not shown["consent"]:
+        errors["contact_consent"] = "Tick the box so we can send your invoice and setup guide."
+    return {"channel": channel if not errors else "", "value": value, "form": shown}, errors
 
 
 def _refill_cart(order):

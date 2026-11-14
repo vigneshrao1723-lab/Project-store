@@ -70,8 +70,22 @@ PRODUCTS = [
 ]
 
 
+def seed_guides():
+    """Fill in the setup guide of each seeded project, unless an admin has edited it. Safe to run any number of times."""
+    from .guides import GUIDES
+    changed = 0
+    for slug, text in GUIDES.items():
+        p = db.session.scalar(db.select(Product).where(Product.slug == slug))
+        if p is not None and not p.guide_edited and (p.setup_guide or "") != text:
+            p.setup_guide = text
+            changed += 1
+    db.session.commit()
+    return changed
+
+
 def seed_catalogue(only_if_empty=False):
     if only_if_empty and db.session.scalar(db.select(db.func.count(Product.id))):
+        seed_guides()                 # an existing catalogue still gets the guides (never over an edited one)
         return False
 
     cats = {}
@@ -98,6 +112,7 @@ def seed_catalogue(only_if_empty=False):
             db.session.add(InventoryLog(product_id=p.id, delta=p.stock, reason="seed"))
 
     db.session.commit()
+    seed_guides()
     return True
 
 
