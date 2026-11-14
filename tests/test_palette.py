@@ -227,3 +227,9 @@ def test_the_old_design_rules_no_longer_say_no_gradients_or_ink_blue(f):
     text = (ROOT / f).read_text(encoding="utf-8")
     assert "#1B2A41" not in text and "#F5D90A" not in text
     assert not re.search(r"[Dd]o not add gradients", text)
+
+
+def test_nothing_that_slides_in_from_the_side_can_widen_the_page():
+    css = (CSS / "main.css").read_text(encoding="utf-8")
+    assert re.search(r"main \{ flex: 1; overflow-x: clip; \}", css)                       # clip, not hidden: no scroll container, sticky still works
+    assert re.search(r"\.hero \{[^}]*overflow-x: clip", css)

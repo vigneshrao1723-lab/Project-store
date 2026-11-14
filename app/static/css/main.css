@@ -21,7 +21,7 @@ body {
   font: 400 1.0625rem/1.65 var(--font-text); font-optical-sizing: auto;
   min-height: 100vh; display: flex; flex-direction: column;
 }
-main { flex: 1; }
+main { flex: 1; overflow-x: clip; }       /* cards that slide in from the side must never widen the page while they travel; clip makes no scroll container, so sticky and pinned parts are unaffected */
 img, svg { display: block; max-width: 100%; }
 a { color: var(--sunset); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:hover { color: var(--amber); text-decoration: underline; }
