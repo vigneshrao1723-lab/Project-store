@@ -2,6 +2,17 @@
 
 Dates are commit dates. The newest release is first.
 
+## 1.2.0 (2026-11-14)
+
+A new palette and a 3D background. Every animation from 1.1.0 is still there (`docs/MOTION_INVENTORY.md`, and its test, pass); they are recoloured, not removed.
+
+* **Palette.** Dark first, one theme: amber `#FFAB00` (action, key numbers), harley `#DD2E18` (critical fills), white (text), sunset `#FF5841` (links, accents, the focus ring), violet `#C53678` (pills, chips, bars, big shapes), on a near-black plum with panel, line, muted and ink neutrals. Every colour is written once, in `app/static/css/tokens.css`, loaded first; a test fails on a hex literal anywhere else. The old ink-blue and yellow tokens are gone, mapped one by one in `docs/ARCHITECTURE.md`.
+* **Contrast is enforced.** `scripts/check_contrast.py` and `tests/test_palette.py` compute WCAG ratios from the tokens for every text and background pair in use (4.5:1, 3:1 for graphics) and fail on a violation. Text on amber and sunset is `--ink`; white is only on harley, violet and the dark neutrals; violet and harley are never a text colour.
+* **3D background.** `app/static/js/fx-bg.js`: a WebGL shader (domain-warped noise lit like a glossy solid) behind the home page, sign in, register and the paid order page, with the CSS gradient always underneath and a dark left-to-right scrim over it. Catalogue, product, cart, checkout, pay, orders and errors have the static gradient only; admin has neither. It has no loop of its own: the one loop in `fx-scroll.js` drives it. One still frame with reduced motion, `fx-lite` or `{"off": ["bg3d"]}`; the gradient shows if WebGL or the shader fails. Knobs `--bg-speed` and `--bg-brightness`; switch `bg3d`.
+* **Recoloured everywhere.** Header, footer, buttons (amber primary, sunset outline secondary), links, a 3 px amber focus ring, inputs and their error and success states, status pills, chips, stepper, toasts, cart badge, tables and admin (amber figures); the generated covers and all line art; the payment mark (amber ring, violet disc, white tick; failure stays harley with a white cross). Cards over the background are the panel colour at 90% or more.
+* **Fixes found on the way.** The hero art no longer makes the home page 25 px too wide at tablet width; the tab icon, the cover drawings and the Razorpay theme read the palette instead of carrying their own colours.
+* **Measured.** See the release notes in `docs/RELEASE_STEPS_v1.2.md` and the project README for the numbers; the 4x CPU slowdown on the home page is still not smooth (known limitation from 1.1.0).
+
 ## 1.1.0 (2026-11-14)
 
 Motion, additive only (`docs/MOTION_INVENTORY.md` lists every effect; a test fails if one disappears).

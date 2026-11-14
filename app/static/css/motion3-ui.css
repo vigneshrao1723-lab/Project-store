@@ -71,7 +71,7 @@ html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp calc(900ms / v
 
 /* ---- sign in and register: slow line-art drifting behind the form ---- */
 .auth-wrap { position: relative; overflow-x: clip; }
-.drift { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--muted); }
+.drift { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--muted); opacity: .3; }
 .auth-wrap > .auth { position: relative; z-index: 1; }
 .drift span { position: absolute; display: block; }
 .drift .d1 { right: 4%; top: 6%; animation: fx-drift-a 26s ease-in-out infinite alternate; }

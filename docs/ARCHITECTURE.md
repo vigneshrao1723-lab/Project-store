@@ -73,7 +73,7 @@ A small, optional motion layer on the home page, the catalogue and the product p
 | `static/js/motion-boot.js` | plain script in `<head>` | Adds `.intro-run` to `<html>` on the first page of a browser session (storage works, reduced motion off). Sets its flag at once, so a broken `motion.js` can show the loader at most once. |
 | Loader | `base.html`, CSS "intro loader" | Hidden by default. A pure-CSS timeline plays a six-object line-art scene (inbox, cart, TV, PC, CPU, RAM) and fades out by 1.2 s; a second animation hides it at 2 s whatever else fails. `pointer-events: none`, nothing focusable, only the loader is `aria-hidden`. |
 | `static/js/motion.js` (deferred, about 6 KB) | end of `<body>` | Counts the loader percentage and removes `.intro-run` when the loader's own exit animation ends. Runs the card interactions below. No timers; everything is cleaned up on `pagehide`. |
-| `_macros.html` `fx_back()` / `fx_panel(kind)` | tiles, hero plate, product plate | Two `aria-hidden` layers inside the cover's box: a flat ink/yellow backdrop behind the cover and a small corner panel with the category's motif. Chosen by `p.category.cover_kind` (`data-motion-kind`), never by title or id. |
+| `_macros.html` `fx_back()` / `fx_panel(kind)` | tiles, hero plate, product plate | Two `aria-hidden` layers inside the cover's box: a flat violet/amber backdrop behind the cover and a small corner panel with the category's motif. Chosen by `p.category.cover_kind` (`data-motion-kind`), never by title or id. |
 
 **One active card at a time.** `motion.js` puts `.is-active` on the card the user is pointing at (fine pointers only), has keyboard focus on (`:focus-visible`; focus in the product's purchase box plays the plate's motif), or is pressing (any pointer; touch rests on `pointerup` or `pointercancel`). The CSS does the rest and returns to rest when the class goes. The cover zooms 1.02-1.035 and tilts 1-2 degrees over the backdrop. Sold-out tiles get no panel.
 
@@ -84,7 +84,61 @@ A small, optional motion layer on the home page, the catalogue and the product p
 | `web` | three storefront panes stack; two project tiles drop into a cart |
 | `hardware` | the display wakes; CPU pins pulse twice; two RAM sticks drop into their slots |
 
-Rules every change here must keep (tests in `tests/test_motion_*.py` enforce them): only `transform` and `opacity` are animated; `will-change` appears only on the `.is-animating` class the script sets while the cover transitions; hover effects live only under `(hover: hover) and (pointer: fine)`; no gradients, shadows, external assets or inline styles and scripts; content is visible by default; and **pressing never changes the pressed element's own box** (a scale shrinks the hit area, so a press near an edge ends outside the element and the click is lost; tiles dim their text block and buttons dim themselves instead). Navigation is never delayed or cancelled.
+Rules every change here must keep (tests in `tests/test_motion_*.py` enforce them): only `transform` and `opacity` are animated; `will-change` appears only on the `.is-animating` class the script sets while the cover transitions; hover effects live only under `(hover: hover) and (pointer: fine)`; no gradients or shadows inside the motion layers (the palette's background and the card hover glow live in the Background block of `main.css`, outside them), no external assets or inline styles and scripts; content is visible by default; and **pressing never changes the pressed element's own box** (a scale shrinks the hit area, so a press near an edge ends outside the element and the click is lost; tiles dim their text block and buttons dim themselves instead). Navigation is never delayed or cancelled.
+
+## Palette and tokens
+
+One theme, dark first (`color-scheme: dark`), every colour written once in `app/static/css/tokens.css`, which is the first stylesheet on every page. Nothing else may contain a hex literal or a literal `rgb()`: stylesheets, templates, scripts and Python all refer to tokens by name, and `tests/test_palette.py` fails on a violation. Where a colour has to reach something that cannot read a stylesheet, the value is read from the tokens at run time: the WebGL shader reads `--amber`, `--harley`, `--white`, `--sunset`, `--violet` and `--night` with `getComputedStyle`; the Razorpay checkout theme reads `--violet`; the tab icon is built in `app/context.py` from the values in `tokens.css`; the cover drawings carry classes (`cv-ln`, `cv-hl` ...) that `main.css` paints.
+
+| Token | Value | Use |
+|---|---|---|
+| `--amber` | #FFAB00 | primary action, key numbers, the focus ring; text on it is `--ink` |
+| `--harley` | #DD2E18 | critical fills (errors, failed pills, the failed mark); text on it is `--white` |
+| `--white` | #FFFFFF | body text on dark |
+| `--sunset` | #FF5841 | links, hover accents, section labels, secondary button outline; text on it is `--ink` |
+| `--violet` | #C53678 | status pills, chips, bars, big shapes, the headline card; text on it is `--white` |
+| `--night` | #14070F | page background |
+| `--panel`, `--panel-2` | #1F0C18, #2A1221 | cards, raised and hover surfaces |
+| `--line` | #4A2438 | hairlines (decoration only, never the sole edge of a control) |
+| `--muted` | #D9C3CE | secondary text, control borders |
+| `--ink` | #1A0B14 | text on amber and sunset |
+| `--*-rgb` | the same colours as `20 7 15` style triples | translucent surfaces: `rgb(var(--night-rgb) / .9)` (space separated; a comma list is invalid there) |
+
+**Contrast** is measured, not assumed: `scripts/check_contrast.py` computes WCAG ratios from `tokens.css` and checks the required pairs (white on harley 4.69, white on violet 5.03, ink on sunset 6.10, ink on amber 10.05, amber on night 10.38, sunset on night 6.30, and every text colour on all three surfaces), then every `color` and `background` that appear together in one rule of the stylesheets, and a rule that sets only a text colour on all three surfaces. White on sunset (3.12) and white on amber (1.90) fail for small text, which is why the text on them is `--ink`. Violet on night (3.91) and harley on night (4.20) are for graphics and large text only: the script fails if either is ever a `color`. The tests run the same functions.
+
+**Old tokens to new** (v1.1.0 ink-blue and yellow to v1.2.0):
+
+| Old | Was used for | Now |
+|---|---|---|
+| `--paper` #E8EDE7 | page background | `--night` |
+| `--paper-2` #F3F6F1 | cards, inputs, summary boxes | `--panel` (`--panel-2` on hover) |
+| `--panel` #DCE4DD | cover backdrop, admin row hover | `--panel-2` |
+| `--ink` #1B2A41 | text | `--white` |
+| | strong borders | `--line` for decoration, `--muted` for inputs, steppers, tabs |
+| | dark fills (buttons, badges, bars) | `--amber` with `--ink` text; bars `--violet` |
+| `--ink-2` #44546A | secondary text | `--muted` |
+| `--rule` #B4C2B8 | hairlines | `--line` |
+| `--mark` #F5D90A | highlighter, hover fill, banners | `--amber` (action, key numbers, banners), `--sunset` (hover), `--violet` (big shapes, the big error code) |
+| `--green` #1F6B47 | success | `--amber` (ring, ticks, borders), `--violet` (paid pill, tick disc) |
+| `--red` #A3261C | errors | `--harley` fill with white text; `--sunset` for text on dark |
+| `#fff` literals | text on fills, the tick stroke | `--white` |
+
+The design rule "no gradients, shadows or photos" of v1.0.0 and v1.1.0 is overridden for this release (decided by the owner): the warm glossy background and a soft glow on card hover are allowed; the line-art identity of the covers and icons is kept and recoloured.
+
+## Background
+
+A warm 3D background sits behind some pages. Four parts, from the bottom up:
+
+1. **The CSS gradient** on `body::before` (fixed, `z-index: -2`): three radial gradients in violet, sunset and amber over `--night`. It is always there, it is the fallback for everything below, and it drifts slowly (a `transform`-only animation) only on pages that carry the canvas and only until the canvas is running. Admin has no gradient (`body[data-bg="none"]`).
+2. **The canvas** (`<canvas class="bg3d" data-bg3d aria-hidden="true">`, fixed, `z-index: -1`, `pointer-events: none`) drawn by `app/static/js/fx-bg.js`: domain-warped noise lit like a glossy iridescent solid, ported from the owner's approved prototype with the colours read from the tokens. No library; the shader is a string in the module, so the Content-Security-Policy is unchanged.
+3. **The scrim** (`.bg-scrim`): a left-to-right dark gradient over the canvas (an even 85% on phones, where text runs the full width) so a headline over it stays above 4.5:1.
+4. **Veils and cards**: text that is not on a card sits on the page colour at 92% (home sections) or on a panel card at 90% or more (sign in, register, the paid order page, every tile and plate). Cards are never more transparent than that.
+
+**Where.** `<body data-bg>` is set by `{% block bg %}`: `gl` (canvas) on home, sign in, register and a *paid* order page; `css` (gradient only) everywhere else, including catalogue, product, cart, checkout, pay, orders and errors; `none` on admin.
+
+**The loop rule.** The background has no animation loop of its own. `fx-bg.js` exposes `window.fxBg.tick(now)`; the single `requestAnimationFrame` loop in `fx-scroll.js` calls it on every frame and keeps the loop alive while it answers true. There is still exactly one observer and one loop on every page (`tests/test_palette.py` counts them). `fx-bg.js` starts after the page has loaded and the browser is idle, compiles the shader in parallel where the browser supports it, and then dispatches `fxbg-ready` so the loop wakes up; the frame-rate probe that can set `fx-lite` waits for that, so the one-off cost of creating a WebGL context is not mistaken for a slow device.
+
+**Quality.** Render scale is `min(devicePixelRatio, 1.5) * 0.5` on desktop and `0.35` on phones, dropped once (x0.6) if the first 40 frames average slower than 24 fps. The loop stops while the tab is hidden, so nothing is drawn. With `prefers-reduced-motion`, `html.fx-lite` or the `bg3d` switch the module draws one still frame and never animates. If WebGL is missing, the context is lost, or the shader fails to compile or link, the canvas stays hidden and the gradient shows. Knobs: `--bg-speed` and `--bg-brightness` (`fx-tuning.css`); switch: `{"off": ["bg3d"]}` in `app/fx.json`.
 
 ## Scroll system
 
@@ -111,7 +165,7 @@ One vocabulary, one script, one observer, one animation-frame loop. Pages do not
 | `draw` | An SVG line draws as the block crosses the screen (`--d`, 0 to 1) and the steps along it light up. | `<div class="tl-wrap" {{ fx('draw') }}>...<path pathLength="100" class="tl-draw"/>` |
 | `hscroll` | A sideways shelf. A plain swipe row on phones, in `fx-lite` and without the script; on large screens it is pinned and the track slides with the vertical scroll. | `<section class="shelf" {{ fx('hscroll') }}><div class="hs-stage fx-stage"><ul class="hs-track">` |
 | `marquee` | A slow CSS-only ticker; pauses on hover, stops for reduced motion, a plain wrapped list without the script. | `<div class="marquee" {{ fx('marquee') }}>` |
-| `tilt`, `magnetic` | Pointer feedback on fine pointers only: tiles lean up to 6 degrees with a flat yellow disc following the pointer; a primary button leans up to 6 px toward the pointer. Written straight onto the one element under the pointer. | `<a class="tile" {{ fx('tilt') }}>`, `<a class="btn" {{ fx('magnetic') }}>` |
+| `tilt`, `magnetic` | Pointer feedback on fine pointers only: tiles lean up to 6 degrees with a flat amber disc following the pointer; a primary button leans up to 6 px toward the pointer. Written straight onto the one element under the pointer. | `<a class="tile" {{ fx('tilt') }}>`, `<a class="btn" {{ fx('magnetic') }}>` |
 
 Other pieces that are not words: the section rail (`<nav class="rail">`, desktop only, fills as the home page's sections go by), three parallax layers of line-art in the home hero (`.px-1`, `.px-2`, `.px-3` set their speed with `--pm`), and cross-document view transitions (`@view-transition { navigation: auto }` with a named cover that travels from the card you point at to the product page; ignored by browsers without support).
 

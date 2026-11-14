@@ -368,7 +368,7 @@ html:not(.fx-on) .mq-row[aria-hidden="true"] { display: none; }
 
 /* hero: three layers of line-art drifting at different speeds behind the headline (--pm is each layer's speed) */
 .hero { position: relative; overflow-x: clip; }
-.hero-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; color: var(--muted); }
+.hero-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; color: var(--muted); opacity: .3; }
 .hero-grid { position: relative; z-index: 1; }
 .px { position: absolute; display: block; }
 .px-1 { --pm: -.8; right: 4%; top: 6%; opacity: .7; }

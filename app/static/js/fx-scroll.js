@@ -265,6 +265,7 @@
   // once an element has finished arriving, drop its stagger delay so hover feedback is never late
   const onEnd = (e) => { const t = e.target; if (t.classList && t.classList.contains("is-in") && e.propertyName === "opacity") t.classList.add("is-settled"); };
   window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("fxbg-ready", schedule);                // the background module starts after load; wake the loop when it is ready
   window.addEventListener("resize", onResize, { passive: true });
   document.addEventListener("visibilitychange", onVisible);
   document.addEventListener("focusin", onFocus);
@@ -273,13 +274,17 @@
     io.disconnect(); cancelAnimationFrame(raf); raf = 0; live.clear(); settle.clear(); counting.length = 0;
     if (window.fxBg) window.fxBg.stop();
     cleanups.forEach((fn) => fn());
-    window.removeEventListener("scroll", schedule); window.removeEventListener("resize", onResize);
+    window.removeEventListener("scroll", schedule); window.removeEventListener("resize", onResize); window.removeEventListener("fxbg-ready", schedule);
     document.removeEventListener("visibilitychange", onVisible); document.removeEventListener("focusin", onFocus);
     document.removeEventListener("transitionend", onEnd);
   }, { once: true });
   schedule();
   if (!lite && !forced) {
-    const startProbe = () => setTimeout(() => { probing = !document.hidden; schedule(); }, 300);
-    if (document.readyState === "complete") startProbe(); else window.addEventListener("load", startProbe, { once: true });
+    let started = false;
+    const startProbe = () => { if (started) return; started = true; setTimeout(() => { probing = !document.hidden; schedule(); }, 300); };
+    // when the 3D background is on this page it starts after load; measure after it is running (or after 4 s if it never starts),
+    // so the one-off cost of creating its WebGL context is not mistaken for a slow device
+    const afterBg = () => { if (document.querySelector("canvas[data-bg3d]") && !window.fxBg) { window.addEventListener("fxbg-ready", startProbe, { once: true }); setTimeout(startProbe, 4000); } else startProbe(); };
+    if (document.readyState === "complete") afterBg(); else window.addEventListener("load", afterBg, { once: true });
   }
 })();

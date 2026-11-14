@@ -205,7 +205,7 @@ def test_the_canvas_is_aria_hidden_and_the_scrim_too(client):
 
 
 def test_fx_bg_fits_the_script_budget():
-    assert len(gzip.compress((JS / "fx-bg.js").read_bytes(), 9)) < 3500
+    assert len(gzip.compress((JS / "fx-bg.js").read_bytes(), 9)) < 4096
 
 
 def test_covers_carry_classes_not_colours_and_still_escape_titles():

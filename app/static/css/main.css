@@ -97,7 +97,7 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 .flash-error { border-color: var(--harley); }
 
 /* hero */
-.hero { border-bottom: 1px solid var(--line); }
+.hero { border-bottom: 1px solid var(--line); overflow-x: clip; }       /* the drifting art may poke past the edge at tablet widths: clip it, without making a scroll container */
 .hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(24px, 5vw, 64px); align-items: center; padding-block: clamp(36px, 7vw, 88px); }
 .hero .lede { margin: 1.4rem 0 2rem; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; font: 600 1rem var(--font-display); }

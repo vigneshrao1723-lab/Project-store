@@ -335,7 +335,7 @@ def test_everything_is_undone_on_pagehide():
 
 
 def test_script_budget():
-    assert len(gzip.compress(JS.read_bytes(), 9)) < 6 * 1024
+    assert len(gzip.compress(JS.read_bytes(), 9)) < 7 * 1024     # 6 KB until the background loop hook and the probe wait were added; the total for all fx scripts is capped separately at 14 KB
 
 
 # ---- adaptive quality: fx-lite ---------------------------------------------------------------------------------------------
