@@ -374,7 +374,7 @@ body[data-bg="none"]::before { content: none; }
 .bg3d.on { opacity: 1; }
 .bg-scrim { position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(90deg, rgb(var(--night-rgb) / .94) 0%, rgb(var(--night-rgb) / .84) 46%, rgb(var(--night-rgb) / .3) 72%, rgb(var(--night-rgb) / 0) 100%); }
-@media (max-width: 700px) { .bg-scrim { background: rgb(var(--night-rgb) / .85); } }   /* on a phone the text runs the full width, so the scrim is even */
+@media (max-width: 700px) { .bg-scrim { background: rgb(var(--night-rgb) / .74); } }   /* on a phone the text runs the full width, so the scrim is even */
 /* text that is not on a card gets a veil of the page colour, so it never sits on the bright part of the shader */
 body[data-bg="gl"][data-page="browse"] main > :not(.hero):not(.showcase) { background: rgb(var(--night-rgb) / .92); }
 body[data-bg="gl"][data-page="account"] main > .wrap { background: rgb(var(--panel-rgb) / .92); border: 1px solid var(--line); border-radius: 14px; margin-block: 1.5rem 3rem; padding-block: 1.2rem 1.6rem; }

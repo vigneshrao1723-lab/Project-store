@@ -15,16 +15,19 @@ Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design note
 | ![Cart](docs/screenshots/cart.png) | ![Checkout](docs/screenshots/checkout.png) |
 | **Pay (practice gateway)** | **Paid order** |
 | ![Pay page](docs/screenshots/pay.png) | ![Paid order](docs/screenshots/order.png) |
-| **Your orders** | **Admin overview** |
-| ![Orders](docs/screenshots/orders.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
+| **Sign in** | **Your orders** |
+| ![Sign in over the 3D background](docs/screenshots/login.png) | ![Orders](docs/screenshots/orders.png) |
+| **Admin overview** | |
+| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | |
 
-On a 390 px phone: home, catalogue, product, cart, pay and paid order.
+On a 390 px phone: sign in, home, catalogue, product, cart, pay and paid order.
 
 | ![Home at 390 px](docs/screenshots/home-390.png) | ![Catalogue at 390 px](docs/screenshots/catalogue-390.png) | ![Product at 390 px](docs/screenshots/product-390.png) |
 |---|---|---|
 | ![Cart at 390 px](docs/screenshots/cart-390.png) | ![Pay at 390 px](docs/screenshots/pay-390.png) | ![Paid order at 390 px](docs/screenshots/order-390.png) |
+| ![Sign in at 390 px](docs/screenshots/login-390.png) | | |
 
-The screenshots were taken from a fresh database loaded with the demo seed and one practice purchase, so they show no real customer data. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
+The screenshots were taken from a fresh database loaded with the demo seed and two practice purchases, so they show no real customer data. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
 
 **This is an open-source demo store.** The source is public (MIT), so there is no paywall. The download links in the seeded catalogue are blank, so a paid order's page says "Link coming soon. Contact the store." If you run a store like this for your own work, set private links as described in [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 
