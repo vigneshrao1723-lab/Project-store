@@ -24,4 +24,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=20s \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
+# --no-control-socket: gunicorn 27 otherwise opens a control socket under the home directory, which the system user
+# does not have (it logged "Control server error: Permission denied"); the store does not use that interface.
+CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-", "--no-control-socket"]

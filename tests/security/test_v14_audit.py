@@ -339,3 +339,11 @@ def test_e3_shell_scripts_that_run_in_containers_have_unix_line_endings():
     """A CR in the shebang line makes Docker answer "exec ./docker-entrypoint.sh: no such file or directory"."""
     for f in [ROOT / "docker-entrypoint.sh", *(ROOT / "docker" / "mysql-init").glob("*.sh"), *(ROOT / "scripts").glob("*.sh")]:
         assert b"\r" not in f.read_bytes(), f
+
+
+def test_e3_gunicorn_runs_without_its_control_socket():
+    """gunicorn 27 opens a control socket under $HOME by default; the image's system user has no home directory, so
+    every start logged "Control server error: Permission denied" (seen in the v1.4 smoke test)."""
+    docker = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    cmd = re.search(r"^CMD (\[.*\])$", docker, re.M).group(1)
+    assert '"--no-control-socket"' in cmd and '"gunicorn"' in cmd and "--reload" not in cmd and "--debug" not in cmd
