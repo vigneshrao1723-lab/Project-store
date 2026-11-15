@@ -55,6 +55,13 @@ def create_app(config=None):
             raise RuntimeError(f"SECRET_KEY {problem}. Generate one with: "
                                'python -c "import secrets; print(secrets.token_hex(32))"')
 
+    proxies = int(app.config.get("TRUSTED_PROXIES") or 0)
+    if proxies > 0:
+        # Only the last `proxies` hops of X-Forwarded-For are believed (the ones our own proxies appended); anything a
+        # client put in front of them is ignored, so a forged header cannot pick its own rate-limit key.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=0, x_port=0, x_prefix=0)
+
     db.init_app(app)
     # Absolute path, so `flask db ...` works from any directory. render_as_batch lets later migrations
     # alter tables on SQLite (local dev, CI smoke test); on MySQL it emits ordinary ALTER statements.
@@ -94,10 +101,13 @@ def create_app(config=None):
             "default-src 'self'; script-src 'self' https://checkout.razorpay.com; "
             "style-src 'self'; "
             "font-src 'self'; img-src 'self' data:; "
-            "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
+            # The contact map (v1.4) is the only addition: a Google Maps frame, created only when the visitor asks.
+            "frame-src https://api.razorpay.com https://checkout.razorpay.com https://maps.google.com https://www.google.com; "
             "connect-src 'self' https://lumberjack.razorpay.com https://api.razorpay.com; "
-            "form-action 'self'; base-uri 'self'; frame-ancestors 'self'",
+            "object-src 'none'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'",
         )
+        # Our files are for our pages only: another site cannot embed our scripts, styles or images.
+        h.setdefault("Cross-Origin-Resource-Policy", "same-origin")
         # Nothing here needs the camera, microphone, location or USB. Razorpay Checkout runs in an iframe and
         # may use the browser's payment sheet, so only it (and this site) get "payment".
         h.setdefault("Permissions-Policy",

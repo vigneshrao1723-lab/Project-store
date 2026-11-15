@@ -41,10 +41,10 @@ def test_contact_details_come_only_from_the_environment(app, client):
     assert "Get in touch" in page and "mailto:" not in page and "wa.me" not in page and "tel:" not in page
     assert "Use the form and we will reply" in page
     app.config.update(CONTACT_EMAIL="owner@example.com", CONTACT_PHONE="+91 98765 43210", CONTACT_CITY="Pune",
-                      CONTACT_GITHUB="https://github.com/example", CONTACT_LINKEDIN="javascript:alert(1)")
+                      CONTACT_GITHUB="https://github.com/owner-test", CONTACT_LINKEDIN="javascript:alert(1)")
     page = client.get("/contact").get_data(as_text=True)
     assert "mailto:owner@example.com" in page and "https://wa.me/919876543210" in page and "tel:+919876543210" in page
-    assert "Pune" in page and "https://github.com/example" in page
+    assert "Pune" in page and "https://github.com/owner-test" in page
     assert "javascript:" not in page                       # a non-http URL in the environment is dropped
 
 

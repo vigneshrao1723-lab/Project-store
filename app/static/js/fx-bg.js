@@ -1,11 +1,5 @@
-/* The 3D background: domain-warped noise lit like a glossy, iridescent solid, in the brand palette.
-   One shared module for every page that carries it (home, sign in, register, the paid order page). It has no loop of its
-   own: fx-scroll.js calls window.fxBg.tick(now) from its single requestAnimationFrame loop and keeps that loop going while
-   tick() answers true. Colours are read from the CSS tokens (tokens.css), never written here.
-   Quality: render scale min(devicePixelRatio, 1.5) * 0.5 on desktop and 0.35 on phones; one drop of the scale if the
-   first 40 frames average slower than 24 fps; nothing is drawn while the tab is hidden (the loop stops). With reduced
-   motion, html.fx-lite, or the "bg3d" switch it draws ONE still frame and never animates. If WebGL or the shader fails,
-   the canvas stays hidden and the CSS gradient on body::before (always underneath) is what shows. */
+/* The 3D background: domain-warped noise lit like a glossy solid, in the palette read from tokens.css. No loop of its
+   own (fx-scroll.js calls window.fxBg.tick). Quality, fallbacks and still-frame rules: docs/ARCHITECTURE.md, Script notes. */
 (() => {
   "use strict";
   const root = document.documentElement;
@@ -41,8 +35,7 @@
       "vec3 col=mix(N,c*g,m*.92);col+=pow(m,6.)*.08*W*g;" +
       "float vg=smoothstep(1.3,.2,length(p));col*=.55+.45*vg;" +
       "gl_FragColor=vec4(col,1.);}";
-    // compile and link without asking for the result at once, so a browser with KHR_parallel_shader_compile does the work off
-    // the main thread; poll for completion with a timer (no second animation loop)
+    // compile without waiting (KHR_parallel_shader_compile), poll with a timer
     const make = (type, src) => { const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
     const v = make(gl.VERTEX_SHADER, vs), f = make(gl.FRAGMENT_SHADER, fs);
     const pr = gl.createProgram();
@@ -50,7 +43,7 @@
     const parallel = gl.getExtension("KHR_parallel_shader_compile");
     const wait = () => {
       if (parallel && !gl.getProgramParameter(pr, parallel.COMPLETION_STATUS_KHR)) { window.setTimeout(wait, 25); return; }
-      if (!gl.getShaderParameter(v, gl.COMPILE_STATUS) || !gl.getShaderParameter(f, gl.COMPILE_STATUS) || !gl.getProgramParameter(pr, gl.LINK_STATUS)) return;   // a compile or link failure keeps the gradient
+      if (!gl.getShaderParameter(v, gl.COMPILE_STATUS) || !gl.getShaderParameter(f, gl.COMPILE_STATUS) || !gl.getProgramParameter(pr, gl.LINK_STATUS)) return;
       ready();
     };
     const ready = () => {
@@ -64,13 +57,13 @@
       const uR = u("r"), uT = u("t"), uG = u("g");
       ["A", "H", "W", "S", "V", "N"].forEach((n, i) => gl.uniform3f(u(n), cols[i][0], cols[i][1], cols[i][2]));
 
-      // knobs (fx-tuning.css): --bg-speed multiplies the drift, --bg-brightness is how bright the solid is (0.3 to 1)
+      // knobs: --bg-speed, --bg-brightness
       const phone = (window.matchMedia && window.matchMedia("(max-width: 700px)").matches) || Math.min(window.innerWidth, window.innerHeight) < 500;
       let scale = phone ? 0.35 : Math.min(window.devicePixelRatio || 1, 1.5) * 0.5;
       const speed = Math.max(0, num("--bg-speed", 1) * num("--fx-speed", 1));
       const glow = Math.min(1, Math.max(0.3, num("--bg-brightness", 0.75)));
       let t = 0, last = 0, frames = 0, sum = 0, dead = false, still = off || reduced;
-      const STILL_T = 6;                                      // the moment the still frame shows (the prototype looks its best around six seconds in); animation starts from 0, as the prototype does
+      const STILL_T = 6;                                      // the still frame's moment
 
       const size = () => {
         const w = Math.max(2, Math.floor(window.innerWidth * scale)), h = Math.max(2, Math.floor(window.innerHeight * scale));
@@ -89,12 +82,11 @@
       cv.addEventListener("webglcontextlost", (e) => { e.preventDefault(); dead = true; cv.classList.remove("on"); root.classList.remove("bg-gl"); }, false);
       window.addEventListener("pagehide", () => window.removeEventListener("resize", onResize), { once: true });
 
-      t = still ? STILL_T : 0; draw();                        // first frame at once, so the canvas is never blank
+      t = still ? STILL_T : 0; draw();                        // first frame at once
       cv.classList.add("on");
-      root.classList.add("bg-gl");                            // the CSS gradient underneath stops drifting while the canvas covers it
+      root.classList.add("bg-gl");
 
       window.fxBg = {
-        // called by the one loop in fx-scroll.js on every frame; true asks for another frame
         tick(now) {
           if (dead) return false;
           if (still) return false;
@@ -115,12 +107,11 @@
         get animated() { return !still && !dead; },
       };
       if (still) freeze();
-      window.dispatchEvent(new Event("fxbg-ready"));         // the scroll loop may have gone idle before this module was ready: wake it
+      window.dispatchEvent(new Event("fxbg-ready"));         // wake the scroll loop
     };
     wait();
   };
-  // Start after the page has loaded and the browser is idle: creating a WebGL context and compiling the shader can take
-  // a few hundred milliseconds, which must never land on the intro loader or the first paint. The CSS gradient shows meanwhile.
+  // start once the page has loaded and the browser is idle; the CSS gradient shows meanwhile
   const later = () => { if (window.requestIdleCallback) window.requestIdleCallback(boot, { timeout: 1500 }); else window.setTimeout(boot, 200); };
   if (document.readyState === "complete") later(); else window.addEventListener("load", later, { once: true });
 })();

@@ -31,19 +31,41 @@ def _favicon():
 FAVICON = _favicon()
 
 
+MAP_EMBED = "https://maps.google.com/maps?q={q}&t=h&z=12&output=embed"      # hybrid view, city level, no API key
+MAP_OPEN = "https://www.google.com/maps/search/?api=1&query={q}"
+
+
 def contact_info(cfg):
-    """The owner's contact details, only those set in the environment. Nothing personal is written in the code."""
+    """The owner's contact details, only those set in the environment. Nothing personal is written in the code.
+
+    The phone number is shown as typed in CONTACT_PHONE, and its tel: and wa.me links are built from its digits here,
+    at render time. The map is city level only: it is centred on CONTACT_CITY, never on a street address."""
     phone = cfg.get("CONTACT_PHONE", "")
     digits = "".join(ch for ch in phone if ch.isdigit())
     if digits and len(digits) == 10:                  # a bare Indian mobile number
         digits = "91" + digits
     safe_url = lambda u: u if u.startswith(("https://", "http://")) else ""
-    info = {"email": cfg.get("CONTACT_EMAIL", ""), "phone": phone, "city": cfg.get("CONTACT_CITY", ""),
+    city = cfg.get("CONTACT_CITY", "")
+    # "Bengaluru, Karnataka" from SELLER_ADDRESS when it starts with the city, otherwise the city alone
+    parts = [p.strip() for p in cfg.get("SELLER_ADDRESS", "").split(",") if p.strip()]
+    region = ", ".join(parts[:2]) if city and parts and parts[0].lower() == city.lower() else city
+    info = {"name": cfg.get("CONTACT_NAME", ""), "email": cfg.get("CONTACT_EMAIL", ""), "phone": phone, "city": city,
             "tel": ("+" + digits) if 8 <= len(digits) <= 15 else "",
             "whatsapp": f"https://wa.me/{digits}" if 8 <= len(digits) <= 15 else "",
-            "github": safe_url(cfg.get("CONTACT_GITHUB", "")), "linkedin": safe_url(cfg.get("CONTACT_LINKEDIN", ""))}
-    info["any"] = any(info[k] for k in ("email", "phone", "city", "github", "linkedin"))
+            "github": safe_url(cfg.get("CONTACT_GITHUB", "")), "linkedin": safe_url(cfg.get("CONTACT_LINKEDIN", "")),
+            "map_label": region,
+            "map_embed": MAP_EMBED.format(q=quote(city)) if city else "",
+            "map_open": MAP_OPEN.format(q=quote(region or city)) if city else ""}
+    info["any"] = any(info[k] for k in ("name", "email", "phone", "city", "github", "linkedin"))
     return info
+
+
+def seller_info(cfg):
+    """Who sells, as the Consumer Protection (E-Commerce) Rules, 2020 ask a seller to show: name, address, contact
+    and the grievance officer. Everything comes from the environment."""
+    return {"name": cfg.get("SELLER_NAME", "") or "Project Store", "address": cfg.get("SELLER_ADDRESS", ""),
+            "gstin": cfg.get("SELLER_GSTIN", ""), "grievance_name": cfg.get("CONTACT_NAME", "") or cfg.get("SELLER_NAME", ""),
+            "email": cfg.get("CONTACT_EMAIL", ""), "phone": cfg.get("CONTACT_PHONE", "")}
 
 
 def register_context(app):
@@ -59,4 +81,5 @@ def register_context(app):
                 "gateway_mode": payments.mode(),
                 "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
                 "facts": FACTS, "fx_off": FX_OFF, "favicon_href": FAVICON,
-                "contact_info": contact_info(current_app.config), "current_year": utcnow().year}
+                "contact_info": contact_info(current_app.config), "seller": seller_info(current_app.config),
+                "current_year": utcnow().year}

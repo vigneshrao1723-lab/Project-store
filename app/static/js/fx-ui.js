@@ -1,7 +1,5 @@
-/* Interface motion for controls and for the pages people pay and sign in on. It never hides anything: it adds states
-   (a spinner on a posting button, a toast that leaves, a cart row that slides away, a figure that ticks, a download that
-   says it is preparing). No observer of the viewport and no animation-frame loop here; the scroll system lives in
-   fx-scroll.js. Under reduced motion only the form guard runs, and its spinner is a still ring. */
+/* Interface motion for controls (posting buttons, toasts, cart rows, downloads). No viewport observer, no frame loop.
+   See docs/ARCHITECTURE.md, Script notes. */
 (() => {
   "use strict";
   const calm = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

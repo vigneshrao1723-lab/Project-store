@@ -18,6 +18,8 @@
   --bg-speed: 1;                 /* bg3d: how fast the 3D background drifts (also scaled by --fx-speed). 0 = frozen, 2 = double. Good range 0.3 to 1.6. */
   --bg-brightness: .75;          /* bg3d: how bright the glossy solid is. Lower it if text feels busy on top. Good range 0.4 to 0.9. */
   --marquee-speed: 1;            /* marquee: ticker speed. 0.5 = half speed, 2 = double. Good range 0.4 to 2. */
+  --shelf-speed: 26;             /* shelf-loop: how fast the home shelf drifts on its own, in px per second (a number). 0 = no drift. Good range 12 to 60. */
+  --shelf-wheel-gain: 1;         /* shelf-loop: how hard a scroll, sideways swipe or drag pushes the shelf. 0.5 = half, 2 = double. Good range 0.4 to 2. */
 
   /* derived: do not edit */
   --cart-k: calc(var(--cart-anim-ms) / 1000 / var(--fx-speed));
@@ -46,7 +48,7 @@ html[data-fx-off~="marquee"] .mq-row[aria-hidden="true"] { display: none !import
 html[data-fx-off~="tilt"] [data-fx="tilt"] { transform: none !important; transition: none !important; }
 html[data-fx-off~="spotlight"] [data-fx="tilt"]::after { display: none !important; }
 html[data-fx-off~="magnetic"] [data-fx="magnetic"] { transform: none !important; }
-html[data-fx-off~="rail"] .rail { display: none !important; }
+html[data-fx-off~="shelf-loop"] .shelf-toggle { display: none !important; }
 html[data-fx-off~="parallax"] [data-fx="parallax"] { transform: none !important; }
 html[data-fx-off~="view-transitions"] .product .plate-cover, html[data-fx-off~="view-transitions"] .tile .tile-cover { view-transition-name: none !important; }
 html[data-fx-off~="view-transitions"]::view-transition-group(*), html[data-fx-off~="view-transitions"]::view-transition-old(*),

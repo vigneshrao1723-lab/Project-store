@@ -8,3 +8,4 @@
   {% include "_contact.html" %}
 </div>
 {% endblock %}
+{% block scripts %}{% if contact_info.map_embed %}<script src="{{ url_for('static', filename='js/contact-map.js') }}" defer></script>{% endif %}{% endblock %}

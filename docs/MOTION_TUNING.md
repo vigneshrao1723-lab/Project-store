@@ -23,6 +23,8 @@ Each is a CSS custom property in `fx-tuning.css`, named after the effect it belo
 | `--bg-speed` | `1` | **bg3d.** How fast the 3D background drifts (also scaled by `--fx-speed`): `0` freezes it, `2` doubles it. | 0.3 to 1.6 |
 | `--bg-brightness` | `.75` | **bg3d.** How bright the glossy solid is. Lower it if text feels busy over it. | 0.4 to 0.9 |
 | `--marquee-speed` | `1` | **marquee.** Ticker speed: `0.5` half speed, `2` double. | 0.4 to 2 |
+| `--shelf-speed` | `26` | **shelf-loop.** How fast the home shelf drifts on its own, in px per second. `0` stops the drift (pushes still work). | 12 to 60 |
+| `--shelf-wheel-gain` | `1` | **shelf-loop.** How hard a scroll, sideways swipe or drag pushes the shelf: `0.5` half, `2` double. | 0.4 to 2 |
 
 Examples of one-line edits: "tilt too strong" is `--tilt-max: 3;`; "everything feels slow" is `--fx-speed: 1.3;`;
 "the covers fly in from too far" is `--cover-slide-distance: 40vw;`; "the background is too bright" is `--bg-brightness: .55;`; "turn the 3D off" is `{ "off": ["bg3d"] }`.
@@ -52,7 +54,7 @@ The server writes it into `<html data-fx-off="tilt marquee">`, so the switch wor
 | `tilt` | tile tilt |
 | `spotlight` | the amber disc that follows the pointer on tiles |
 | `magnetic` | magnetic buttons |
-| `rail` | section rail |
+| `shelf-loop` | the home shelf's endless drifting loop (off: the shelf is the plain pinned row it was before v1.4) |
 | `parallax` | all parallax layers |
 | `view-transitions` | cross-page fade and the shared cover |
 | `toasts` | toast styling (messages stay inline) |

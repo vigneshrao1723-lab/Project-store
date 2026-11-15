@@ -76,12 +76,15 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | Drawn "How buying works" timeline | home | `{{ fx('draw') }}` | app/templates/home.html | draw |
 | Timeline line drawing | home | `stroke-dashoffset: calc(100 * (1 - var(--d)))` | app/static/css/motion3.css | draw |
 | Sideways shelf driven by vertical scroll | home | `{{ fx('hscroll') }}` | app/templates/home.html | hscroll |
+| Shelf endless loop: slow drift, pushed by scroll, sideways wheel and drag, momentum back to the drift (v1.4) | home | `window.fxShelf = {` | app/static/js/fx-shelf.js | shelf-loop |
+| Shelf loop moves the track by one custom property (v1.4) | home | `translate3d(calc(var(--sx, 0) * -1px), 0, 0)` | app/static/css/motion3.css | shelf-loop |
+| Shelf loop copies are aria-hidden and inert (v1.4) | home | `k.setAttribute("inert", "")` | app/static/js/fx-shelf.js | shelf-loop |
+| Shelf Pause / Play button (v1.4, WCAG 2.2.2) | home | `data-shelf-toggle` | app/templates/home.html | shelf-loop |
+| Shelf loop hook script in the one loop (v1.4) | home | `window.fxShelf.tick(now, y)` | app/static/js/fx-scroll.js | - |
 | Tech-stack marquee | home | `{{ fx('marquee') }}` | app/templates/home.html | marquee |
 | Tile tilt and pointer spotlight | home, catalogue, product | `{{ fx('tilt') }}` | app/templates/_macros.html | tilt |
 | Magnetic primary button | home | `{{ fx('magnetic') }}` | app/templates/home.html | magnetic |
-| Section rail | home | `<nav class="rail"` | app/templates/home.html | rail |
-| Section rail fill | home | `--rs` | app/static/js/fx-scroll.js | rail |
-| Hero parallax, three layers | home | `px px-3` | app/templates/home.html | parallax |
+| Hero parallax, two layers (v1.4: the crosshair layer was removed) | home | `px px-2` | app/templates/home.html | parallax |
 | View transitions between pages | all | `@view-transition { navigation: auto; }` | app/static/css/motion3.css | view-transitions |
 | Cover shared between card and product page | catalogue, product | `view-transition-name: cover` | app/static/css/motion3.css | view-transitions |
 | Adaptive quality list of switches | all | `const OFF = [];` | app/static/js/fx-scroll.js | - |
@@ -135,3 +138,16 @@ Columns: **Effect**, **Page** where the visitor sees it, **Hook** (the literal t
 | The draw switch also stills the phone line (v1.3) | home (phones) | `html[data-fx-off~="draw"] .tl-wrap .steps::after` | app/static/css/fx-tuning.css | draw |
 | Cascade: "Get in touch" form and contact panel (v1.3) | home, contact | `<div class="contact" {{ fx('cascade') }}>` | app/templates/_contact.html | cascade |
 | Magnetic "Send message" button (v1.3) | home, contact | `send-btn" type="submit" {{ fx('magnetic') }}` | app/templates/_contact.html | magnetic |
+
+## Removed on purpose in v1.4
+
+The owner asked for two pieces to go from the whole site. Their rows were deleted from the table above, and
+`tests/test_fx_variants.py::test_the_section_rail_and_the_crosshair_strip_are_gone_from_every_page` now checks that
+they stay gone.
+
+| Removed | Rows deleted | Where it was |
+|---|---|---|
+| Section rail: the column of nine squares on the right edge of the home page, filled amber as sections went by, and its line | "Section rail" (`<nav class="rail"`, home.html), "Section rail fill" (`--rs`, fx-scroll.js) | home.html, motion3.css (`.rail` rules), fx-scroll.js (the `--rs` writes), fx-tuning.css and motion3-ui.css (the `rail` switch) |
+| The crosshair "+" with a dashed line: the third hero layer on the home page, and the third drifting shape on sign in and register | "Hero parallax, three layers" (`px px-3`) became "Hero parallax, two layers" (`px px-2`) | home.html (`.px-3`), login.html and register.html (`.d3`), motion3.css (`.px-3`), motion3-ui.css (`.drift .d3`) |
+
+The `rail` switch is replaced by `shelf-loop`, so the number of switches is unchanged.

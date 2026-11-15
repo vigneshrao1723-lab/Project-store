@@ -369,7 +369,7 @@ def test_a_slow_first_half_second_switches_lite_on_and_a_fast_one_does_not():
     assert fast == {"c": ["fx-on"]}
 
 
-# ---- variants: words, lines, draw, hscroll, tilt, magnetic, the rail, switching one off ------------------------------------
+# ---- variants: words, lines, draw, hscroll, tilt, magnetic, switching one off (the section rail was removed in v1.4) ------
 
 VARIANTS = """
   const w = world(OPTS);
@@ -385,11 +385,9 @@ VARIANTS = """
   const btn = w.make("btn", { dataset: { fx: "magnetic" }, top: 100 });
   tile.getBoundingClientRect = () => ({ top: 100, left: 100, width: 200, height: 100, bottom: 200 });
   btn.getBoundingClientRect = () => ({ top: 100, left: 100, width: 100, height: 40, bottom: 140 });
-  const dots = [0, 1, 2, 3].map((i) => w.make("dot" + i, {}));
-  const rail = w.make("rail", { querySelectorAll: (s) => (s === "li" ? dots : []) });
   const secs = [0, 1, 2, 3].map((i) => w.make("sec" + i, { top: i * 600 - 300, height: 600 }));
   POINTERSETUP
-  w.run({ extra: [lede, h1, clip, left, tl, tile, btn], ".rail": [rail], "main > section": secs, ".site-header": [] });
+  w.run({ extra: [lede, h1, clip, left, tl, tile, btn], "main > section": secs, ".site-header": [] });
 """
 
 POINTER = """
@@ -453,12 +451,15 @@ def test_a_magnetic_button_leans_at_most_6px_and_lets_go():
     assert r == {"far": ["6px", "-6px"], "after": ["0px", "0px"]}
 
 
-def test_the_rail_fills_as_sections_go_by_and_lives_on_its_own_node():
+def test_the_section_rail_is_gone_and_scrolling_never_writes_to_the_root():
+    """v1.4 removed the section rail (the column of squares on the right edge) on purpose; see docs/MOTION_INVENTORY.md."""
+    src = JS.read_text(encoding="utf-8")
+    assert ".rail" not in src and "--rs" not in src
     r = run_node(variants("""
-      const at = (y) => { secs.forEach((s, i) => { s.top = i * 600 - y; }); w.dispatch("scroll"); w.advance(32); return parseFloat(rail.style.props["--rs"]); };
-      const result = { rs: [0, 300, 900, 1500, 99999].map(at), rootWrites: w.writes.filter((x) => x[0] === "html").length };"""))
-    rs = r["rs"]
-    assert rs[0] <= rs[1] < rs[2] < rs[3] <= rs[4] <= 4 and r["rootWrites"] == 0, rs
+      const at = (y) => { secs.forEach((s, i) => { s.top = i * 600 - y; }); w.dispatch("scroll"); w.advance(32); };
+      [0, 300, 900, 1500].forEach(at);
+      const result = { rootWrites: w.writes.filter((x) => x[0] === "html").length };"""))
+    assert r["rootWrites"] == 0
 
 
 def test_switching_a_variant_off_in_the_one_list_leaves_it_already_in_place_and_marks_the_root():

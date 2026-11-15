@@ -20,14 +20,16 @@ NEUTRALISING = re.compile(r"animation: none|transition: none|transform: none|dis
 
 # ---- knobs -----------------------------------------------------------------------------------------------------------------
 
-def test_the_fourteen_knobs_exist_with_their_defaults_and_are_all_named_after_an_effect():
+def test_the_sixteen_knobs_exist_with_their_defaults_and_are_all_named_after_an_effect():
     names = [k[0] for k in KNOBS]
     assert names == ["--fx-speed", "--fx-dist", "--fx-stagger", "--fx-ease", "--tilt-max", "--magnet-max", "--parallax-strength",
-                     "--cover-slide-distance", "--loader-ms", "--cart-anim-ms", "--pay-anim-ms", "--bg-speed", "--bg-brightness", "--marquee-speed"]
+                     "--cover-slide-distance", "--loader-ms", "--cart-anim-ms", "--pay-anim-ms", "--bg-speed", "--bg-brightness", "--marquee-speed",
+                     "--shelf-speed", "--shelf-wheel-gain"]
     defaults = {k: v.strip() for k, v, _ in KNOBS}
     assert defaults["--fx-speed"] == "1" and defaults["--tilt-max"] == "6" and defaults["--magnet-max"] == "6"
     assert defaults["--fx-dist"] == "14px" and defaults["--fx-stagger"] == "60ms" and defaults["--cover-slide-distance"] == "60vw"
     assert defaults["--loader-ms"] == "1000ms" and defaults["--cart-anim-ms"] == "1000" and defaults["--pay-anim-ms"] == "1400"
+    assert defaults["--shelf-speed"] == "26" and defaults["--shelf-wheel-gain"] == "1"
 
 
 @pytest.mark.parametrize("knob", [k[0] for k in KNOBS])
@@ -65,7 +67,7 @@ def test_every_switch_has_a_rule_that_stops_its_animation_and_is_listed_in_the_d
 
 
 def test_the_twenty_named_effects_are_all_switchable():
-    wanted = "lines words from-left from-right zoom flip clip draw hscroll marquee tilt magnetic rail parallax view-transitions spotlight toasts stepper status-timeline admin-motion".split()
+    wanted = "lines words from-left from-right zoom flip clip draw hscroll marquee tilt magnetic shelf-loop parallax view-transitions spotlight toasts stepper status-timeline admin-motion".split()
     assert set(wanted) <= set(SWITCHES), set(wanted) - set(SWITCHES)
 
 

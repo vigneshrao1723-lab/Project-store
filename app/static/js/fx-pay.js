@@ -1,6 +1,4 @@
-/* Payment result: shows the success sequence once per order per browser session. The sequence itself is plain CSS
-   and starts as soon as the page paints; this file only switches it off when this order has already played it
-   here (a back/forward or a reload). With no script, or with storage blocked, the sequence just plays again. */
+/* The payment mark plays once per order per browser session. See docs/ARCHITECTURE.md. */
 (() => {
   "use strict";
   const mark = document.querySelector('.result-success[data-play]');

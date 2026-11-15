@@ -10,7 +10,7 @@ from .helpers import build_app
 
 REQUIRED_HEADERS = [
     "Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy",
-    "Permissions-Policy", "Cross-Origin-Opener-Policy",
+    "Permissions-Policy", "Cross-Origin-Opener-Policy", "Cross-Origin-Resource-Policy",
 ]
 
 

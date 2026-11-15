@@ -67,6 +67,7 @@ class Config:
 
     # Contact details shown on the contact block and /contact. Each comes only from the environment; an empty one is
     # simply not shown. Nothing personal is written in the repository.
+    CONTACT_NAME = os.getenv("CONTACT_NAME", "").strip()
     CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "").strip()
     CONTACT_PHONE = os.getenv("CONTACT_PHONE", "").strip()
     CONTACT_CITY = os.getenv("CONTACT_CITY", "").strip()
@@ -96,6 +97,11 @@ class Config:
     MESSAGE_LINK_DAYS = 7
     MESSAGE_MAX_ATTEMPTS = 5
     MESSAGES_PER_CONTACT_PER_DAY = 3
+
+    # How many reverse proxies in front of the app may be believed about the client's address (X-Forwarded-For) and
+    # scheme (X-Forwarded-Proto). 0, the default, believes none: the address is the TCP peer, so a forged header
+    # cannot dodge a rate limit. Set it to exactly the number of proxies you run (1 for one nginx or Caddy).
+    TRUSTED_PROXIES = int(os.getenv("TRUSTED_PROXIES") or "0")
 
     WTF_CSRF_TIME_LIMIT = None
 

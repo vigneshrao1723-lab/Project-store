@@ -69,17 +69,16 @@ html.fx-on .otl li.is-linked .otl-line::after { animation: fx-stp calc(900ms / v
 .delivery a.is-preparing { position: relative; padding-right: 1.6rem; }
 .delivery a.is-preparing::after { content: ""; position: absolute; right: 0; top: 50%; width: .8rem; height: .8rem; margin-top: -.4rem; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: fx-spin calc(700ms / var(--fx-speed, 1)) linear infinite; }
 
-/* ---- sign in and register: slow line-art drifting behind the form ---- */
+/* ---- sign in and register: slow line-art drifting behind the form (two shapes; v1.4 removed the crosshair and dashed line) ---- */
 .auth-wrap { position: relative; overflow-x: clip; }
 .drift { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--muted); opacity: .3; }
 .auth-wrap > .auth { position: relative; z-index: 1; }
 .drift span { position: absolute; display: block; }
 .drift .d1 { right: 4%; top: 6%; animation: fx-drift-a 26s ease-in-out infinite alternate; }
 .drift .d2 { left: 3%; bottom: 8%; animation: fx-drift-b 34s ease-in-out infinite alternate; }
-.drift .d3 { right: 22%; bottom: 12%; animation: fx-drift-a 42s ease-in-out infinite alternate-reverse; }
 @keyframes fx-drift-a { to { transform: translate3d(-28px, 22px, 0) rotate(6deg); } }
 @keyframes fx-drift-b { to { transform: translate3d(30px, -26px, 0) rotate(-8deg); } }
-@media (max-width: 700px) { .drift .d2, .drift .d3 { display: none; } .drift .d1 { right: -30px; } }
+@media (max-width: 700px) { .drift .d2 { display: none; } .drift .d1 { right: -30px; } }
 
 /* ---- the hero headline arrives out of a brief blur (6px at most, that one element, gone when it ends) ---- */
 html.fx-on .hero h1 { animation: fx-ghost calc(900ms / var(--fx-speed, 1)) var(--fx-ease) backwards; }
@@ -123,11 +122,10 @@ html.fx-off-focus-ring :focus-visible { animation: none; }
 html.fx-off-press .btn:active, html.fx-off-press .stepper button:active, html.fx-off-press .linkish:active { transform: none; }
 html.fx-off-wipe .nav a::after, html.fx-off-wipe .site-footer a::after, html.fx-off-wipe .crumbs a::after { display: none; }
 @media (hover: hover) and (pointer: fine) { html.fx-off-lift .fx-card:hover, html.fx-off-lift .hs-card a:hover, html.fx-off-lift .sc-cover a:hover, html.fx-off-lift .summary:hover, html.fx-off-lift .delivery:hover { transform: none; } }
-html.fx-off-rail .rail { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .stp li.is-arriving .stp-line::after, .otl li.is-linked .otl-line::after, .btn.is-loading::after, .delivery a.is-preparing::after,
-  .empty-cart, .empty-orders, .empty-search, .drift .d1, .drift .d2, .drift .d3, .line.is-ghost, .is-tick, :focus-visible, .field.has-error .inp { animation: none; }
+  .empty-cart, .empty-orders, .empty-search, .drift .d1, .drift .d2, .line.is-ghost, .is-tick, :focus-visible, .field.has-error .inp { animation: none; }
   .stp li.is-current .stp-line::after, .stp li.is-arriving .stp-line::after { transform: scaleX(1); }
   .inp .ul, .inp .ok path { transition: none; }
   .nav a::after, .site-footer a::after, .crumbs a::after { transition: none; }

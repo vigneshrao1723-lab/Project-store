@@ -71,7 +71,8 @@ def test_login_and_register_get_drifting_art_that_is_decorative(client):
     for page in ("/login", "/register"):
         html = client.get(page).get_data(as_text=True)
         art = html[html.index('<div class="drift"'):html.index('<div class="auth">')]
-        assert 'aria-hidden="true"' in art and art.count("<span") == 3 and not re.search(r"<(a|button|input)\b", art)
+        assert 'aria-hidden="true"' in art and art.count("<span") == 2 and not re.search(r"<(a|button|input)\b", art)   # 3 until v1.4 removed the crosshair
+        assert "stroke-dasharray" not in art
         assert 'class="wrap page-pad auth-wrap"' in html
 
 
@@ -294,7 +295,7 @@ def test_everything_is_disconnected_on_pagehide():
 
 def test_every_switch_name_in_the_script_comment_does_something_somewhere():
     scroll = (ROOT / "app" / "static" / "js" / "fx-scroll.js").read_text(encoding="utf-8")
-    others = "rail stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift".split()
+    others = "stepper inputs shake toasts cart downloads forms drift bob timeline focus-ring press wipe lift".split()   # "rail" went with the rail in v1.4
     assert all(name in scroll for name in others)
     ui_css, ui_js = BARE, JS.read_text(encoding="utf-8")
     page_css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")

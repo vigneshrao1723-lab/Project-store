@@ -1,5 +1,5 @@
 """The browse-page variants: headline lines, word-by-word copy, alternating card entrances, clip reveals, the drawn
-timeline, the sideways shelf, the marquee, tilt and magnetic feedback, the section rail, hero parallax, and view
+timeline, the sideways shelf, the marquee, tilt and magnetic feedback, hero parallax (the section rail went in v1.4), and view
 transitions. Markup through the macros; rules in the stylesheet; behaviour in test_fx_scroll.py."""
 import re
 from pathlib import Path
@@ -64,7 +64,7 @@ def test_the_home_page_carries_every_browse_variant(client):
     assert 'class="plain steps fx-flipc" data-fx="cascade"' in home and '<div class="grid fx-alt" data-motion-group="tiles" data-fx="cascade">' in home
     tiles = len(re.findall(r'<a class="tile', home))
     assert tiles >= 4 and home.count('data-fx="tilt"') == tiles and home.count('data-fx="clip"') == tiles
-    assert 'data-fx="magnetic"' in home and home.count('data-fx="parallax"') == 3
+    assert 'data-fx="magnetic"' in home and home.count('data-fx="parallax"') == 2          # two hero layers since v1.4 removed the crosshair layer
 
 
 def test_the_timeline_is_four_real_steps_with_a_drawn_line(client, app):
@@ -86,13 +86,15 @@ def test_the_marquee_lists_the_stack_twice_for_a_seamless_loop_and_hides_the_cop
     assert re.findall(r"<li>(.*?)</li>", rows[1][1]) == names
 
 
-def test_the_rail_has_one_dot_for_every_section_of_the_home_page(client):
-    home = client.get("/").get_data(as_text=True)
-    main = home[home.index("<main"):home.index("</main>")]
-    sections = re.findall(r"<section\b", main)
-    rail = re.search(r'<nav class="rail" aria-hidden="true"><ol>(.*?)</ol></nav>', home, re.S).group(1)
-    assert rail.count("<li></li>") == len(sections) == 9            # nine since the "Get in touch" section (v1.3)
-    assert len(re.findall(r"\.rail li:nth-child\(\d\)", BARE)) >= 8
+def test_the_section_rail_and_the_crosshair_strip_are_gone_from_every_page(client):
+    """v1.4 removed, on purpose, the column of squares on the right edge (the section rail) and the crosshair-and-dashed-
+    line art (home hero, sign in, register). Neither the markup nor its styles may come back."""
+    for path in ("/", "/catalogue", "/login", "/register", "/contact"):
+        html = client.get(path).get_data(as_text=True)
+        assert 'class="rail"' not in html and "px-3" not in html and 'class="d3"' not in html, path
+        assert 'stroke-dasharray="6 6"' not in html and "M4 20h40M24 4v32" not in html and "M4 20h30M19 6v28" not in html, path
+    css = "".join((ROOT / "app" / "static" / "css" / f).read_text(encoding="utf-8") for f in ("main.css", "motion3.css", "motion3-ui.css", "fx-tuning.css"))
+    assert not re.search(r"\.rail\b", css) and ".px-3" not in css and ".drift .d3" not in css
 
 
 def test_the_sideways_shelf_lists_real_projects_as_plain_links(client):
@@ -147,14 +149,14 @@ def test_the_marquee_is_css_only_pauses_on_hover_and_stops_for_reduced_motion():
     assert "setInterval" not in (ROOT / "app" / "static" / "js" / "fx-scroll.js").read_text(encoding="utf-8")
 
 
-def test_the_rail_is_for_large_screens_and_browse_pages_only():
-    assert re.search(r'@media \(min-width: 1100px\) \{\s*html\.fx-on body\[data-page="browse"\] \.rail \{ display: block; position: fixed', VARIANTS)
-    assert re.search(r"\.rail \{ display: none; \}", VARIANTS)
+def test_the_home_page_still_has_its_nine_sections_without_the_rail(client):
+    home = client.get("/").get_data(as_text=True)
+    assert len(re.findall(r"<section\b", home[home.index("<main"):home.index("</main>")])) == 9
 
 
-def test_the_hero_layers_move_at_three_different_speeds_and_fx_lite_stops_them():
+def test_the_hero_layers_move_at_two_different_speeds_and_fx_lite_stops_them():
     speeds = re.findall(r"\.px-(\d) \{ --pm: (-?[\d.]+);", VARIANTS)
-    assert len({s for _, s in speeds}) == 3
+    assert len({s for _, s in speeds}) == 2          # three until v1.4 removed the crosshair layer
     assert 'html.fx-lite [data-fx="parallax"] { transform: none; }' in BARE
 
 

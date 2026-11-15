@@ -3,14 +3,11 @@
 {% from "_macros.html" import tile, fx_back, fx_panel, fx, fx_count, fx_lines, fx_words %}
 {% block title %}Project Store{% endblock %}
 {% block content %}
-<nav class="rail" aria-hidden="true"><ol>{% for i in range(9) %}<li></li>{% endfor %}</ol></nav>
 {# facts (test count, coverage) come from app/facts.json through the context processor; every other figure here is counted live. #}
 <section class="hero" data-motion="hero">
   <div class="hero-art" aria-hidden="true">
     <span class="px px-1" {{ fx('parallax') }}><svg viewBox="0 0 220 220" width="220" height="220" fill="none" stroke="currentColor" stroke-width="1.4">{% for r in range(5) %}{% for c in range(5) %}<circle cx="{{ 20 + c * 45 }}" cy="{{ 20 + r * 45 }}" r="{{ 3 if (r + c) % 2 else 6 }}"/>{% endfor %}{% endfor %}</svg></span>
-    <span class="px px-2" {{ fx('parallax') }}><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="70" height="70" class="art-hl"/><rect x="34" y="34" width="70" height="70" fill="none" class="art-ln" stroke-width="2"/></svg></span>
-    <span class="px px-3" {{ fx('parallax') }}><svg viewBox="0 0 160 40" width="160" height="40" fill="none" class="art-ln" stroke-width="2"><path d="M4 20h40M24 4v32"/><path d="M70 20h86" stroke-dasharray="6 6"/></svg></span>
-  </div>
+    <span class="px px-2" {{ fx('parallax') }}><svg viewBox="0 0 120 120" width="120" height="120"><rect x="14" y="14" width="70" height="70" class="art-hl"/><rect x="34" y="34" width="70" height="70" fill="none" class="art-ln" stroke-width="2"/></svg></span>  </div>
   <div class="wrap hero-grid">
     <div data-motion="hero-copy">
       <h1 class="h1" {{ fx('lines') }}>{{ fx_lines('Real', 'engineering', 'projects,', 'ready to run', 'and ready to', 'explain.') }}</h1>
@@ -100,7 +97,10 @@
 {% if latest | length >= 2 %}
 <section class="shelf" {{ fx('hscroll') }} aria-labelledby="shelf-h">
   <div class="hs-stage fx-stage">
-    <div class="wrap hs-head"><h2 class="h2" id="shelf-h">The whole shelf, side by side</h2><p class="muted">Scroll and the shelf slides along. On a phone, swipe it.</p></div>
+    <div class="wrap hs-head shelf-head">
+      <div><h2 class="h2" id="shelf-h">The whole shelf, side by side</h2><p class="muted">Scroll, swipe or drag it either way. Every project is a link.</p></div>
+      <button class="shelf-toggle" type="button" data-shelf-toggle data-state="playing" hidden><svg class="ico-pause" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><rect x="2" y="1" width="3.5" height="12"/><rect x="8.5" y="1" width="3.5" height="12"/></svg><svg class="ico-play" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M3 1l10 6-10 6z"/></svg><span data-label>Pause</span><span class="sr"> the moving shelf</span></button>
+    </div>
     <ul class="plain hs-track">
       {% for p in latest %}<li class="hs-card"><a href="{{ url_for('shop.product', slug=p.slug) }}"><span class="sc-art">{{ cover(p) }}</span><span class="sc-cap"><span>{{ p.title }}</span><span class="num">{{ p.price_paise | inr }}</span></span></a></li>{% endfor %}
     </ul>
@@ -147,3 +147,4 @@
   </div>
 </section>
 {% endblock %}
+{% block scripts %}{% if latest | length >= 2 %}<script src="{{ url_for('static', filename='js/fx-shelf.js') }}" defer></script>{% endif %}{% if contact_info.map_embed %}<script src="{{ url_for('static', filename='js/contact-map.js') }}" defer></script>{% endif %}{% endblock %}

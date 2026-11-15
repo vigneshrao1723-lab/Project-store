@@ -331,7 +331,8 @@ def test_order_rows_cascade_lightly_and_the_payment_sequence_is_left_alone(buyer
 
 def test_all_the_fx_scripts_together_stay_under_14_kb_gzipped():       # was 12 KB until the 3D background module (fx-bg.js) arrived
     sizes = {f.name: len(gzip.compress(f.read_bytes(), 9)) for f in (ROOT / "app" / "static" / "js").glob("fx-*.js")}
-    assert set(sizes) == {"fx-bg.js", "fx-cart.js", "fx-pay.js", "fx-scroll.js", "fx-ui.js"}, sizes
+    # fx-shelf.js (v1.4) fits inside the same 14 KB: long comments moved to docs/ARCHITECTURE.md ("Script notes") to make room
+    assert set(sizes) == {"fx-bg.js", "fx-cart.js", "fx-pay.js", "fx-scroll.js", "fx-shelf.js", "fx-ui.js"}, sizes
     assert sum(sizes.values()) < 14 * 1024, sizes
 
 

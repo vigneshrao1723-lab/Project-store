@@ -354,11 +354,22 @@ p.stat-value { margin: 0; font-weight: 700; }
 .connect { display: flex; gap: .7rem; flex-wrap: wrap; }
 .connect-btn { display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 50%; background: var(--amber); color: var(--ink); text-decoration: none; transition: transform .15s; }
 .connect-btn:hover { color: var(--ink); background: var(--white); }
-.pin-art { margin-top: auto; width: 100%; max-width: 280px; height: auto; align-self: flex-end; }
-.pin-art .pa-grid { fill: none; stroke: var(--white); stroke-opacity: .25; stroke-width: 1; }
-.pin-art .pa-road { fill: none; stroke: var(--amber); stroke-width: 3; stroke-linecap: round; }
-.pin-art .pa-pin { fill: var(--panel); stroke: var(--amber); stroke-width: 3; }
-.pin-art .pa-dot { fill: var(--amber); }
+.contact-rows .wa-link { display: block; margin-top: .2rem; font: 600 .92rem var(--font-display); }
+/* the map: a poster until the visitor asks for it, then a Google Maps iframe (hybrid view, city level) in the same box */
+.map { margin-top: auto; position: relative; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); min-height: 15rem; }
+.map-poster { position: relative; display: flex; flex-direction: column; gap: .5rem; padding: 1.1rem 1.2rem 1.2rem; color: var(--white); }
+.map-art { width: 100%; height: auto; max-height: 6rem; }
+.map-art .ma-grid { fill: none; stroke: var(--line); stroke-width: 1; }
+.map-art .ma-river { fill: none; stroke: var(--sunset); stroke-width: 2.5; stroke-linecap: round; }
+.map-art .ma-ring { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 5 6; }
+.map-city { margin: 0; font: 700 1.15rem/1.2 var(--font-display); color: var(--white); }
+.map-note { margin: 0; font-size: .92rem; color: var(--muted); }
+.map-actions { display: flex; flex-wrap: wrap; gap: .6rem 1.1rem; align-items: center; margin-top: .3rem; }
+.map-load[hidden] { display: none; }
+.contact-info .map-open { color: var(--white); font: 600 .95rem var(--font-display); }
+.map-frame { display: block; width: 100%; height: 100%; min-height: 15rem; border: 0; }
+.map.is-loaded { min-height: 18rem; }
+.map.is-loaded .map-poster { display: none; }
 .contact-section { border-top: 1px solid var(--line); }
 @media (max-width: 900px) { .contact { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .two-fields { grid-template-columns: 1fr; } }
@@ -615,3 +626,13 @@ body[data-bg="gl"][data-page="account"] main > .wrap { background: rgb(var(--pan
   .fx-back, .fx-panel { display: none; }
   .tile.is-active .tile-cover .cover, .plate.is-active .plate-cover .cover, .plate-link.is-active .plate-cover .cover, .tile:hover .tile-cover .cover { transform: none; }
 }
+
+/* ===== Home shelf: its head and the Pause / Play button for the endless loop (v1.4; the loop itself is in motion3.css and fx-shelf.js) ===== */
+.shelf-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem 1.2rem; }
+.shelf-toggle { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.6rem; padding: .45rem 1rem; border: 1px solid var(--muted); border-radius: 999px; background: var(--panel); color: var(--white); font: 700 .9rem var(--font-display); cursor: pointer; }
+.shelf-toggle:hover { border-color: var(--amber); }
+.shelf-toggle[hidden] { display: none; }
+.shelf-toggle svg { width: 14px; height: 14px; fill: currentColor; }
+.shelf-toggle .ico-play { display: none; }
+.shelf-toggle[data-state="paused"] .ico-play { display: inline; }
+.shelf-toggle[data-state="paused"] .ico-pause { display: none; }

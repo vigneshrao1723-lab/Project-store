@@ -1,7 +1,4 @@
-/* Add to cart on the product page, plus a pulse on the header count when it goes up.
-   It listens to what the page already does and changes nothing about it: the form's submit event starts the
-   animation, and the DOM updates app.js already makes (the note under the button, the header count) say how the
-   request ended. If this file never loads, the button works exactly as before. */
+/* Add to cart animation and the header count pulse; it only follows what app.js does. See docs/ARCHITECTURE.md. */
 (() => {
   "use strict";
   const calm = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
