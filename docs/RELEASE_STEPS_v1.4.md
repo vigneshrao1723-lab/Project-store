@@ -22,6 +22,7 @@ comments say.
 3. Check `.env` also has `CONTACT_NAME`, `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `SELLER_NAME`,
    `SELLER_ADDRESS` (written there in v1.4) and set `PUBLIC_BASE_URL` to the address buyers use (for the live stack on
    this machine: `http://localhost:8001`).
+4. Check that `DB_PASSWORD` and `DB_ROOT_PASSWORD` in `.env` are **not weak** (not `store`, `root`, `password` and the like). From v1.4 the one-shot `migrate` service refuses to start with a placeholder password, and on the live stack's first try it did (exit 1, nothing changed in the database). To change them: set both inside MySQL with `ALTER USER` (for `store` and for every `root` account), put the same values in `.env`, then recreate the db container (`docker compose up -d --no-deps --force-recreate db`) so its environment matches. Do it before step 6a's backup is taken or right after it, never print the values.
 
 ```powershell
 cd "C:\Users\Vignesh T\Documents\Project Store"
@@ -88,8 +89,9 @@ git checkout main
 git pull --ff-only origin main
 # 6a. Backup FIRST: the dump is written inside the container and copied out byte for byte
 New-Item -ItemType Directory -Force "..\ProjectStore-backups" | Out-Null
-# row counts before, to compare after (the root password stays in the container's environment, never on the screen)
-docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N -e "SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log)"'
+# row counts before, to compare after (the SQL goes in on stdin: Windows PowerShell 5.1 strips the inner double quotes
+# of a -e "..." argument; the root password stays in the container's environment, never on the screen)
+"SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log);" | docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N'
 docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines project_store > /tmp/before-v1.4.0.sql'
 docker compose cp db:/tmp/before-v1.4.0.sql "..\ProjectStore-backups\before-v1.4.0.sql"
 (Get-Item "..\ProjectStore-backups\before-v1.4.0.sql").Length    # must be well above zero
@@ -115,7 +117,7 @@ curl.exe -s http://localhost:8001/healthz    # {"status":"ok"}
 foreach ($p in "/", "/contact", "/privacy", "/cookies", "/sitemap.xml") { curl.exe -s -o NUL -w "$p %{http_code}`n" "http://localhost:8001$p" }   # all 200
 docker compose exec web python -c "from app import create_app; from app.extensions import db; a=create_app(); c=a.app_context(); c.push(); print(db.session.execute(db.text('SELECT CURRENT_USER()')).scalar())"   # store_app@%
 # row counts after: the same four numbers as before 6a (nothing is rewritten; only new tables and columns are added)
-docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N -e "SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log)"'
+"SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log);" | docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N'
 ```
 
 ### Going back after a bad rebuild
