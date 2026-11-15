@@ -185,9 +185,10 @@ def test_the_invoice_shows_the_seller_contact_and_grievance_officer(owner, buyer
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
     order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()["id"]
     buyer.post(f"/checkout/test-pay/{order}", data={"outcome": "pay"})
+    owner.config["PUBLIC_BASE_URL"] = "https://shop.example.test"        # the link uses the configured address, not the request host
     html = buyer.get(f"/orders/{order}/invoice").get_data(as_text=True)
     assert "Bengaluru, Karnataka, India" in html and "owner@example.test" in html and "+91 98450 12345" in html
-    assert "Grievance officer: Owner Name, owner@example.test." in html and "/refunds" in html
+    assert "Grievance officer: Owner Name, owner@example.test." in html and "https://shop.example.test/refunds" in html
 
 
 # ---- files for crawlers and browsers ----------------------------------------------------------------------------------
