@@ -1,6 +1,6 @@
 # Python 3.12.16 on Debian 13 (trixie), pinned by digest so every build starts from the same bytes; Dependabot
 # proposes the next digest. Checked 15 Nov 2026 (docs/SECURITY_AUDIT.md, item 5).
-FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
