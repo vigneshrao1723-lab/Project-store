@@ -11,7 +11,7 @@
   {% if m.subject %}<div><dt>Subject</dt><dd>{{ m.subject }}</dd></div>{% endif %}
 </dl>
 <h2 class="mt-24">Message text</h2>
-<pre class="msg-pre">{{ m.body_text or 'Not rendered yet.' }}</pre>
+<pre class="msg-pre" tabindex="0">{{ m.body_text or 'Not rendered yet.' }}</pre>
 {% if m.status in ('not_configured', 'failed', 'queued') %}
 <form method="post" action="{{ url_for('admin.outbox_sent', message_id=m.id) }}" class="mt-1">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

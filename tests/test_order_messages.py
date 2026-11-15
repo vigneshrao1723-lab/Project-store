@@ -367,7 +367,7 @@ def test_xss_in_titles_and_guides_is_escaped_everywhere(app, buyer, rag, smtp):
 def test_the_guide_renderer_allows_only_its_own_tags():
     html = str(render_guide("# Head\n## Sub\n- a\n- b\n1. one\n2. two\n```\n<x> & y\n```\nplain `code` <i>no</i>"))
     assert "<h3>Head</h3><h4>Sub</h4><ul><li>a</li><li>b</li></ul><ol><li>one</li><li>two</li></ol>" in html
-    assert "<pre><code>&lt;x&gt; &amp; y</code></pre>" in html and "<code>code</code>" in html and "<i>" not in html
+    assert "<pre tabindex=\"0\"><code>&lt;x&gt; &amp; y</code></pre>" in html and "<code>code</code>" in html and "<i>" not in html
 
 
 # ---- guides, admin, anonymising, practice mode ---------------------------------------------------------------------

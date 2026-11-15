@@ -41,7 +41,7 @@ def render_guide(text):
         line = raw.rstrip()
         if code is not None:
             if line.strip().startswith("```"):
-                out.append("<pre><code>" + "\n".join(str(escape(c)) for c in code) + "</code></pre>")
+                out.append("<pre tabindex=\"0\"><code>" + "\n".join(str(escape(c)) for c in code) + "</code></pre>")
                 code = None
             else:
                 code.append(raw)
@@ -71,6 +71,6 @@ def render_guide(text):
         flush_list()
         para.append(line.strip())
     if code is not None:                                  # an unclosed block still comes out escaped
-        out.append("<pre><code>" + "\n".join(str(escape(c)) for c in code) + "</code></pre>")
+        out.append("<pre tabindex=\"0\"><code>" + "\n".join(str(escape(c)) for c in code) + "</code></pre>")
     flush_para(); flush_list()
     return Markup("".join(out))  # nosec B704 - every piece above went through escape()
