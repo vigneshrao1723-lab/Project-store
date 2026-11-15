@@ -1,0 +1,14 @@
+{# Small pieces shared by the policy pages; import with context so `seller` is visible. #}
+{% macro reach() -%}
+{%- if seller.email %}email <a href="mailto:{{ seller.email }}">{{ seller.email }}</a> or use the <a href="{{ url_for('contact.page') }}">contact form</a>{% else %}use the <a href="{{ url_for('contact.page') }}">contact form</a>{% endif -%}
+{%- endmacro %}
+{% macro seller_block() -%}
+<dl>
+  <dt>Seller</dt><dd>{{ seller.name }}</dd>
+  {% if seller.address %}<dt>Address</dt><dd>{{ seller.address }}</dd>{% endif %}
+  {% if seller.email %}<dt>Email</dt><dd><a href="mailto:{{ seller.email }}">{{ seller.email }}</a></dd>{% endif %}
+  {% if seller.phone %}<dt>Phone</dt><dd>{{ seller.phone }}</dd>{% endif %}
+  <dt>Grievance officer</dt><dd>{{ seller.grievance_name or seller.name }}{% if seller.email %}, <a href="mailto:{{ seller.email }}">{{ seller.email }}</a>{% endif %}</dd>
+  {% if seller.gstin %}<dt>GSTIN</dt><dd>{{ seller.gstin }}</dd>{% endif %}
+</dl>
+{%- endmacro %}

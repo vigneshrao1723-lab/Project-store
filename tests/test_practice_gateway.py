@@ -10,7 +10,7 @@ from app.services import payments
 
 def _checkout(client, product):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": 1})
-    return client.post("/api/v1/checkout", json={"billing_name": "Buyer"})
+    return client.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"})
 
 
 @pytest.fixture()

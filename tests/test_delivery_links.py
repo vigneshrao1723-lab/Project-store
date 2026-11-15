@@ -9,7 +9,7 @@ SECRET_LINK = "https://files.example.com/private/kit-7f3a9c"
 
 def _start_order(client, product, qty=1):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": qty})
-    pay_url = client.post("/checkout", data={"billing_name": "Asha"}).headers["Location"]
+    pay_url = client.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"}).headers["Location"]
     return pay_url.rsplit("/", 1)[1]
 
 

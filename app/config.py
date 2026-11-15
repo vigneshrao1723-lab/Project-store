@@ -59,6 +59,8 @@ class Config:
         "contact_email": (3, 3600),        # the contact form, per sender email
         "notify_ip": (10, 86400),          # checkouts that ask for an invoice by email or WhatsApp, per address per day
         "notify_user": (5, 86400),         # the same, per account per day
+        "links": (60, 600),                # signed invoice and guide links and the stop page, per address (v1.4)
+        "api_write": (120, 600),           # any API POST, PUT, PATCH or DELETE, per account or address (v1.4)
     }
 
     # Sign-in is blocked for LOGIN_LOCKOUT_MINUTES after LOGIN_MAX_ATTEMPTS failures from one email + IP.
@@ -126,4 +128,9 @@ class TestConfig(Config):
     CONTACT_CITY = ""
     CONTACT_GITHUB = ""
     CONTACT_LINKEDIN = ""
+    CONTACT_NAME = ""
+    SELLER_NAME = "Project Store"
+    SELLER_ADDRESS = ""
+    SELLER_GSTIN = ""
+    TRUSTED_PROXIES = 0
     PUBLIC_BASE_URL = "http://localhost"

@@ -1,0 +1,25 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach with context %}
+{% block body %}
+<p>Every kit is a digital product. There is no shipping, no shipping charge and no delivery address.</p>
+
+<h2>How you receive it</h2>
+<ul>
+  <li><strong>On your order page.</strong> As soon as your payment is confirmed, your order page (Orders, then the order)
+  shows a download link for each project, the setup guide and the invoice. It stays there for as long as you have your
+  account.</li>
+  <li><strong>By email or WhatsApp, if you asked for it.</strong> If you ticked "Send my invoice and setup guide to this
+  contact" at checkout and the store has switched that channel on, one message is sent after the payment is confirmed,
+  never before. Its links to the invoice and the setup guide are signed and work for 7 days; the order page always
+  works. The order page tells you truthfully whether the message was sent.</li>
+</ul>
+
+<h2>When</h2>
+<p>Straight away: the payment confirmation from Razorpay (or the practice gateway in test mode) marks the order paid and
+the links appear. If a project's download link is not ready yet, the order page says "Link coming soon"; {{ reach() }}
+and we will send it.</p>
+
+<h2>If something goes wrong</h2>
+<p>If a link does not work, {{ reach() }} with your order number. A download that fails and cannot be fixed is covered by
+the <a href="{{ url_for('pages.refunds') }}">Refund and Cancellation Policy</a>.</p>
+{% endblock %}

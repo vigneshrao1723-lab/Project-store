@@ -85,7 +85,9 @@ def test_json_bodies_must_be_objects(buyer):
 
 def test_an_empty_body_is_an_empty_object(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id})
-    assert buyer.post("/api/v1/checkout").status_code == 201
+    r = buyer.post("/api/v1/checkout")                       # no body at all: read as {}, so the missing agreement is named
+    assert r.status_code == 400 and r.get_json()["fields"] == {"accept_terms": "Send accept_terms: true once the buyer has agreed."}
+    assert buyer.post("/api/v1/checkout", json={"accept_terms": True}).status_code == 201
 
 
 def test_quantities_above_the_line_cap_still_clamp(buyer, rag, app):
@@ -109,7 +111,7 @@ def test_site_errors_stay_html(client):
 
 def test_non_ascii_signatures_are_rejected_not_crashed(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id})
-    pid = buyer.post("/api/v1/checkout").get_json()
+    pid = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     gid = pid["payment"]["gateway_order_id"]
     r = buyer.post("/api/v1/checkout/verify", json={"order_id": pid["id"], "gateway_order_id": gid,
                                                       "payment_id": "pay_x", "signature": "é" * 64})
@@ -124,9 +126,9 @@ def test_non_ascii_signatures_are_rejected_not_crashed(buyer, rag):
 
 def test_checkout_form_caps_name_and_phone(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id})
-    assert buyer.post("/checkout", data={"billing_name": "n" * 121}).status_code == 400
-    assert buyer.post("/checkout", data={"billing_name": "n", "phone": "1" * 25}).status_code == 400
-    assert buyer.post("/checkout", data={"billing_name": "n" * 120, "phone": "1" * 24}).status_code == 302
+    assert buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "n" * 121}).status_code == 400
+    assert buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "n", "phone": "1" * 25}).status_code == 400
+    assert buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "n" * 120, "phone": "1" * 24}).status_code == 302
 
 
 def test_admin_stock_form_rejects_absurd_changes(admin_client, rag):
@@ -151,7 +153,7 @@ def test_registration_and_login_caps(client, user):
 
 def test_admin_cannot_use_customer_payment_routes_but_can_still_read_the_order(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id})
-    pid = buyer.post("/api/v1/checkout").get_json()["id"]
+    pid = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()["id"]
     assert admin_client.get(f"/checkout/pay/{pid}").status_code == 404
     assert admin_client.post(f"/checkout/cancel/{pid}").status_code == 404
     assert admin_client.get(f"/orders/{pid}").status_code == 200

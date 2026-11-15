@@ -48,7 +48,7 @@ def test_a10_registration_rejects_oversized_input(client, field, value):
                                   {"billing_name": ["list"]}, {"billing_name": {"a": 1}}, {"billing_name": "Okay", "phone": ["1"]}])
 def test_a10_api_checkout_rejects_oversized_or_wrongly_typed_fields(live_buyer, live_rag, body):
     live_buyer.post("/api/v1/cart/items", json={"product_id": live_rag.id, "qty": 1})
-    r = live_buyer.post("/api/v1/checkout", json=body)
+    r = live_buyer.post("/api/v1/checkout", json={**body, "accept_terms": True})       # agreed: only the field is wrong
     assert 400 <= r.status_code < 500, f"HTTP {r.status_code}: checkout accepted {str(body)[:60]}"
     assert db.session.scalar(db.select(db.func.count(Order.id))) == 0
 
@@ -56,7 +56,7 @@ def test_a10_api_checkout_rejects_oversized_or_wrongly_typed_fields(live_buyer, 
 @pytest.mark.parametrize("form", [{"billing_name": LONG}, {"billing_name": "Okay", "phone": LONG}])
 def test_a10_page_checkout_rejects_oversized_fields(buyer, rag, form):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    r = buyer.post("/checkout", data=form)
+    r = buyer.post("/checkout", data={**form, "accept_terms": "on"})
     assert r.status_code == 400 and db.session.scalar(db.select(db.func.count(Order.id))) == 0
 
 

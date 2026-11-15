@@ -8,8 +8,19 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Project Store{% endblock %}{% if self.title() | trim != 'Project Store' %} | Project Store{% endif %}</title>
   <meta name="description" content="{% block description %}Finished engineering projects with working source, a setup guide and architecture notes.{% endblock %}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Project Store">
+  <meta property="og:title" content="{{ self.title() | trim }}">
+  <meta property="og:description" content="{{ self.description() | trim }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="{{ theme_color }}">
   {% block head_extra %}{% endblock %}
   <link rel="icon" href="{{ favicon_href }}">
+  <link rel="icon" href="{{ url_for('pages.favicon') }}" type="image/svg+xml">
+  <link rel="manifest" href="{{ url_for('pages.manifest') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/fx-tuning.css') }}">
@@ -97,11 +108,18 @@
 
   <main id="main">{% block content %}{% endblock %}</main>
 
+  <aside class="cookie-note no-print" data-cookie-note aria-label="Cookie notice">
+    <div class="wrap cookie-inner">
+      <p>This site uses <strong>essential cookies only</strong>: one keeps you signed in and protects forms, and a second is added if you tick "Keep me signed in". No analytics, no advertising, no tracking. <a href="{{ url_for('pages.cookies') }}">Cookie Policy</a></p>
+      <button class="btn cookie-btn" type="button" data-cookie-ok hidden>OK<span class="sr">, hide this notice</span></button>
+    </div>
+  </aside>
   <footer class="site-footer"{% if fx_page != 'none' %} {{ fx('rise') }}{% endif %}>
     <div class="wrap foot">
       <div>
         <p class="wordmark small"><span>Project Store</span></p>
-        <p class="muted foot-copy">&copy; {{ current_year }} Project Store</p>
+        <p class="muted foot-copy">&copy; {{ current_year }} {{ seller.name }}</p>
+        <p class="muted foot-seller">Sold by {{ seller.name }}{% if seller.address %}, {{ seller.address }}{% endif %}.{% if seller.grievance_name and seller.email %} Grievance officer: {{ seller.grievance_name }}, <a href="mailto:{{ seller.email }}">{{ seller.email }}</a>.{% endif %}</p>
       </div>
       <div>
         <p class="foot-h">Shop</p>
@@ -109,12 +127,25 @@
           <li><a href="{{ url_for('shop.catalogue') }}">Catalogue</a></li>
           <li><a href="{{ url_for('account.orders') }}">Your orders</a></li>
           <li><a href="{{ url_for('cart.view') }}">Cart</a></li>
+          <li><a href="{{ url_for('pages.about') }}">About</a></li>
         </ul>
       </div>
       <div>
         <p class="foot-h">Help</p>
         <ul class="plain">
           <li><a href="{{ url_for('contact.page') }}">Contact</a></li>
+          <li><a href="{{ url_for('pages.faq') }}">FAQ</a></li>
+          <li><a href="{{ url_for('pages.delivery') }}">Delivery</a></li>
+          <li><a href="{{ url_for('pages.refunds') }}">Refunds and cancellation</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="foot-h">Legal</p>
+        <ul class="plain">
+          <li><a href="{{ url_for('pages.terms') }}">Terms of Sale</a></li>
+          <li><a href="{{ url_for('pages.privacy') }}">Privacy</a></li>
+          <li><a href="{{ url_for('pages.cookies') }}">Cookies</a></li>
+          <li><a href="{{ url_for('pages.accessibility') }}">Accessibility</a></li>
         </ul>
       </div>
     </div>

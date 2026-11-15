@@ -72,7 +72,7 @@ def test_a1_signed_in_pages_are_not_cached(buyer, rag):
     """Every response for a signed-in visitor, whatever the page type, status or method, must not be stored by the
     browser or a proxy (so Back after sign-out cannot show it) and must say it varies with the cookie."""
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    order_id = buyer.post("/api/v1/checkout", json={}).get_json()["id"]
+    order_id = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()["id"]
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
     for method, path in _page_types(order_id, rag.slug):
         resp = getattr(buyer, method)(path)

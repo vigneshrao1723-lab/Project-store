@@ -1,0 +1,32 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach with context %}
+{% block body %}
+<p>We want everyone to be able to browse, buy and download from Project Store. The site aims to meet the Web Content
+Accessibility Guidelines (WCAG) 2.2 at level AA.</p>
+
+<h2>What we do</h2>
+<ul>
+  <li>Every page is checked with the axe-core accessibility engine, with animation on and with reduced motion, and the
+  release is held until it reports no violations.</li>
+  <li>The whole purchase, from the product page to the paid order with its download link, works with the keyboard alone,
+  with a visible focus ring on every control and a "Skip to content" link on every page.</li>
+  <li>Every text and background colour pair in the palette is checked for contrast by a script in the project.</li>
+  <li>Form fields have labels, and errors are written next to the field and linked to it.</li>
+  <li>If your device asks for reduced motion, the scroll animations, the drifting shelf and the 3D background are not
+  started. The home page's moving shelf has a Pause button, and it stops while the pointer is over it or while
+  something inside it has keyboard focus. Copies of cards used to make the shelf loop are hidden from screen readers
+  and from the Tab key.</li>
+  <li>Decorative drawings are hidden from screen readers.</li>
+</ul>
+
+<h2>Known limits</h2>
+<ul>
+  <li>We have not yet tested with screen readers (NVDA, JAWS, VoiceOver or TalkBack), or in Firefox and Safari.</li>
+  <li>The Google map on the contact block comes from Google and we cannot change how it behaves; the city is written next
+  to it, and the "Open in Google Maps" link works without loading it.</li>
+  <li>Downloads are the projects' own files (source code and notes), which we have not checked for accessibility.</li>
+</ul>
+
+<h2>Tell us</h2>
+<p>If something is hard to use, {{ reach() }}. Tell us the page and what happened; we reply within 5 working days.</p>
+{% endblock %}

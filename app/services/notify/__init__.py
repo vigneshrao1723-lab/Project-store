@@ -108,10 +108,11 @@ def first_name(order):
 
 
 def invoice_context(order):
+    from ...context import seller_info
     from ..guide import render_guide
     return {
         "order": order, "first_name": first_name(order),
-        "seller": {k: current_app.config[f"SELLER_{k.upper()}"] for k in ("name", "address", "gstin")},
+        "seller": seller_info(current_app.config),
         "seller_email": current_app.config["CONTACT_EMAIL"],
         "guides": [(item.title, render_guide(item.product.setup_guide if item.product else ""),
                     (item.product.delivery_url if item.product else "")) for item in order.items],

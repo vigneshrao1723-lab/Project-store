@@ -101,12 +101,12 @@ def test_the_checkout_form_redirects_to_the_pay_page_of_the_unpaid_order(buyer, 
     soc.stock = 4
     db.session.commit()
     fill_cart(buyer, rag)
-    first = buyer.post("/checkout", data={"billing_name": "Asha"})
+    first = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"})
     first_url = first.headers["Location"]
     assert "/checkout/pay/" in first_url
     fill_cart(buyer, soc)
     for method in ("get", "post"):
-        r = getattr(buyer, method)("/checkout", **({"data": {"billing_name": "Asha"}} if method == "post" else {}))
+        r = getattr(buyer, method)("/checkout", **({"data": {"billing_name": "Asha", "accept_terms": "on"}} if method == "post" else {}))
         assert r.status_code == 302 and r.headers["Location"] == first_url, method
     page = buyer.get(first_url).get_data(as_text=True)
     assert "unpaid order" in page                         # the flashed explanation, shown on the pay page
@@ -115,17 +115,17 @@ def test_the_checkout_form_redirects_to_the_pay_page_of_the_unpaid_order(buyer, 
 
 def test_an_empty_cart_with_an_unpaid_order_still_goes_to_that_order(buyer, rag):
     fill_cart(buyer, rag)
-    url = buyer.post("/checkout", data={"billing_name": "Asha"}).headers["Location"]
+    url = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"}).headers["Location"]
     r = buyer.get("/checkout")
     assert r.status_code == 302 and r.headers["Location"] == url
 
 
 def test_after_cancelling_the_user_can_check_out_again(buyer, rag):
     fill_cart(buyer, rag)
-    url = buyer.post("/checkout", data={"billing_name": "Asha"}).headers["Location"]
+    url = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"}).headers["Location"]
     public_id = url.rsplit("/", 1)[1]
     buyer.post(f"/checkout/cancel/{public_id}")            # puts the items back in the cart
-    again = buyer.post("/checkout", data={"billing_name": "Asha"})
+    again = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"})
     assert again.status_code == 302 and "/checkout/pay/" in again.headers["Location"]
     assert again.headers["Location"] != url
 
@@ -136,10 +136,10 @@ def test_api_checkout_answers_409_with_the_existing_order_and_how_to_pay_it(buye
     soc.stock = 4
     db.session.commit()
     fill_cart(buyer, rag)
-    first = buyer.post("/api/v1/checkout", json={}).get_json()
+    first = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     fill_cart(buyer, soc)
     stock_before = stock_of(soc)
-    r = buyer.post("/api/v1/checkout", json={})
+    r = buyer.post("/api/v1/checkout", json={"accept_terms": True})
     body = r.get_json()
     assert r.status_code == 409 and "unpaid order" in body["error"]
     assert body["order"]["id"] == first["id"] and body["order"]["status"] == "pending"
@@ -150,6 +150,6 @@ def test_api_checkout_answers_409_with_the_existing_order_and_how_to_pay_it(buye
 
 def test_api_checkout_with_a_pending_order_and_an_empty_cart_reports_the_order_too(buyer, rag):
     fill_cart(buyer, rag)
-    first = buyer.post("/api/v1/checkout", json={}).get_json()
-    r = buyer.post("/api/v1/checkout", json={})
+    first = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
+    r = buyer.post("/api/v1/checkout", json={"accept_terms": True})
     assert r.status_code == 409 and r.get_json()["order"]["id"] == first["id"]

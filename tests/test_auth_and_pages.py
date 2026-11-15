@@ -115,7 +115,7 @@ def test_cart_is_private_to_each_user(app, buyer, rag):
 def test_checkout_pages_walk_through(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
     assert buyer.get("/cart").status_code == 200
-    r = buyer.post("/checkout", data={"billing_name": "Asha", "phone": ""})
+    r = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha", "phone": ""})
     assert r.status_code == 302 and "/checkout/pay/" in r.headers["Location"]
     pay_url = r.headers["Location"]
     assert b"Pay" in buyer.get(pay_url).data
@@ -127,7 +127,7 @@ def test_checkout_pages_walk_through(buyer, rag):
 
 def test_declined_test_payment_keeps_hold_and_cancel_refills_cart(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 2})
-    pay_url = buyer.post("/checkout", data={"billing_name": "Asha"}).headers["Location"]
+    pay_url = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha"}).headers["Location"]
     public_id = pay_url.rsplit("/", 1)[1]
     buyer.post(f"/checkout/test-pay/{public_id}", data={"outcome": "fail"})
     assert buyer.get("/api/v1/orders/" + public_id).get_json()["status"] == "pending"
@@ -138,7 +138,7 @@ def test_declined_test_payment_keeps_hold_and_cancel_refills_cart(buyer, rag):
 
 def test_checkout_requires_a_name(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    r = buyer.post("/checkout", data={"billing_name": "  "})
+    r = buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "  "})
     assert r.status_code == 400
     assert buyer.get("/api/v1/cart").get_json()["count"] == 1
 

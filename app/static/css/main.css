@@ -237,7 +237,7 @@ textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
 
 /* footer */
 .site-footer { border-top: 1px solid var(--line); margin-top: auto; background: var(--panel); }
-.foot { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem; padding-block: 2.4rem; font-size: .95rem; }
+.foot { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; padding-block: 2.4rem; font-size: .95rem; }
 .foot p { margin-bottom: .4rem; max-width: 26em; }
 .foot-h { font: 700 .9rem var(--font-display); margin-bottom: .6rem; }
 .foot li { padding: .15rem 0; font: 500 .95rem var(--font-display); }
@@ -636,3 +636,34 @@ body[data-bg="gl"][data-page="account"] main > .wrap { background: rgb(var(--pan
 .shelf-toggle .ico-play { display: none; }
 .shelf-toggle[data-state="paused"] .ico-play { display: inline; }
 .shelf-toggle[data-state="paused"] .ico-pause { display: none; }
+
+/* ===== Cookie notice (v1.4): essential cookies only, so it informs and can be dismissed; never covers the page ===== */
+.cookie-note { border-top: 1px solid var(--line); background: var(--panel); }
+.cookie-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.2rem; padding-block: .9rem; }
+.cookie-inner p { margin: 0; max-width: 60rem; font-size: .95rem; color: var(--muted); }
+.cookie-inner strong { color: var(--white); }
+.cookie-btn[hidden] { display: none; }
+html.cookie-ok .cookie-note { display: none; }
+.foot-seller { margin: .6rem 0 0; font-size: .88rem; max-width: 26rem; }
+@media print { .no-print { display: none !important; } }
+
+/* ===== Policy and information pages (v1.4) ===== */
+.policy { max-width: 46rem; }
+.policy h1 { margin-bottom: .4rem; }
+.policy-meta { margin: 0 0 1.6rem; color: var(--muted); font-size: .95rem; }
+.policy-meta p { margin: .2rem 0; }
+.policy-note { border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 10px; background: var(--panel); padding: .8rem 1rem; color: var(--white); }
+.policy h2 { margin: 2.2rem 0 .6rem; font-size: 1.35rem; }
+.policy h3 { margin: 1.4rem 0 .4rem; font-size: 1.08rem; }
+.policy p, .policy li { line-height: 1.65; }
+.policy ul { padding-left: 1.2rem; }
+.policy table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
+.policy th, .policy td { text-align: left; vertical-align: top; padding: .55rem .6rem; border-bottom: 1px solid var(--line); }
+.policy th { color: var(--white); font-family: var(--font-display); }
+.policy .table-wrap { overflow-x: auto; }
+.policy dt { font-weight: 700; color: var(--white); margin-top: 1rem; }
+.policy dd { margin: .2rem 0 0; }
+.err-actions { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-top: 1.4rem; }
+.err-search { display: flex; gap: .6rem; max-width: 30rem; margin-top: 1.2rem; }
+.err-search input { flex: 1; min-width: 0; background: var(--panel); border: 1.5px solid var(--muted); padding: .7rem .8rem; font: 500 1rem var(--font-display); color: var(--white); border-radius: 8px; }
+.err-search input::placeholder { color: var(--muted); }

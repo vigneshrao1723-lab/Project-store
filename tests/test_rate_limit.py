@@ -96,7 +96,7 @@ def test_the_registration_limit_is_per_address_not_global(tight):
 
 
 def test_api_refusals_are_json_with_retry_after(tight, buyer):
-    codes = [buyer.post("/api/v1/checkout", json={}) for _ in range(5)]
+    codes = [buyer.post("/api/v1/checkout", json={"accept_terms": True}) for _ in range(5)]
     refused = codes[-1]
     assert refused.status_code == 429 and refused.is_json and "Too many requests" in refused.get_json()["error"]
     assert int(refused.headers["Retry-After"]) >= 1
@@ -107,9 +107,9 @@ def test_checkout_and_verify_are_limited_per_user_not_per_address(tight, app, bu
     c2 = app.test_client()
     login(c2, "other@example.com")
     for _ in range(4):
-        buyer.post("/api/v1/checkout", json={})
-    assert buyer.post("/api/v1/checkout", json={}).status_code == 429
-    assert c2.post("/api/v1/checkout", json={}).status_code != 429          # same address, another account
+        buyer.post("/api/v1/checkout", json={"accept_terms": True})
+    assert buyer.post("/api/v1/checkout", json={"accept_terms": True}).status_code == 429
+    assert c2.post("/api/v1/checkout", json={"accept_terms": True}).status_code != 429          # same address, another account
     for _ in range(4):
         buyer.post("/checkout/verify", data={"public_id": "PS-AAAAAAA"})
     assert buyer.post("/checkout/verify", data={"public_id": "PS-AAAAAAA"}).status_code == 429

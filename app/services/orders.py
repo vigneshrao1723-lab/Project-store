@@ -59,8 +59,9 @@ def _log(product, delta, reason, order=None, note=""):
     )
 
 
-def create_order_from_cart(user, billing_name, phone="", contact=None):
-    """Turn the user's cart into a pending order and hold the stock. All or nothing."""
+def create_order_from_cart(user, billing_name, phone="", contact=None, terms_accepted=False):
+    """Turn the user's cart into a pending order and hold the stock. All or nothing. ``terms_accepted`` records when the
+    buyer agreed to the Terms of Sale, Privacy Policy and Refund Policy (the routes refuse a checkout without it)."""
     release_expired()
     user_id = user.id       # read it now: after the commit below the user object is expired, and touching it would reload it
     # Under MySQL's default isolation a transaction reads from the snapshot taken at its first plain SELECT, and
@@ -101,6 +102,7 @@ def create_order_from_cart(user, billing_name, phone="", contact=None):
             contact_channel=contact[0] if contact else "",
             contact_value=contact[1] if contact else "",
             contact_consent_at=utcnow() if contact else None,
+            terms_accepted_at=utcnow() if terms_accepted else None,
             total_paise=sum(products[i.product_id].price_paise * i.qty for i in items),
             expires_at=Order.new_expiry(current_app.config["RESERVATION_MINUTES"]),
         )

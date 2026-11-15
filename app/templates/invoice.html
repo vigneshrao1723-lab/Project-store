@@ -11,6 +11,7 @@
         <p class="wordmark small"><span>{{ seller.name }}</span></p>
         {% if seller.address %}<p class="inv-addr">{{ seller.address }}</p>{% endif %}
         {% if seller_email %}<p class="inv-addr">{{ seller_email }}</p>{% endif %}
+        {% if seller.phone %}<p class="inv-addr">{{ seller.phone }}</p>{% endif %}
         {% if seller.gstin %}<p class="inv-addr">GSTIN {{ seller.gstin }}</p>{% endif %}
       </div>
       <div class="inv-meta">
@@ -36,6 +37,7 @@
       </table>
     </div>
     <p class="muted inv-note">Amounts are in Indian rupees.{% if not seller.gstin %} This is a receipt for a digital project kit; no tax is itemised.{% endif %}</p>
+    <p class="muted inv-note">Sold by {{ seller.name }}{% if seller.address %}, {{ seller.address }}{% endif %}.{% if seller.grievance_name and seller_email %} Grievance officer: {{ seller.grievance_name }}, {{ seller_email }}.{% endif %} Refunds: see the Refund and Cancellation Policy at {{ url_for('pages.refunds', _external=True) }}.</p>
     <p class="inv-actions no-print">{% if not via_link %}<a href="{{ url_for('account.order_detail', public_id=order.public_id) }}">Back to the order</a>{% endif %}</p>
   </article>
 </div>

@@ -21,9 +21,17 @@ x-notify-env: &notify-env
   WHATSAPP_TEMPLATE_NAME: ${WHATSAPP_TEMPLATE_NAME:-}
   WHATSAPP_LANG: ${WHATSAPP_LANG:-}
 
+# Logs are rotated: at most three files of 10 MB per container (the Privacy Policy states this).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: mysql:8.4
+    logging: *logging
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: project_store
@@ -44,6 +52,7 @@ services:
 
   web:
     build: .
+    logging: *logging
     restart: unless-stopped
     depends_on:
       db:
@@ -69,6 +78,7 @@ services:
   # Frees stock held by unpaid orders even when nobody is browsing.
   sweeper:
     build: .
+    logging: *logging
     restart: unless-stopped
     depends_on:
       web:

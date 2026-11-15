@@ -1,0 +1,44 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach with context %}
+{% block body %}
+<p>Project Store uses <strong>essential cookies only</strong>. There are no analytics, advertising or tracking cookies,
+so there is nothing to opt in to or out of. This page lists every cookie the store sets, and the small amount of
+browser storage it uses, which never leaves your browser.</p>
+
+<h2>Cookies</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Duration</th><th scope="col">Essential?</th></tr></thead>
+  <tbody>
+    <tr><td><code>session</code></td><td>Keeps you signed in, holds the security token that protects every form from cross-site request forgery, and carries one-time notices such as "Payment received". Sent only to this site, not readable by scripts (HttpOnly), SameSite=Lax.</td><td>Until you close your browser</td><td>Yes</td></tr>
+    <tr><td><code>remember_token</code></td><td>Set only if you tick "Keep me signed in on this device": signs you back in after the browser is closed. Signing out removes it. HttpOnly, SameSite=Lax.</td><td>14 days</td><td>Yes (you ask for it)</td></tr>
+  </tbody>
+</table>
+</div>
+<p>When the store runs over HTTPS both cookies are also marked Secure.</p>
+
+<h2>Browser storage (not cookies)</h2>
+<p>These are kept by your browser for this site only. They hold no personal data and are never sent to the store or to
+anyone else.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Duration</th><th scope="col">Essential?</th></tr></thead>
+  <tbody>
+    <tr><td><code>ps-cookie-note</code> (localStorage)</td><td>Remembers that you pressed "OK" on the cookie notice, so it stops showing</td><td>Until you clear this site's data</td><td>Yes (records your choice)</td></tr>
+    <tr><td><code>ps-intro</code> (sessionStorage)</td><td>Plays the short intro animation once per tab instead of on every page</td><td>Until the tab is closed</td><td>No, but it stays in your browser</td></tr>
+    <tr><td><code>ps-paid-&lt;order&gt;</code> (sessionStorage)</td><td>Plays the payment tick animation once per order instead of on every reload</td><td>Until the tab is closed</td><td>No, but it stays in your browser</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Google Maps</h2>
+<p>The contact block shows a map of the city only if you press "Load map". Until then nothing is requested from Google.
+Once you load it, the map runs in a frame from Google, which may set its own cookies under Google's domains; those are
+covered by Google's privacy policy, not this one. The "Open in Google Maps" link takes you to Google's site.</p>
+
+<h2>Removing them</h2>
+<p>Signing out ends your session. You can delete this site's cookies and storage at any time in your browser's
+settings; you will then need to sign in again.</p>
+
+<p>Questions: {{ reach() }}.</p>
+{% endblock %}

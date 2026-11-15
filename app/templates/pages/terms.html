@@ -1,0 +1,65 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach, seller_block with context %}
+{% block body %}
+<p>These terms apply when you buy a project kit from Project Store. By ticking "I agree" at checkout you accept them,
+together with the <a href="{{ url_for('pages.privacy') }}">Privacy Policy</a>, the
+<a href="{{ url_for('pages.refunds') }}">Refund and Cancellation Policy</a> and the
+<a href="{{ url_for('pages.delivery') }}">Delivery Policy</a>.</p>
+
+<h2>The seller</h2>
+{{ seller_block() }}
+
+<h2>Your account</h2>
+<p>You need an account to buy. Keep your password to yourself; you are responsible for what is done with your account.
+You must be 18 or older, or buy with a parent's or guardian's permission.</p>
+
+<h2>What you buy</h2>
+<p>Each kit is a digital product: the project's working source code, a setup guide and the notes described on its
+product page. The product page says what is in the kit and what it is built with. Nothing physical is shipped.</p>
+
+<h2>Prices and payment</h2>
+<ul>
+  <li>Prices are in Indian rupees and the price on the product page is the full amount you pay. The amount charged is
+  worked out by the store from your order, never taken from your browser.{% if seller.gstin %} The invoice shows the
+  GST included.{% endif %}</li>
+  <li>Payments are taken by Razorpay. When the store shows a "Test mode" banner, payments use a practice gateway and no
+  real money moves.</li>
+  <li>When you continue to payment, the copies you chose are held for {{ reservation_minutes }} minutes. If the payment
+  does not arrive in time the hold ends and the copies go back on the shelf.</li>
+  <li>The contract is made when your payment is confirmed and your order shows "Paid".</li>
+</ul>
+
+<h2>Delivery</h2>
+<p>Your download link appears on your order page once the payment is confirmed. See the
+<a href="{{ url_for('pages.delivery') }}">Delivery Policy</a>.</p>
+
+<h2>Refunds and cancellation</h2>
+<p>You can cancel an unpaid order at any time. After payment, you can get a refund within {{ refund_days }} days if the
+download fails or the kit is materially not as described; otherwise a delivered digital kit is not refundable. See the
+<a href="{{ url_for('pages.refunds') }}">Refund and Cancellation Policy</a>.</p>
+
+<h2>What you may do with a kit</h2>
+<ul>
+  <li>You may use the source for your own learning, for your own projects and to show in your portfolio.</li>
+  <li>You may not resell, share or publish the kit as it is, or pass it off as a product of your own.</li>
+  <li>If you submit any part of a kit for a course or an exam, following your institution's rules on original work is
+  your responsibility.</li>
+</ul>
+
+<h2>Our responsibility</h2>
+<p>We describe each kit honestly and help you set it up if you get stuck ({{ reach() }}). The kits are provided as
+they are described on their product pages, without any further promise that they suit a particular purpose. To the
+extent the law allows, our total liability for an order is limited to the amount you paid for it. Nothing in these
+terms limits your rights under the Consumer Protection Act, 2019.</p>
+
+<h2>Complaints</h2>
+<p>To complain, {{ reach() }}. Our grievance officer, {{ seller.grievance_name or seller.name }}, acknowledges a complaint within 48 hours and aims
+to resolve it within one month.</p>
+
+<h2>Law</h2>
+<p>These terms are governed by the laws of India{% if contact_info.city %}, and the courts at {{ contact_info.city }}
+have jurisdiction{% endif %}.</p>
+
+<h2>Changes</h2>
+<p>We may update these terms; the version that applies to an order is the one shown when you placed it.</p>
+{% endblock %}

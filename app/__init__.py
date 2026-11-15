@@ -40,6 +40,34 @@ def secret_key_problem(key):
     return None
 
 
+_WEAK_DB_PASSWORDS = {"store", "root", "password", "mysql", "admin", "your-db-password", "changeme", "secret"}
+
+
+def config_problems(cfg):
+    """Everything that makes this configuration unsafe to run for real (outside tests and debug runs): a weak
+    SECRET_KEY, a MySQL URL with an empty or placeholder password, or a half-set or placeholder Razorpay key pair."""
+    problems = []
+    secret = secret_key_problem(cfg.get("SECRET_KEY"))
+    if secret:
+        problems.append(f"SECRET_KEY {secret}. Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"")
+    url = cfg.get("SQLALCHEMY_DATABASE_URI") or ""
+    if url.startswith("mysql"):
+        from sqlalchemy.engine import make_url
+        password = (make_url(url).password or "").strip()
+        if not password or password.lower() in _WEAK_DB_PASSWORDS or any(m in password.lower() for m in _PLACEHOLDER_MARKERS):
+            problems.append("the database password in DATABASE_URL is empty or a placeholder")
+    key_id, key_secret = cfg.get("RAZORPAY_KEY_ID") or "", cfg.get("RAZORPAY_KEY_SECRET") or ""
+    if bool(key_id) != bool(key_secret):
+        problems.append("set both RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET, or neither")
+    for name in ("RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"):
+        value = (cfg.get(name) or "").lower()
+        if value and any(m in value for m in _PLACEHOLDER_MARKERS):
+            problems.append(f"{name} is a placeholder value")
+    if key_id and not key_id.startswith(("rzp_test_", "rzp_live_")):
+        problems.append("RAZORPAY_KEY_ID does not look like a Razorpay key (rzp_test_... or rzp_live_...)")
+    return problems
+
+
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_object(config or Config)
@@ -50,10 +78,9 @@ def create_app(config=None):
         Path(app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "")).parent.mkdir(parents=True, exist_ok=True)
 
     if not app.testing and not app.debug:
-        problem = secret_key_problem(app.config["SECRET_KEY"])
-        if problem:
-            raise RuntimeError(f"SECRET_KEY {problem}. Generate one with: "
-                               'python -c "import secrets; print(secrets.token_hex(32))"')
+        problems = config_problems(app.config)
+        if problems:                               # names the setting, never prints its value
+            raise RuntimeError("Refusing to start: " + "; ".join(problems))
 
     proxies = int(app.config.get("TRUSTED_PROXIES") or 0)
     if proxies > 0:
@@ -73,10 +100,10 @@ def create_app(config=None):
     # cover_svg() escapes everything it was given, so the finished drawing is safe to mark as HTML.
     app.jinja_env.globals["cover"] = lambda p: Markup(cover_svg(p.slug, p.category.cover_kind, p.title))  # nosec B704
 
-    from .blueprints import account, admin, api, auth, cart, checkout, contact, orderdocs, shop, webhooks
+    from .blueprints import account, admin, api, auth, cart, checkout, contact, orderdocs, pages, shop, webhooks
 
     for bp in (shop.bp, auth.bp, cart.bp, checkout.bp, account.bp, admin.bp, api.bp, webhooks.bp, contact.bp,
-               orderdocs.bp):
+               orderdocs.bp, pages.bp):
         app.register_blueprint(bp)
     csrf.exempt(webhooks.bp)
 
@@ -197,6 +224,17 @@ def register_cli(app):
             raise click.ClickException("No such order.")
         anonymise_order(order.id)
         click.echo(f"Order {public_id} anonymised.")
+
+    @app.cli.command("anonymise-account")
+    @click.argument("email")
+    def anonymise_account_cmd(email):
+        """Erase a person's account on request: anonymise all its orders and remove its name, email and password."""
+        from .services.privacy import anonymise_account
+        user = db.session.scalar(db.select(User).where(User.email == email.strip().lower()))
+        if user is None:
+            raise click.ClickException("No such account.")
+        anonymise_account(user.id)
+        click.echo("Account anonymised.")
 
     @app.cli.command("release-expired")
     def release_expired_cmd():

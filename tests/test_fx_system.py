@@ -62,7 +62,7 @@ def fx_elements(html):
 @pytest.fixture()
 def order_id(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    return buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    return buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
 
 
 def pages(app, buyer, admin_client, rag, order_id):
@@ -115,7 +115,7 @@ def test_admin_may_use_one_shot_words_but_never_scroll_linked_pinned_or_pointer_
 
 def test_the_admin_pages_that_render_only_use_those_words_and_have_the_footer_rise_and_counters(admin_client, app, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"})
+    buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"})
     for path in ("/admin", "/admin/orders", "/admin/products"):
         html = admin_client.get(path).get_data(as_text=True)
         assert set(re.findall(r'data-fx="([\w-]+)"', html)) <= ADMIN_WORDS, path

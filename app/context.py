@@ -19,16 +19,19 @@ FACTS = json.loads((Path(__file__).parent / "facts.json").read_text(encoding="ut
 FX_OFF = json.loads((Path(__file__).parent / "fx.json").read_text(encoding="utf-8"))["off"]
 
 
-def _favicon():
-    """The tab icon as a data URI, painted with the palette read from tokens.css, so no colour is written twice."""
-    css = (Path(__file__).parent / "static" / "css" / "tokens.css").read_text(encoding="utf-8")
-    tok = dict(re.findall(r"--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})", css))
-    svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%s'/>"
-           "<path d='M6 6h13l7 7v13H6z' fill='%s'/></svg>") % (tok["violet"], tok["amber"])
-    return "data:image/svg+xml," + quote(svg, safe="/:=' ")
+# The palette, read once from tokens.css (the only place a colour is written), for the favicon and the manifest.
+TOKENS = dict(re.findall(r"--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})",
+                         (Path(__file__).parent / "static" / "css" / "tokens.css").read_text(encoding="utf-8")))
 
 
-FAVICON = _favicon()
+def _favicon_svg():
+    """The tab icon, painted with the palette from tokens.css, so no colour is written twice."""
+    return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%s'/>"
+            "<path d='M6 6h13l7 7v13H6z' fill='%s'/></svg>") % (TOKENS["violet"], TOKENS["amber"])
+
+
+FAVICON_SVG = _favicon_svg()
+FAVICON = "data:image/svg+xml," + quote(FAVICON_SVG, safe="/:=' ")
 
 
 MAP_EMBED = "https://maps.google.com/maps?q={q}&t=h&z=12&output=embed"      # hybrid view, city level, no API key
@@ -68,6 +71,15 @@ def seller_info(cfg):
             "email": cfg.get("CONTACT_EMAIL", ""), "phone": cfg.get("CONTACT_PHONE", "")}
 
 
+def canonical_url():
+    """The one address a page should be listed under: PUBLIC_BASE_URL plus the path, without tracking or sort
+    parameters. The catalogue keeps its field (?category=...), which is a page of its own."""
+    url = current_app.config["PUBLIC_BASE_URL"] + request.path
+    if request.endpoint == "shop.catalogue" and request.args.get("category"):
+        url += "?category=" + quote(request.args.get("category", "")[:80], safe="")
+    return url
+
+
 def register_context(app):
     @app.context_processor
     def inject():
@@ -82,4 +94,4 @@ def register_context(app):
                 "reservation_minutes": current_app.config["RESERVATION_MINUTES"], "current_path": request.path,
                 "facts": FACTS, "fx_off": FX_OFF, "favicon_href": FAVICON,
                 "contact_info": contact_info(current_app.config), "seller": seller_info(current_app.config),
-                "current_year": utcnow().year}
+                "current_year": utcnow().year, "canonical_url": canonical_url(), "theme_color": TOKENS["night"]}

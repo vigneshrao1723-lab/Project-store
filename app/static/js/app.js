@@ -142,3 +142,15 @@
     if (event.persisted) window.location.reload();
   });
 })();
+
+// The cookie notice (v1.4): the site sets essential cookies only, so the notice just informs; "OK" hides it for good on
+// this device (localStorage "ps-cookie-note"). Without the script it stays as a plain line above the footer.
+(() => {
+  const note = document.querySelector("[data-cookie-note]"), ok = note && note.querySelector("[data-cookie-ok]");
+  if (!ok) return;
+  ok.hidden = false;
+  ok.addEventListener("click", () => {
+    try { window.localStorage.setItem("ps-cookie-note", "ok"); } catch (e) { /* not remembered: it shows again next time */ }
+    document.documentElement.classList.add("cookie-ok");
+  });
+})();

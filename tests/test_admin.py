@@ -52,14 +52,14 @@ def test_stock_adjust_writes_ledger_and_blocks_negative(admin_client, rag):
 
 def test_stats_endpoint(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    buyer.post("/api/v1/checkout", json={})
+    buyer.post("/api/v1/checkout", json={"accept_terms": True})
     stats = admin_client.get("/api/v1/admin/stats").get_json()
     assert stats["orders_by_status"]["pending"] == 1 and stats["revenue_paise"] == 0
 
 
 def test_admin_pages_render(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    order = buyer.post("/api/v1/checkout", json={}).get_json()
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     for url in ["/admin", "/admin/products", "/admin/products/new", f"/admin/products/{rag.id}",
                 "/admin/orders", "/admin/orders?status=pending", f"/admin/orders/{order['id']}"]:
         assert admin_client.get(url).status_code == 200, url
@@ -80,7 +80,7 @@ def test_admin_html_product_form_round_trip(admin_client):
 
 def test_admin_cancels_pending_and_resolves_refund(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 2})
-    order = buyer.post("/api/v1/checkout", json={}).get_json()
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     before = db.session.get(Product, rag.id).stock
     admin_client.post(f"/admin/orders/{order['id']}/cancel")
     db.session.expire_all()

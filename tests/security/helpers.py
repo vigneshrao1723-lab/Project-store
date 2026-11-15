@@ -54,7 +54,7 @@ def csrf_login(client, email="buyer@example.com", password="correct-horse"):
 
 def start_order(client, product, qty=1, name="Victim Person"):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": qty})
-    r = client.post("/api/v1/checkout", json={"billing_name": name})
+    r = client.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": name})
     assert r.status_code == 201, r.get_data(as_text=True)
     return r.get_json()
 

@@ -25,7 +25,7 @@ def check(html, where):
 
 def test_customer_pages_show_the_title_as_text(buyer, odd_titled):
     buyer.post("/api/v1/cart/items", json={"product_id": odd_titled.id, "qty": 1})
-    order = buyer.post("/api/v1/checkout", json={}).get_json()["id"]
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()["id"]
     buyer.post("/api/v1/cart/items", json={"product_id": odd_titled.id, "qty": 1})
     pages = ["/", "/catalogue", "/catalogue?q=quotes", f"/p/{odd_titled.slug}", "/cart", "/orders", f"/orders/{order}",
              f"/checkout/pay/{order}"]
@@ -37,7 +37,7 @@ def test_customer_pages_show_the_title_as_text(buyer, odd_titled):
 
 def test_admin_pages_show_the_title_as_text(admin_client, buyer, odd_titled):
     buyer.post("/api/v1/cart/items", json={"product_id": odd_titled.id, "qty": 1})
-    order = buyer.post("/api/v1/checkout", json={}).get_json()["id"]
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()["id"]
     for path in ("/admin/products", f"/admin/orders/{order}"):
         check(admin_client.get(path).get_data(as_text=True), path)
     edit = admin_client.get(f"/admin/products/{odd_titled.id}").get_data(as_text=True)

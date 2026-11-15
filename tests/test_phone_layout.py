@@ -75,12 +75,12 @@ def labelled(html):
 
 def test_orders_table_is_stackable_and_labelled(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    buyer.post("/api/v1/checkout", json={})
+    buyer.post("/api/v1/checkout", json={"accept_terms": True})
     labelled(buyer.get("/orders").get_data(as_text=True))
 
 
 def test_admin_tables_are_stackable_and_labelled(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    buyer.post("/api/v1/checkout", json={})
+    buyer.post("/api/v1/checkout", json={"accept_terms": True})
     labelled(admin_client.get("/admin/orders").get_data(as_text=True))
     labelled(admin_client.get("/admin/products").get_data(as_text=True))

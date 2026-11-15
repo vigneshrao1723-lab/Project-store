@@ -225,6 +225,8 @@ class Order(db.Model):
     contact_channel = db.Column(db.String(16), nullable=False, default="", server_default="")
     contact_value = db.Column(db.String(190), nullable=False, default="", server_default="")
     contact_consent_at = db.Column(db.DateTime)
+    # v1.4: when the buyer ticked "I agree to the Terms of Sale, Privacy Policy and Refund Policy" at checkout
+    terms_accepted_at = db.Column(db.DateTime)
 
     user = db.relationship("User", back_populates="orders")
     items = db.relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")

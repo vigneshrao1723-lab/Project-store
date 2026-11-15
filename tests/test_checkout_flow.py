@@ -14,7 +14,7 @@ def add(client, product, qty=1):
 
 
 def checkout(client, **body):
-    return client.post("/api/v1/checkout", json=body)
+    return client.post("/api/v1/checkout", json={"accept_terms": True, **body})
 
 
 def pay(client, order_json):

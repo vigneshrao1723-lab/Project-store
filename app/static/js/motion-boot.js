@@ -12,3 +12,8 @@
     }
   } catch (e) { /* no storage, no loader */ }
 })();
+// The cookie notice (v1.4): once dismissed it stays hidden, decided here so it never flashes. localStorage only
+// remembers the dismissal on this device; it is listed in the Cookie Policy.
+(function () {
+  try { if (window.localStorage.getItem("ps-cookie-note") === "ok") document.documentElement.classList.add("cookie-ok"); } catch (e) { /* storage blocked: the notice shows */ }
+})();

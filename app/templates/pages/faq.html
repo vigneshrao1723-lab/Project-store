@@ -1,0 +1,43 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach with context %}
+{% block body %}
+<dl>
+  <dt>What exactly do I get?</dt>
+  <dd>The project's source code, a setup guide and notes on how it is built. Each product page lists what its kit contains.
+  See <a href="{{ url_for('pages.about') }}">About</a>.</dd>
+
+  <dt>How is it delivered?</dt>
+  <dd>As a download link on your order page, as soon as your payment is confirmed. Nothing is shipped. See the
+  <a href="{{ url_for('pages.delivery') }}">Delivery Policy</a>.</dd>
+
+  <dt>Do I need an account?</dt>
+  <dd>Yes, to buy: your orders, downloads and invoices are kept under it. Browsing needs no account.</dd>
+
+  <dt>How do I pay?</dt>
+  <dd>Through Razorpay, with the methods its checkout offers you. Your card or UPI details go to Razorpay, never to this
+  store. When a "Test mode" banner is showing, payments use a practice gateway and no real money moves.</dd>
+
+  <dt>Why does checkout say my copy is held?</dt>
+  <dd>Continuing to payment holds your copies for {{ reservation_minutes }} minutes, so nobody else can buy the last copy
+  while you pay. If the payment does not arrive in time, the hold ends.</dd>
+
+  <dt>Can I cancel or get a refund?</dt>
+  <dd>An unpaid order can be cancelled any time. After payment, you can get a refund within {{ refund_days }} days if the
+  download fails or the kit is materially not as described. See the
+  <a href="{{ url_for('pages.refunds') }}">Refund and Cancellation Policy</a>.</dd>
+
+  <dt>Will you send me the invoice?</dt>
+  <dd>The invoice is always on your order page. At checkout you can also ask for it, with the setup guide, by email or
+  WhatsApp; the message is sent once, after payment, if the store has switched that channel on.</dd>
+
+  <dt>How do I stop messages?</dt>
+  <dd>Every message has a "stop messages" link. Press its button and that contact is never messaged again.</dd>
+
+  <dt>Can you build something custom?</dt>
+  <dd>Ask: {{ reach() }}.</dd>
+
+  <dt>What do you do with my data?</dt>
+  <dd>Only what is needed to sell and deliver the kit; no analytics and no tracking. See the
+  <a href="{{ url_for('pages.privacy') }}">Privacy Policy</a> and the <a href="{{ url_for('pages.cookies') }}">Cookie Policy</a>.</dd>
+</dl>
+{% endblock %}

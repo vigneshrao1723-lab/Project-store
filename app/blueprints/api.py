@@ -21,6 +21,14 @@ from ..validation import MAX_NAME, MAX_NOTE, MAX_PHONE, MAX_STOCK_DELTA, InputEr
 bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
 
+@bp.before_request
+def limit_writes():
+    """Every write through the API counts against one limit per account (or address when signed out), on top of the
+    stricter checkout and payment limits (v1.4)."""
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        rate_limit.enforce("api_write")
+
+
 def error(message, status=400, fields=None):
     body = {"error": message}
     if fields:
@@ -140,13 +148,17 @@ def cart_remove(product_id):
 @bp.post("/checkout")
 @login_required_json
 def checkout():
-    """Hold stock and create a pending order. The client then pays and calls /checkout/verify."""
+    """Hold stock and create a pending order. The client then pays and calls /checkout/verify. The body must carry
+    "accept_terms": true: the buyer agreed to the Terms of Sale, Privacy Policy and Refund Policy (v1.4)."""
     rate_limit.enforce("checkout")
     body = json_body()
     name = text(body.get("billing_name"), MAX_NAME, "The billing name") or current_user.name
     phone = text(body.get("phone"), MAX_PHONE, "The phone number")
+    if body.get("accept_terms") is not True:          # the client shows the terms and sends the buyer's agreement
+        return error("Agree to the Terms of Sale, the Privacy Policy and the Refund Policy to check out.", 400,
+                     {"accept_terms": "Send accept_terms: true once the buyer has agreed."})
     try:
-        order = order_svc.create_order_from_cart(current_user, name, phone)
+        order = order_svc.create_order_from_cart(current_user, name, phone, terms_accepted=True)
     except order_svc.PendingOrderExists as exc:
         body = {"error": exc.messages[0], "order": {**order_json(exc.order), "payment": payment_json(exc.order)}}
         return jsonify(body), 409

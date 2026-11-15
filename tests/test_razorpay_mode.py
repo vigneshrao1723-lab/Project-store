@@ -58,7 +58,7 @@ def test_checkout_registers_order_with_razorpay_and_pay_page_uses_it(rzp_client,
     monkeypatch.setattr("app.services.payments.requests.post", fake_post)
 
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 2})
-    r = rzp_client.post("/checkout", data={"billing_name": "Asha", "phone": "9999999999"})
+    r = rzp_client.post("/checkout", data={"accept_terms": "on", "billing_name": "Asha", "phone": "9999999999"})
     pay_url = r.headers["Location"]
     assert seen["auth"] == (KEY, SECRET) and seen["body"]["currency"] == "INR"
     assert seen["body"]["amount"] == 2 * 299900          # amount comes from the server, never the browser
@@ -77,7 +77,7 @@ def test_razorpay_signature_flow(rzp_client, monkeypatch):
     monkeypatch.setattr("app.services.payments.requests.post", lambda *a, **k: FakeResp({"id": "order_RZP9"}))
     monkeypatch.setattr("app.services.payments.requests.get", lambda *a, **k: FakeResp(captured()))
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 1})
-    public_id = rzp_client.post("/checkout", data={"billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
+    public_id = rzp_client.post("/checkout", data={"accept_terms": "on", "billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
 
     bad = rzp_client.post("/checkout/verify", data={"public_id": public_id, "razorpay_order_id": "order_RZP9",
                                                     "razorpay_payment_id": "pay_1", "razorpay_signature": "nope"})
@@ -94,7 +94,7 @@ def test_razorpay_signature_flow(rzp_client, monkeypatch):
 def test_test_gateway_is_disabled_when_razorpay_is_configured(rzp_client, monkeypatch):
     monkeypatch.setattr("app.services.payments.requests.post", lambda *a, **k: FakeResp({"id": "order_X"}))
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 1})
-    public_id = rzp_client.post("/checkout", data={"billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
+    public_id = rzp_client.post("/checkout", data={"accept_terms": "on", "billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
     assert rzp_client.post(f"/checkout/test-pay/{public_id}", data={"outcome": "pay"}).status_code == 404
 
 
@@ -104,7 +104,7 @@ def test_gateway_outage_releases_stock_and_restores_cart(rzp_client, monkeypatch
     monkeypatch.setattr("app.services.payments.requests.post", boom)
     before = db.session.get(Product, rag_id()).stock
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 2})
-    r = rzp_client.post("/checkout", data={"billing_name": "A"})
+    r = rzp_client.post("/checkout", data={"accept_terms": "on", "billing_name": "A"})
     assert r.headers["Location"].endswith("/cart")
     db.session.expire_all()
     assert db.session.get(Product, rag_id()).stock == before
@@ -115,7 +115,7 @@ def test_gateway_outage_releases_stock_and_restores_cart(rzp_client, monkeypatch
 def test_api_checkout_reports_502_on_gateway_outage(rzp_client, monkeypatch):
     monkeypatch.setattr("app.services.payments.requests.post", lambda *a, **k: FakeResp({}, ok=False))
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 1})
-    assert rzp_client.post("/api/v1/checkout", json={}).status_code == 502
+    assert rzp_client.post("/api/v1/checkout", json={"accept_terms": True}).status_code == 502
 
 
 # ---- the browser's "success" is checked against Razorpay before the order is marked paid ------------------------
@@ -124,7 +124,7 @@ def test_api_checkout_reports_502_on_gateway_outage(rzp_client, monkeypatch):
 def pending_order(rzp_client, monkeypatch):
     monkeypatch.setattr("app.services.payments.requests.post", lambda *a, **k: FakeResp({"id": "order_RZP9"}))
     rzp_client.post("/api/v1/cart/items", json={"product_id": rag_id(), "qty": 1})
-    public_id = rzp_client.post("/checkout", data={"billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
+    public_id = rzp_client.post("/checkout", data={"accept_terms": "on", "billing_name": "A"}).headers["Location"].rsplit("/", 1)[1]
     sig = hmac.new(SECRET.encode(), b"order_RZP9|pay_1", hashlib.sha256).hexdigest()
     return public_id, {"public_id": public_id, "razorpay_order_id": "order_RZP9", "razorpay_payment_id": "pay_1",
                        "razorpay_signature": sig}

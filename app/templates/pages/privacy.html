@@ -1,0 +1,83 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach, seller_block with context %}
+{% block body %}
+<p>This policy explains what personal data Project Store keeps, why, for how long, who else handles it, and the rights you
+have under India's Digital Personal Data Protection Act, 2023 (the DPDP Act). It describes what the store's software
+actually does; nothing here is aspirational.</p>
+
+<h2>Who is responsible</h2>
+<p>{{ seller.name }} runs this store and decides how your data is used (the "Data Fiduciary" under the DPDP Act).</p>
+{{ seller_block() }}
+
+<h2>What we keep, and why</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th scope="col">Data</th><th scope="col">When</th><th scope="col">Why</th><th scope="col">How long</th></tr></thead>
+  <tbody>
+    <tr><td>Your name, email address and a scrypt hash of your password (never the password itself)</td><td>When you create an account</td><td>To sign you in and show your orders</td><td>Until you ask us to remove your account</td></tr>
+    <tr><td>Orders: the name on the order, the projects, prices, totals, dates, status, payment references from the gateway, and when you agreed to the Terms of Sale</td><td>When you check out</td><td>To deliver what you bought, issue the invoice, handle refunds and keep sales records</td><td>As long as the law requires sales records to be kept; the name and contact can be removed earlier on request (see below)</td></tr>
+    <tr><td>The email address or WhatsApp number you chose for your invoice, and when you agreed to receive it</td><td>Only if you tick "Send my invoice and setup guide to this contact" at checkout</td><td>To send one message with the invoice and setup guide after payment</td><td>With the order; removed on request</td></tr>
+    <tr><td>Messages we send you (the recipient and the text) and their delivery status</td><td>After a paid order that asked for a message</td><td>To retry a failed send and to show you whether it was sent</td><td>With the order; the recipient and text are removed on request</td></tr>
+    <tr><td>Your cart</td><td>While you shop, signed in</td><td>To remember what you are buying</td><td>Until you check out or remove the items</td></tr>
+    <tr><td>Contact form messages: first and last name, email, subject, message, and that you agreed to be contacted</td><td>When you send the contact form</td><td>To reply to you</td><td>Until we delete them; there is no automatic deletion yet</td></tr>
+    <tr><td>A "do not contact" list</td><td>When you use a stop link</td><td>To make sure we never message that contact again</td><td>Kept, but it holds only a keyed hash of the contact, not the contact itself</td></tr>
+    <tr><td>Your IP address, the email typed into the sign-in form, and a count of failed attempts</td><td>When a sign-in fails</td><td>To slow down password guessing</td><td>Deleted when you sign in successfully, or after 10 minutes without another failure</td></tr>
+    <tr><td>Your IP address (or your account number) and a count of recent requests</td><td>When you register, check out, confirm a payment, sign in, send the contact form or ask for order messages</td><td>Rate limits that stop abuse</td><td>Deleted after one day</td></tr>
+    <tr><td>Server logs: the address that connected, the time, the page asked for, the response, and your browser's user agent</td><td>Every request</td><td>Security and fixing faults</td><td>Rotated by the server: at most three files of 10 MB each are kept</td></tr>
+  </tbody>
+</table>
+</div>
+<p>We do not use analytics, advertising or tracking of any kind, and we do not sell or rent personal data. Card, UPI and
+bank details are entered on Razorpay's own checkout and never reach this store.</p>
+
+<h2>Who else handles your data (processors)</h2>
+<ul>
+  <li><strong>Razorpay</strong> (payments, when real payments are switched on): receives the order number and amount, and the name, email and phone number on the order so its checkout can be prefilled. Razorpay processes your payment details itself. In the store's test mode no real payment is taken and nothing is sent to Razorpay.</li>
+  <li><strong>The email provider</strong> (only if the store has switched on email messages): receives the address you chose and the message with your invoice and setup guide links.</li>
+  <li><strong>Meta, through the WhatsApp Business Platform</strong> (only if the store has switched on WhatsApp messages): receives the number you chose, your first name, your order number and the links in the message.</li>
+  <li><strong>Google Maps</strong> (only if you press "Load map" on the contact block): your browser then connects to Google, which receives your IP address and browser details and may set its own cookies. Until you press the button nothing is requested from Google.</li>
+  <li><strong>The server that hosts the store</strong>: stores the database and the logs described above.</li>
+</ul>
+<p>Some of these companies may process data outside India. We use each only for the purpose stated.</p>
+
+<h2>Your rights under the DPDP Act</h2>
+<p>You can ask us to:</p>
+<ul>
+  <li>tell you what personal data we hold about you and how we use it, and who we have shared it with (right to access information);</li>
+  <li>correct, complete or update it (right to correction);</li>
+  <li>erase it where we no longer need it for the purpose you gave it for or the law no longer requires us to keep it (right to erasure);</li>
+  <li>withdraw a consent you gave, for example to order messages, as easily as you gave it;</li>
+  <li>nominate someone to exercise these rights for you if you die or become unable to;</li>
+  <li>resolve a complaint (right to grievance redressal).</li>
+</ul>
+<p>To use any of these rights, {{ reach() }}. We acknowledge every request within 48 hours and aim to complete it within
+one month. If you are not satisfied with our answer you can complain to the Data Protection Board of India.</p>
+
+<h3>Stopping order messages</h3>
+<p>Every invoice message has a "stop messages" link (<code>/stop/...</code>). Pressing its button puts that contact on the
+do-not-contact list at once, and we will never message it again. You can also simply ask us.</p>
+
+<h3>Deleting your data</h3>
+<p>Ask us as above. For an order we run the store's <code>flask anonymise-order</code> tool, which replaces the name on the
+order with "Removed" and blanks the phone, the chosen contact, and the recipient and text of every message for that
+order; the amounts, projects and dates stay, because they are the sales record. For an account we run
+<code>flask anonymise-account</code>, which does the same for every order of the account, empties the cart, and replaces
+the account's name, email and password so it can no longer be used or linked to you. Contact form messages are deleted
+on request.</p>
+
+<h2>Children</h2>
+<p>The store is meant for adults. If you are under 18, ask a parent or guardian to buy for you; we do not knowingly
+collect a child's personal data.</p>
+
+<h2>Security</h2>
+<p>Passwords are hashed with scrypt, every form is protected against cross-site request forgery, sign-in and other
+actions are rate limited, and links in messages are signed and expire after seven days. If a breach affects your
+personal data we will tell you and the Data Protection Board of India as the DPDP Act requires.</p>
+
+<h2>Grievance officer</h2>
+<p>{{ seller.grievance_name or seller.name }}{% if seller.email %}, <a href="mailto:{{ seller.email }}">{{ seller.email }}</a>{% endif %}. We
+acknowledge a complaint within 48 hours and aim to resolve it within one month.</p>
+
+<h2>Changes</h2>
+<p>When this policy changes, the "Last updated" date above changes with it.</p>
+{% endblock %}

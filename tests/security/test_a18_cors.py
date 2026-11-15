@@ -30,7 +30,7 @@ def test_a18_credentialed_cross_site_post_is_rejected_by_csrf(csrf_app):
     make_user()
     c = csrf_app.test_client()
     assert csrf_login(c).status_code == 302
-    for path, body in (("/api/v1/cart/items", {"product_id": 1, "qty": 1}), ("/api/v1/checkout", {})):
+    for path, body in (("/api/v1/cart/items", {"product_id": 1, "qty": 1}), ("/api/v1/checkout", {"accept_terms": True})):
         r = c.post(path, json=body, headers={"Origin": "https://evil.example", "Referer": "https://evil.example/attack"})
         assert r.status_code == 400, f"{path} accepted a cookie-authenticated cross-site POST"
     assert c.post("/logout", headers={"Origin": "https://evil.example"}).status_code == 400

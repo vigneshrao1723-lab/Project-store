@@ -156,7 +156,7 @@ def test_admin_has_neither_canvas_nor_gradient(admin_client):
 
 def _order(client, product):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": 1})
-    return client.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    return client.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
 
 
 def test_the_background_module_has_no_loop_no_observer_and_no_colour_of_its_own():

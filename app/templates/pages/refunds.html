@@ -1,0 +1,34 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach with context %}
+{% block body %}
+<p>Project Store sells digital project kits. Because a kit is delivered the moment your payment is confirmed, the rules
+are different from a parcel. This page says exactly when you can cancel or get your money back.</p>
+
+<h2>Cancelling before you pay</h2>
+<p>An order you have not paid for yet can be cancelled at any time with "Cancel this order and return to cart" on the payment page.
+The copies go back on the shelf and nothing is charged. If you simply leave, the hold ends by itself after
+{{ reservation_minutes }} minutes.</p>
+
+<h2>Refunds after payment</h2>
+<p>You can get a full refund within {{ refund_days }} days of payment if:</p>
+<ul>
+  <li><strong>the download fails</strong>: the link on your order page does not work and we cannot give you a working one; or</li>
+  <li><strong>the kit is materially not as described</strong>: what you received is substantially different from what its
+  product page says is in the kit.</li>
+</ul>
+<p>Otherwise a kit is not refundable once it has been delivered, because a digital copy cannot be returned.</p>
+<p>One case is refunded automatically: if your payment arrives after your hold has ended and the project has sold out in
+the meantime, the order is marked for a refund and the full amount is returned.</p>
+
+<h2>How to ask</h2>
+<p>To ask, {{ reach() }} within {{ refund_days }} days of payment, with your order number (it starts with "PS-") and
+what went wrong. We acknowledge your request within 48 hours and tell you our decision within 7 days. If we refund,
+the money goes back to the payment method you used, through Razorpay; banks usually take 5 to 7 working days to show
+it.</p>
+<p>Orders paid in the store's test mode used a practice gateway; no real money moved, so there is nothing to refund.</p>
+
+<h2>Complaints</h2>
+<p>If you disagree with our decision, write to our grievance officer, {{ seller.grievance_name or seller.name }}{% if seller.email %}
+(<a href="mailto:{{ seller.email }}">{{ seller.email }}</a>){% endif %}. Nothing in this policy limits your rights
+under the Consumer Protection Act, 2019.</p>
+{% endblock %}

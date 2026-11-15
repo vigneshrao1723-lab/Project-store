@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{# Layout for the information and policy pages (v1.4). Every policy shows its "Last updated" date and says that it is a
+   template no lawyer has reviewed. Names and contact details come from the environment through `seller` and
+   `contact_info`. #}
+{% block title %}{{ page_title }}{% endblock %}
+{% block description %}{{ page_description }}{% endblock %}
+{% block page_class %}transactional{% endblock %}
+{% block content %}
+<article class="wrap page-pad policy" aria-labelledby="page-h">
+  <h1 class="h2" id="page-h">{{ page_title }}</h1>
+  {% if is_policy %}
+  <div class="policy-meta">
+    <p>Last updated: <time datetime="2026-11-15">{{ updated }}</time></p>
+    <p class="policy-note">This is a template that has not been reviewed by a lawyer.</p>
+  </div>
+  {% endif %}
+  {% block body %}{% endblock %}
+</article>
+{% endblock %}

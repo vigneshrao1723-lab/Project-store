@@ -93,7 +93,7 @@ def test_a_database_built_the_old_way_is_adopted_with_its_data_intact(fresh):
     for later in ("messages", "contact_optouts", "contact_messages"):        # tables added by 0005 to 0008
         db.metadata.tables[later].drop(db.engine)
     for table, column in (("orders", "contact_channel"), ("orders", "contact_value"), ("orders", "contact_consent_at"),
-                          ("products", "setup_guide"), ("products", "guide_edited")):
+                          ("products", "setup_guide"), ("products", "guide_edited"), ("orders", "terms_accepted_at")):   # 0006 to 0009
         db.session.execute(db.text(f"ALTER TABLE {table} DROP COLUMN {column}"))
     db.session.commit()
     user = User(name="Early Buyer", email="early@example.com")

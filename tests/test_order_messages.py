@@ -21,6 +21,7 @@ def _checkout(client, product, channel="email", value="buyer@example.com", conse
     data["contact_email" if channel == "email" else "contact_whatsapp"] = value
     if consent:
         data["contact_consent"] = "on"
+    data["accept_terms"] = "on"
     return client.post("/checkout", data=data)
 
 

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block description %}That page does not exist on Project Store.{% endblock %}
+{% block page_class %}none{% endblock %}
+{% block head_extra %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="wrap narrow page-pad" aria-labelledby="err-h">
+  <p class="big-code" aria-hidden="true">404</p>
+  <h1 class="h2" id="err-h">Page not found</h1>
+  <p>That page doesn't exist, or the project has been retired. Search the catalogue, or go back to the start.</p>
+  <form class="err-search" action="{{ url_for('shop.catalogue') }}" role="search">
+    <label class="sr" for="err-q">Search projects</label>
+    <input id="err-q" name="q" type="search" placeholder="Search by name or technology">
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <p class="err-actions"><a class="btn ghost" href="{{ url_for('shop.catalogue') }}">Browse the catalogue</a><a href="{{ url_for('shop.home') }}">Home</a><a href="{{ url_for('contact.page') }}">Contact</a></p>
+</section>
+{% endblock %}

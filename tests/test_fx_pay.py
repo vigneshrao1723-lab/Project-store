@@ -19,7 +19,7 @@ PAY = BARE[BARE.index(".result {"):BARE.index('html.fx-on [data-fx="rise"]:not(.
 
 def _order(client, product):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": 1})
-    return client.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    return client.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
 
 
 def _mark(html):

@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 
 from ..extensions import db
 from ..models import Message, Order
-from ..services import notify
+from ..services import notify, rate_limit
 
 bp = Blueprint("orderdocs", __name__)
 
@@ -24,6 +24,7 @@ def _private(html):
 
 @bp.get("/i/<token>")
 def invoice_by_token(token):
+    rate_limit.enforce("links", rate_limit.ip_key())          # nobody guesses tokens at speed
     order = notify.order_from_token("invoice", token)
     if order is None:
         abort(404)
@@ -32,6 +33,7 @@ def invoice_by_token(token):
 
 @bp.get("/g/<token>")
 def guide_by_token(token):
+    rate_limit.enforce("links", rate_limit.ip_key())
     order = notify.order_from_token("guide", token)
     if order is None:
         abort(404)
@@ -58,12 +60,14 @@ def _message_from_stop(token):
 
 @bp.get("/stop/<token>")
 def stop(token):
+    rate_limit.enforce("links", rate_limit.ip_key())
     msg = _message_from_stop(token)
     return _private(render_template("stop.html", token=token, done=notify.opted_out(msg.to_hash)))
 
 
 @bp.post("/stop/<token>")
 def stop_confirm(token):
+    rate_limit.enforce("links", rate_limit.ip_key())
     msg = _message_from_stop(token)
     notify.opt_out(msg.to_hash)
     flash("Done. We will not send any more messages to that contact.", "success")

@@ -5,7 +5,7 @@ level-one heading. Each is a visually hidden or attribute-only change."""
 
 def _order(client, product):
     client.post("/api/v1/cart/items", json={"product_id": product.id, "qty": 1})
-    return client.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    return client.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
 
 
 def test_the_test_mode_notice_is_a_labelled_region(client):

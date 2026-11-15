@@ -10,6 +10,8 @@ from ..validation import MAX_EMAIL, MAX_NAME, MAX_PHONE, InputError, normalise_w
 
 bp = Blueprint("checkout", __name__, url_prefix="/checkout")
 
+TERMS_MISSING = "Tick the box to agree to the Terms of Sale, the Privacy Policy and the Refund Policy."
+
 
 def own_order_or_404(public_id):
     """The signed-in user's own order. These routes pay, verify and cancel, so an admin gets no exception here:
@@ -61,12 +63,15 @@ def start():
             flash("Your cart is empty.", "info")
             return redirect(url_for("cart.view"))
         return render_template("checkout.html", cart=cart, name=current_user.name, phone="",
-                               contact=_contact_defaults(), errors={})
+                               contact=_contact_defaults(), errors={}, terms=False)
 
     rate_limit.enforce("checkout")
     name = request.form.get("billing_name", "").strip()
     phone = request.form.get("phone", "").strip()
     contact, errors = _read_contact(request.form)
+    terms = request.form.get("accept_terms") in ("on", "yes", "1", "true")
+    if not terms:                                # Consumer Protection (E-Commerce) Rules, 2020: explicit agreement
+        errors["accept_terms"] = TERMS_MISSING
     problem = None
     if not name:
         problem = "Enter the name for this order."
@@ -79,7 +84,7 @@ def start():
     if problem:
         flash(problem, "error")
         return render_template("checkout.html", cart=cart, name=name[:MAX_NAME], phone=phone[:MAX_PHONE],
-                               contact=contact["form"], errors=errors), 400
+                               contact=contact["form"], errors=errors, terms=terms), 400
     if contact["channel"] == "whatsapp" and not phone:
         phone = contact["value"]                 # the payment form can prefill it; the free phone field is gone
     if contact["channel"]:                       # messages were asked for: limit how often, per address and account
@@ -88,7 +93,8 @@ def start():
 
     try:
         order = order_svc.create_order_from_cart(current_user, name, phone,
-                                                 contact=(contact["channel"], contact["value"]) if contact["channel"] else None)
+                                                 contact=(contact["channel"], contact["value"]) if contact["channel"] else None,
+                                                 terms_accepted=True)
     except order_svc.PendingOrderExists as exc:
         return _to_unpaid_order(exc.order)
     except order_svc.CheckoutError as exc:

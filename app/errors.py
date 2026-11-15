@@ -66,13 +66,11 @@ def register_error_handlers(app):
     def not_found(exc):
         if _wants_json():
             return _json_error(API_MESSAGES[404], 404)
-        return render_template("error.html", code=404, title="Page not found",
-                               message="That page doesn't exist, or the project has been retired."), 404
+        return render_template("404.html"), 404
 
     @app.errorhandler(500)
     def server_error(exc):
         db.session.rollback()
         if _wants_json():
             return _json_error(API_MESSAGES[500], 500)
-        return render_template("error.html", code=500, title="Something broke on our side",
-                               message="The error has been logged. Try again in a moment."), 500
+        return render_template("500.html"), 500

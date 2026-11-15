@@ -1,0 +1,27 @@
+{% extends "pages/_page.html" %}
+{% from "pages/_bits.html" import reach, seller_block with context %}
+{% block body %}
+<p>Project Store sells finished engineering projects, each with its working source, a setup guide and architecture notes,
+written by the person who built it. It is run by {{ seller.name }}{% if contact_info.city %} in {{ contact_info.city }}{% endif %}.</p>
+
+<h2>What is in a kit</h2>
+<ul>
+  <li>The project's source code, as it runs.</li>
+  <li>A setup guide, written from the project's own README and code, also shown on your order page after you buy.</li>
+  <li>Notes on how it is built, so you can explain it.</li>
+</ul>
+<p>Each product page lists exactly what its kit contains and what it is built with.</p>
+
+<h2>How buying works</h2>
+<p>Add a kit to your cart, check out, and pay through Razorpay. Your copy is held while you pay, the amount is worked out
+by the store, and the download link appears on your order page as soon as the payment is confirmed. You can also ask for
+the invoice and setup guide by email or WhatsApp.</p>
+
+<h2>The store itself</h2>
+<p>The store you are using is one of the projects on sale: a Flask and MySQL application with transactional stock
+handling, a REST API, an admin dashboard, Docker packaging and an automated test suite run on every push.</p>
+
+<h2>Seller details</h2>
+{{ seller_block() }}
+<p>Questions or a custom build: {{ reach() }}.</p>
+{% endblock %}

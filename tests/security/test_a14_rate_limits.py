@@ -15,13 +15,13 @@ def test_a14_registration_is_rate_limited(client):
 
 
 def test_a14_api_checkout_is_rate_limited(buyer):
-    codes = _hammer(lambda i: buyer.post("/api/v1/checkout", json={"billing_name": "Bot"}))
+    codes = _hammer(lambda i: buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Bot"}))
     assert 429 in codes, "100 checkout attempts in a row were all processed"
     assert 429 not in codes[:3]
 
 
 def test_a14_page_checkout_is_rate_limited(buyer):
-    codes = _hammer(lambda i: buyer.post("/checkout", data={"billing_name": "Bot"}))
+    codes = _hammer(lambda i: buyer.post("/checkout", data={"accept_terms": "on", "billing_name": "Bot"}))
     assert 429 in codes, "100 checkout form posts in a row were all processed"
 
 

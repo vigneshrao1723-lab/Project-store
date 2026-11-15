@@ -26,6 +26,11 @@
           <p class="hint">Sent once, after your payment is confirmed. Every message has a link to stop further messages.</p>
         </div>
       </fieldset>
+      <div class="field terms-field{% if errors.accept_terms %} has-error{% endif %}">
+        <label class="check"><input type="checkbox" name="accept_terms" required {% if terms %}checked{% endif %} {% if errors.accept_terms %}aria-invalid="true" aria-describedby="accept_terms-msg"{% endif %}> I agree to the <a href="{{ url_for('pages.terms') }}" target="_blank" rel="noopener">Terms of Sale<span class="sr"> (opens in a new tab)</span></a>, the <a href="{{ url_for('pages.privacy') }}" target="_blank" rel="noopener">Privacy Policy<span class="sr"> (opens in a new tab)</span></a> and the <a href="{{ url_for('pages.refunds') }}" target="_blank" rel="noopener">Refund and Cancellation Policy<span class="sr"> (opens in a new tab)</span></a>.</label>
+        {% if errors.accept_terms %}<p class="msg" id="accept_terms-msg">{{ errors.accept_terms }}</p>{% endif %}
+        <p class="hint">Sold by {{ seller.name }}{% if seller.address %}, {{ seller.address }}{% endif %}. Digital delivery: your download link appears on the order page once payment is confirmed.</p>
+      </div>
       <button class="btn" type="submit">Continue to payment</button>
     </form>
     <aside class="summary" aria-label="Order summary" {{ fx('cascade') }}>

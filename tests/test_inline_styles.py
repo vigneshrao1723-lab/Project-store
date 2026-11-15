@@ -44,7 +44,7 @@ def test_the_class_names_do_not_collide_with_older_rules():
 
 def test_dashboard_bars_carry_their_height_in_an_svg_attribute(admin_client, buyer, rag, app):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 2})
-    order = buyer.post("/api/v1/checkout").get_json()
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     row = db.session.scalar(db.select(Order).where(Order.public_id == order["id"]))
     order_svc.mark_paid(row.id, "pay_bar")
     page = admin_client.get("/admin").get_data(as_text=True)
@@ -55,7 +55,7 @@ def test_dashboard_bars_carry_their_height_in_an_svg_attribute(admin_client, buy
 
 def test_the_busiest_day_is_the_highlighted_bar(admin_client, buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    order = buyer.post("/api/v1/checkout").get_json()
+    order = buyer.post("/api/v1/checkout", json={"accept_terms": True}).get_json()
     order_svc.mark_paid(db.session.scalar(db.select(Order.id).where(Order.public_id == order["id"])), "pay_top")
     page = admin_client.get("/admin").get_data(as_text=True)
     assert page.count('class="bar-col top"') == 1

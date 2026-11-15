@@ -20,7 +20,7 @@ NODE = shutil.which("node")
 @pytest.fixture()
 def order_id(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    return buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    return buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
 
 
 # ---- markup ---------------------------------------------------------------------------------------------------------------
@@ -343,7 +343,7 @@ def test_the_ghost_is_on_one_element_and_the_headline_text_is_unchanged(client):
 
 def test_the_pay_marks_get_a_ring_pulse_and_only_when_they_play(buyer, rag):
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
-    pid = buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    pid = buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
     declined = buyer.post(f"/checkout/test-pay/{pid}", data={"outcome": "fail"}, follow_redirects=True).get_data(as_text=True)
     assert '<circle class="rs-pulse"' in declined
     css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
@@ -355,7 +355,7 @@ def test_the_stepper_is_on_all_four_checkout_pages_and_on_a_pending_order(buyer,
     buyer.post("/api/v1/cart/items", json={"product_id": rag.id, "qty": 1})
     assert steps(buyer.get("/cart").get_data(as_text=True))[0][0].startswith("is-current")
     assert "is-current" in steps(buyer.get("/checkout").get_data(as_text=True))[1][0]
-    pid = buyer.post("/api/v1/checkout", json={"billing_name": "Buyer"}).get_json()["id"]
+    pid = buyer.post("/api/v1/checkout", json={"accept_terms": True, "billing_name": "Buyer"}).get_json()["id"]
     assert "is-current" in steps(buyer.get(f"/checkout/pay/{pid}").get_data(as_text=True))[2][0]
     assert "is-current" in steps(buyer.get(f"/orders/{pid}").get_data(as_text=True))[2][0]            # still unpaid: Pay is the current step
     buyer.post(f"/checkout/test-pay/{pid}", data={"outcome": "pay"})
