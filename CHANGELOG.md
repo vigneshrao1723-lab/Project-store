@@ -2,6 +2,26 @@
 
 Dates are commit dates. The newest release is first.
 
+## 1.4.0 (unreleased, branch `v1.4-final`)
+
+Policies and compliance for an India-based seller of digital products, the owner's real contact details with a
+click-to-load map, the home shelf as an endless loop, two pieces of decoration removed, and a security re-check with
+fixes. Every effect from 1.3.0 is still there except the two removed on purpose (recorded in `docs/MOTION_INVENTORY.md`).
+
+* **Contact.** Name, phone (a `tel:` link and "Chat on WhatsApp", both built from `CONTACT_PHONE` at render time), email and city, all from `.env` (`CONTACT_NAME` is new). The placeholder values are gone from templates, tests and docs.
+* **Map.** The pink pin drawing is replaced by a poster ("Bengaluru, Karnataka", "Load map", "Open in Google Maps"); pressing the button creates a Google Maps iframe in hybrid view at city level (`contact-map.js`, sandboxed, lazy, strict referrer). CSP `frame-src` gains `https://maps.google.com https://www.google.com` and nothing else.
+* **The shelf** ("The whole shelf, side by side") is an endless loop (`fx-shelf.js`): it drifts slowly, scrolling, a sideways wheel or swipe and a drag push it either way, and the push eases back into the drift. Copies are `aria-hidden` and `inert`; hover, keyboard focus and a visible Pause / Play button stop it (WCAG 2.2.2); reduced motion leaves the plain row. It rides the one `fx-scroll` loop; knobs `--shelf-speed` and `--shelf-wheel-gain`; switch `shelf-loop`.
+* **Removed, everywhere:** the section rail (the column of squares on the right edge) and the crosshair-and-dashed-line art (home hero, sign in, register). The `rail` switch became `shelf-loop`.
+* **Pages:** Privacy Policy (DPDP Act, 2023), Terms of Sale, Refund and Cancellation, Delivery, Cookie Policy, Accessibility Statement, About, FAQ, and custom 404 and 500 pages, written from an audit of what the app stores. Each policy shows "Last updated" and "This is a template that has not been reviewed by a lawyer."
+* **Cookie notice:** essential cookies only, dismissible, no analytics.
+* **Checkout** needs the Terms / Privacy / Refund agreement (form and API, checked on the server); migration `0009` stores `orders.terms_accepted_at`. Seller and grievance officer on the footer, checkout, About and the invoice.
+* **Site files:** `robots.txt`, `sitemap.xml`, `/.well-known/security.txt`, `favicon.svg`, `manifest.webmanifest`; canonical and Open Graph tags on every page.
+* **Erasure:** `flask anonymise-account`. Container logs rotate (3 x 10 MB).
+* **Security** (`docs/SECURITY_AUDIT.md`, 18 items with evidence): Cross-Origin-Resource-Policy and `object-src 'none'`; startup refuses placeholder database passwords and half-set or placeholder Razorpay keys; rate limits on the signed links, `/stop` and every API write; `TRUSTED_PROXIES` for the client address behind a proxy; the app connects to MySQL as `store_app` (rows only) while a one-shot `migrate` service runs migrations as the owner; gitleaks over all history in CI and a pre-commit hook; dependencies upgraded (Flask-WTF, gunicorn, PyMySQL, requests, pytest) with SQLAlchemy held at 2.0.36; python-dotenv out of the runtime image; base image pinned by digest; tooling and the compose file kept out of the image.
+* **Accessibility fixes found on the way:** policy tables and setup-guide code blocks that scroll sideways on phones are keyboard-focusable.
+* **Measured.** MEASURED_V14
+* **Not verified.** Real email, WhatsApp and Razorpay (fakes only); the rows-only account on the live database; Firefox and Safari; screen readers.
+
 ## 1.3.0 (unreleased, branch `v1.3-contact`)
 
 A contact block, and the invoice, setup guide and a thank-you note for every paid order, sent by email or WhatsApp once the owner switches either on. Every animation and hook from 1.2.0 is still there (`docs/MOTION_INVENTORY.md` and its test pass); four rows were added.

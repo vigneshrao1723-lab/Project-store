@@ -1,6 +1,6 @@
 # Project Store
 
-A store for selling finished engineering projects, built as a full-stack Flask application: sign-in, a searchable catalogue, per-user carts, a checkout that reserves stock inside one database transaction, Razorpay payments, order management, an invoice and a setup guide for every paid order (sent by email or WhatsApp when switched on), a contact form, an admin dashboard and a REST API. Docker and GitHub Actions are set up, and the test suite covers the money, stock and security paths.
+A store for selling finished engineering projects, built as a full-stack Flask application: sign-in, a searchable catalogue, per-user carts, a checkout that reserves stock inside one database transaction, Razorpay payments, order management, an invoice and a setup guide for every paid order (sent by email or WhatsApp when switched on), a contact form with a click-to-load map, privacy, terms, refund, delivery, cookie and accessibility pages, an admin dashboard and a REST API. Docker and GitHub Actions are set up, and the test suite covers the money, stock and security paths.
 
 Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design notes are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and the release history is in [CHANGELOG.md](CHANGELOG.md).
 
@@ -25,6 +25,12 @@ Built with Flask, SQLAlchemy, MySQL, Jinja and hand-written CSS. The design note
 | ![Setup guide page](docs/screenshots/guide.png) | ![Admin messages](docs/screenshots/admin-messages.png) |
 | **Admin overview** | **Contact page** |
 | ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Contact page](docs/screenshots/contact.png) |
+| **The shelf, an endless loop with a Pause button (v1.4)** | **The map, loaded only on click (v1.4)** |
+| ![The home shelf loop](docs/screenshots/home-shelf.png) | ![Google map of Bengaluru in the contact panel](docs/screenshots/contact-map-loaded.png) |
+| **Checkout: the terms agreement (v1.4)** | **Privacy Policy (v1.4)** |
+| ![Checkout refuses to continue without the terms box](docs/screenshots/checkout-terms-error.png) | ![Privacy Policy](docs/screenshots/privacy.png) |
+| **Cookie Policy (v1.4)** | **Page not found (v1.4)** |
+| ![Cookie Policy](docs/screenshots/cookies.png) | ![Custom 404 page](docs/screenshots/404.png) |
 
 On a 390 px phone: sign in, home, the timeline, contact, catalogue, product, cart, checkout with WhatsApp, pay and the paid order.
 
@@ -32,11 +38,12 @@ On a 390 px phone: sign in, home, the timeline, contact, catalogue, product, car
 |---|---|---|
 | ![Cart at 390 px](docs/screenshots/cart-390.png) | ![Pay at 390 px](docs/screenshots/pay-390.png) | ![Paid order at 390 px](docs/screenshots/order-390.png) |
 | ![Sign in at 390 px](docs/screenshots/login-390.png) | ![How buying works at 390 px: the line runs down the left](docs/screenshots/home-how-390.png) | ![Contact page at 390 px](docs/screenshots/contact-390.png) |
-| ![Checkout with WhatsApp at 390 px](docs/screenshots/checkout-390.png) | ![Message status and setup guide at 390 px](docs/screenshots/order-messages-390.png) | |
+| ![Checkout with WhatsApp at 390 px](docs/screenshots/checkout-390.png) | ![Message status and setup guide at 390 px](docs/screenshots/order-messages-390.png) | ![The shelf loop at 390 px](docs/screenshots/home-shelf-390.png) |
+| ![Cookie notice and footer at 390 px](docs/screenshots/footer-390.png) | ![Privacy Policy at 390 px](docs/screenshots/privacy-390.png) | ![Checkout terms error at 390 px](docs/screenshots/checkout-terms-error-390.png) |
 
-At 1920 px: [home](docs/screenshots/home-1920.png), [how buying works](docs/screenshots/home-how-1920.png), [contact](docs/screenshots/contact-1920.png), [checkout](docs/screenshots/checkout-1920.png).
+At 1920 px: [home](docs/screenshots/home-1920.png), [how buying works](docs/screenshots/home-how-1920.png), [contact](docs/screenshots/contact-1920.png), [checkout](docs/screenshots/checkout-1920.png). The other v1.4 pages: [Terms of Sale](docs/screenshots/terms.png), [Refunds](docs/screenshots/refunds.png), [Delivery](docs/screenshots/delivery.png), [Accessibility](docs/screenshots/accessibility.png), [About](docs/screenshots/about.png), [FAQ](docs/screenshots/faq.png).
 
-The screenshots were taken from a fresh scratch database loaded with the demo seed and practice purchases, so they show no real customer data; the phone, email and city in the contact panel are placeholders set only for the screenshots. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
+The screenshots were taken from fresh scratch databases loaded with the demo seed and practice purchases, so they show no real customer data. The name, phone and email in the contact panel and the footer are example values set only for these committed images; the running store shows the owner's details from `.env`. Still frames cannot show the motion; run the store locally to see it. The yellow banner is the practice-gateway notice (see [Payments](#payments)).
 
 **This is an open-source demo store.** The source is public (MIT), so there is no paywall. The download links in the seeded catalogue are blank, so a paid order's page says "Link coming soon. Contact the store." If you run a store like this for your own work, set private links as described in [How to set up the private delivery links](#how-to-set-up-the-private-delivery-links).
 
@@ -64,10 +71,19 @@ The look is a warm dark palette (amber, harley red, white, sunset, violet over a
 
 ## Contact and order messages
 
-* **Get in touch.** A contact block above the footer on the home page and a `/contact` page share one component: a form (name, email, subject, message, consent) and a panel with your phone, email, city and Connect buttons. Every detail comes from `.env` (`CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB`, `CONTACT_LINKEDIN`); anything left empty is not shown. Messages are stored and listed under **Admin → Messages**, and emailed to `CONTACT_EMAIL` once SMTP is set. The form has CSRF, a honeypot, length caps, and limits of 10 an hour per address and 3 an hour per sender email.
+* **Get in touch.** A contact block above the footer on the home page and a `/contact` page share one component: a form (name, email, subject, message, consent) and a panel with your name, phone (a `tel:` link and a "Chat on WhatsApp" link, both built from the number at render time), email, city and Connect buttons. Every detail comes from `.env` (`CONTACT_NAME`, `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB`, `CONTACT_LINKEDIN`); anything left empty is not shown.
+* **Map.** The panel shows a poster with the city and a "Load map" button; only when it is pressed is a Google Maps frame (hybrid view, city level, no API key) created. Until then nothing is requested from Google, and an "Open in Google Maps" link works without scripts. The Content-Security-Policy allows frames from `maps.google.com` and `www.google.com` only. Messages are stored and listed under **Admin → Messages**, and emailed to `CONTACT_EMAIL` once SMTP is set. The form has CSRF, a honeypot, length caps, and limits of 10 an hour per address and 3 an hour per sender email.
 * **Invoice, setup guide and a thank-you note.** At checkout the buyer picks Email or WhatsApp and ticks "Send my invoice and setup guide to this contact". After the payment is confirmed (never at checkout) one message is created per order and channel, outside the payment's transaction, with retries for failures (2, 4, 8, 16 minutes, at most 5 tries), 3 messages a day per contact and a stop link in every message.
 * **Nothing depends on the message.** The paid order page always shows the invoice and the setup guide for each project, and says exactly what happened to the message. The invoice and guide also have signed links that work for 7 days (`/i/...`, `/g/...`).
 * **Out of the box nothing is sent.** With no SMTP or WhatsApp settings the message waits in **Admin → Messages** as "Not configured"; you can open it, send it yourself and mark it sent. To switch on Gmail or the WhatsApp Cloud API, follow [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md).
+
+## Policies and compliance (v1.4)
+
+* **Pages** linked from the footer and the sitemap: Privacy Policy (DPDP Act, 2023: what is kept, why, for how long, processors, rights, the grievance officer), Terms of Sale, Refund and Cancellation Policy (7 days if the download fails or the kit is materially not as described), Delivery Policy, Cookie Policy (every cookie and storage item in a table), Accessibility Statement, About and FAQ, plus custom 404 and 500 pages. They were written from an audit of what the app actually stores; each policy shows "Last updated" and says **"This is a template that has not been reviewed by a lawyer."**
+* **Cookies:** essential only (`session`, and `remember_token` if you tick "Keep me signed in"). A dismissible notice says so; there is no analytics or tracking.
+* **Checkout** needs a ticked "I agree to the Terms of Sale, the Privacy Policy and the Refund and Cancellation Policy" (checked on the server; the API needs `"accept_terms": true`), and the order records when it was given. Seller name, address and grievance officer appear on the footer, checkout, About and the invoice (Consumer Protection (E-Commerce) Rules, 2020).
+* **Erasure:** `flask anonymise-order PS-XXXXXXX` for one order, `flask anonymise-account email@example.com` for a whole account.
+* **Site files:** `robots.txt`, `sitemap.xml`, `/.well-known/security.txt`, `/favicon.svg`, `/manifest.webmanifest`, and canonical and Open Graph tags on every page.
 
 ## Known limitations
 
@@ -75,7 +91,9 @@ Read these before you rely on the store.
 
 * **Real email and WhatsApp delivery is NOT verified.** Order messages and the owner's contact notice were tested only against a local fake SMTP server and a local fake of the Meta WhatsApp Cloud API; no message has been sent through Gmail or Meta. Until you set the variables in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) and buy something yourself to check, messages stay "Not configured" and the order page tells the buyer so. WhatsApp replies are not read ("reply STOP" does nothing; the stop link works).
 * **No password reset.** The store sends email only for order messages and contact notices (once SMTP is set). A user who forgets a password cannot recover the account by themselves. The only built-in tool that sets a password is `flask create-admin`, and it also makes that account an admin, so it is not a customer reset.
-* **Registering an email that already has an account says so.** That reveals the address is registered. It is an accepted risk, because the proper fix (telling the address's owner by email instead of answering in the page) needs email.
+* **Registering an email that already has an account says so.** That reveals the address is registered (an open finding in [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md), item 6). The proper fix, email verification at sign-up, needs SMTP switched on.
+* **The policy pages are templates.** They describe what the app does, but no lawyer has reviewed them; each page says so until you change it.
+* **The map is a Google embed.** Once a visitor presses "Load map", Google receives their address and browser details and may set its own cookies; the Privacy and Cookie policies say so.
 * **The Razorpay path has been tested with mocks only.** The client code, signature checks, amount/currency/status checks and the webhook are tested against a mocked Razorpay API. This code has never run against a live Razorpay account, test or live mode. In particular, `style-src 'self'` might block styling that Razorpay's checkout script injects (see "Razorpay and style-src" in the architecture notes).
 * **Add to cart needs JavaScript.** The button calls the REST API from the page script. With scripts blocked it reloads the product page and nothing is added; every page still renders in full without scripts, and checkout and payment are plain form posts.
 * **The 3D background needs WebGL and a GPU that keeps up.** Without either you get the still gradient. It was run on one integrated GPU (Intel UHD) in Chromium only; no discrete GPU, no Firefox, no Safari, no phone hardware.
@@ -83,9 +101,9 @@ Read these before you rely on the store.
 * **Use the practice gateway for demos.** With `ALLOW_PRACTICE_GATEWAY=true`, anyone who is signed in can mark their own order paid for nothing. It is for demos and local development, and must stay off for a store that sells for real.
 * **Download links are blank in the demo seed.** Paid orders show "Link coming soon. Contact the store." until you set a link per product in the admin screen.
 * **`COOKIE_SECURE` and HSTS are off unless you set them.** `COOKIE_SECURE=true` marks the session cookies Secure and turns on `Strict-Transport-Security`. Set it when the site is served over HTTPS. Over plain HTTP, leave it off, or sign-in stops working.
-* **Sign-in and registration limits count the connection's IP address.** Behind a reverse proxy every visitor arrives from the proxy's address until you configure Werkzeug's `ProxyFix` for that one proxy. The app deliberately does not trust `X-Forwarded-For`.
+* **Rate limits count the connection's IP address.** Behind a reverse proxy every visitor arrives from the proxy's address until you set `TRUSTED_PROXIES` to the number of proxies you run (usually 1); then only the hops your proxies added to `X-Forwarded-For` are believed. With the default 0 the header is ignored, so it cannot be forged.
 * Refunds are tracked, not issued: an admin refunds in the Razorpay dashboard and then marks the order refunded.
-* The cart is for signed-in users only. Migrations run when the web container starts, so run `flask db upgrade` as its own step if you scale to several web containers.
+* The cart is for signed-in users only. Under Docker Compose a one-shot `migrate` service applies migrations before the web container starts, so several web containers never migrate at once.
 
 ## Security
 
@@ -96,11 +114,12 @@ What the code does today, each item with a test (see [Security notes](docs/ARCHI
 * CSRF tokens on every form and every API write. The webhook is exempt and authenticated by its own signature.
 * Sessions carry a per-user token, so signing out or changing a password invalidates every cookie issued earlier. Passwords are scrypt at N=2**17.
 * Database-backed limits shared by all workers: 5 failed sign-ins per email and IP (10-minute block), plus per-address limits on registration, checkout, payment confirmation and failed sign-ins across emails.
-* Content-Security-Policy with no inline scripts and no inline styles, plus `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`. Signed-in pages are `no-store`.
-* The app refuses to start without a `SECRET_KEY` of at least 32 characters, and with no Razorpay keys and the practice gateway off it takes no payments.
+* Content-Security-Policy with no inline scripts and no inline styles (the Google Maps frame origins are its only v1.4 addition), plus `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy`. Signed-in pages are `no-store`.
+* The app refuses to start without a `SECRET_KEY` of at least 32 characters, with a placeholder database password, or with a half-set or placeholder Razorpay key pair; with no Razorpay keys and the practice gateway off it takes no payments.
 * Input is validated with explicit bounds, request bodies over 1 MB get HTTP 413, and API errors are JSON, never a stack trace.
 * Dependencies are pinned by hash in `requirements.lock`; CI runs `pip-audit` and `bandit`, and Dependabot proposes updates weekly.
-* In Docker, the database has no default passwords, its port is not published, the app connects as a non-root database user and runs as an unprivileged container user.
+* In Docker, the database has no default passwords and its port is not published. The web app and the sweeper connect as `store_app`, which can only read and write rows (no DROP, ALTER, GRANT or FILE); migrations run once as the schema owner. The app runs as an unprivileged container user, from a base image pinned by digest.
+* CI scans every commit on every branch for secrets with gitleaks; there is a pre-commit hook for the same scan. The full v1.4 audit, item by item with evidence, is [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md).
 
 ## Required settings
 
@@ -111,20 +130,20 @@ What the code does today, each item with a test (see [Security notes](docs/ARCHI
   ```
 
   Paste the output after `SECRET_KEY=` in `.env`. Changing it signs everyone out.
-* **`DB_PASSWORD` and `DB_ROOT_PASSWORD`** (Docker): `docker compose` refuses to start without them, because MySQL's accounts are created from them. Use two different long random values (`python -c "import secrets; print(secrets.token_urlsafe(24))"`). They are applied **only when the database volume is first created**. If you already have a volume made with other values, put those same values in `.env`, or change the passwords inside MySQL and then `.env`.
+* **`DB_PASSWORD`, `DB_ROOT_PASSWORD` and `DB_APP_PASSWORD`** (Docker): `docker compose` refuses to start without them, because MySQL's accounts are created from them (`DB_APP_PASSWORD` is the rows-only account the app uses; for an existing database create it as in [docs/RELEASE_STEPS_v1.4.md](docs/RELEASE_STEPS_v1.4.md)). Use different long random values (`python -c "import secrets; print(secrets.token_urlsafe(24))"`). They are applied **only when the database volume is first created**. If you already have a volume made with other values, put those same values in `.env`, or change the passwords inside MySQL and then `.env`.
 * **Payments:** set both Razorpay keys, or set `ALLOW_PRACTICE_GATEWAY=true` for demos and local development. With neither, the store takes no orders (see [Payments](#payments)).
-* **Optional, for the contact panel and messages:** `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY`, `CONTACT_GITHUB`, `CONTACT_LINKEDIN`; `PUBLIC_BASE_URL` (the address used in message links); `SMTP_*` for email and `WHATSAPP_*` for WhatsApp, explained in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md). `SELLER_NAME`, `SELLER_ADDRESS` and `SELLER_GSTIN` appear on the invoice. Each is optional: an empty contact, SMTP or WhatsApp value turns its feature off, `SELLER_NAME` defaults to "Project Store", and `PUBLIC_BASE_URL` must be the address buyers use (in `.env.example` it is `http://localhost:8000`).
+* **Optional, for the contact panel, the policies and messages:** `CONTACT_NAME` (also the grievance officer), `CONTACT_EMAIL`, `CONTACT_PHONE`, `CONTACT_CITY` (also centres the map), `CONTACT_GITHUB`, `CONTACT_LINKEDIN`; `TRUSTED_PROXIES` (default 0); `PUBLIC_BASE_URL` (the address used in message links); `SMTP_*` for email and `WHATSAPP_*` for WhatsApp, explained in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md). `SELLER_NAME`, `SELLER_ADDRESS` and `SELLER_GSTIN` appear on the invoice. Each is optional: an empty contact, SMTP or WhatsApp value turns its feature off, `SELLER_NAME` defaults to "Project Store", and `PUBLIC_BASE_URL` must be the address buyers use (in `.env.example` it is `http://localhost:8000`).
 
 `.env` is git-ignored. Never commit it or real keys.
 
 ## Run it with Docker (MySQL)
 
 ```bash
-cp .env.example .env          # then set SECRET_KEY, DB_PASSWORD and DB_ROOT_PASSWORD (see "Required settings")
+cp .env.example .env          # then set SECRET_KEY, DB_PASSWORD, DB_ROOT_PASSWORD and DB_APP_PASSWORD (see "Required settings")
 docker compose up --build
 ```
 
-Open http://localhost:8000. Every start applies any pending [database migrations](#database-migrations), and the first start also loads the catalogue. If port 8000 is taken, set `WEB_PORT` in `.env`. A `sweeper` container runs `flask release-expired` every minute to free stock held by unpaid orders.
+Open http://localhost:8000. Every `up` first runs the one-shot `migrate` service, which applies any pending [database migrations](#database-migrations) and loads the catalogue on the first start; the web container starts after it has finished. If port 8000 is taken, set `WEB_PORT` in `.env`. A `sweeper` container runs `flask release-expired` and `flask send-messages` every minute.
 
 ## Run it locally without Docker (SQLite)
 
@@ -196,6 +215,9 @@ The schema is defined by the migrations in `migrations/` (Alembic, through Flask
 | Registrations per address | 10 per hour | `Config.RATE_LIMITS["register"]` |
 | Starting a checkout, per user | 10 per 10 minutes | `Config.RATE_LIMITS["checkout"]` |
 | Confirming a payment, per user | 20 per 10 minutes | `Config.RATE_LIMITS["verify"]` |
+| Contact form, per address / per sender email | 10 per hour / 3 per hour | `contact_ip`, `contact_email` |
+| Signed invoice and guide links and the stop page, per address (v1.4) | 60 per 10 minutes | `Config.RATE_LIMITS["links"]` |
+| Any API write, per account or address (v1.4) | 120 per 10 minutes | `Config.RATE_LIMITS["api_write"]` |
 | Stock hold for an unpaid order | 15 minutes | `RESERVATION_MINUTES` |
 | Quantity per cart line | 5 | `Config.MAX_QTY_PER_LINE` |
 | Request body | 1 MB | `Config.MAX_CONTENT_LENGTH` |
@@ -256,14 +278,15 @@ To set a link: sign in as an admin, open Admin, Products, open the product, past
 
 ```
 app/
-  blueprints/   shop, auth, cart, checkout, account, admin, api, webhooks
-  services/     orders (state machine + stock), cart, catalog, payments, products, login_throttle, rate_limit
+  blueprints/   shop, auth, cart, checkout, account, admin, api, webhooks, contact, orderdocs, pages
+  services/     orders (state machine + stock), cart, catalog, payments, products, login_throttle, rate_limit, notify, privacy
   templates/    Jinja pages, admin/ for the dashboard
   static/       css, js, self-hosted fonts
-migrations/     Alembic migrations (0001 to 0004)
-scripts/        relock.sh (regenerates the hashed lock files)
+migrations/     Alembic migrations (0001 to 0009)
+docker/         mysql-init (creates the rows-only database account on a new volume)
+scripts/        relock.sh (regenerates the hashed lock files), hooks/pre-commit (gitleaks)
 tests/          pytest suite; tests/security has one file per audit item
-docs/           ARCHITECTURE.md, screenshots/
+docs/           ARCHITECTURE.md, SECURITY_AUDIT.md, RESUME_COVERAGE.md, release steps, screenshots/
 ```
 
 ## License
