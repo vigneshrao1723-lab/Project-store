@@ -86,11 +86,15 @@ columns on `orders` and `products`; nothing dropped or rewritten) and a new data
 ```powershell
 git checkout main
 git pull --ff-only origin main
-# 6a. Backup: the dump is written inside the container and copied out byte for byte
+# 6a. Backup FIRST: the dump is written inside the container and copied out byte for byte
+New-Item -ItemType Directory -Force "..\ProjectStore-backups" | Out-Null
+# row counts before, to compare after (the root password stays in the container's environment, never on the screen)
+docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N -e "SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log)"'
 docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines project_store > /tmp/before-v1.4.0.sql'
 docker compose cp db:/tmp/before-v1.4.0.sql "..\ProjectStore-backups\before-v1.4.0.sql"
 (Get-Item "..\ProjectStore-backups\before-v1.4.0.sql").Length    # must be well above zero
 docker compose exec -T db rm /tmp/before-v1.4.0.sql
+(Select-String -Path "..\ProjectStore-backups\before-v1.4.0.sql" -Pattern "CREATE TABLE").Count   # must be 9 or more (one per table)
 
 # 6b. The rows-only account. An init script only runs on a NEW volume, so on the live database run the same script by
 #     hand. Recreating the db container (the data volume stays; this is NOT down -v) gives it the script mount and
@@ -110,6 +114,8 @@ docker compose ps                            # web (healthy), sweeper running, m
 curl.exe -s http://localhost:8001/healthz    # {"status":"ok"}
 foreach ($p in "/", "/contact", "/privacy", "/cookies", "/sitemap.xml") { curl.exe -s -o NUL -w "$p %{http_code}`n" "http://localhost:8001$p" }   # all 200
 docker compose exec web python -c "from app import create_app; from app.extensions import db; a=create_app(); c=a.app_context(); c.push(); print(db.session.execute(db.text('SELECT CURRENT_USER()')).scalar())"   # store_app@%
+# row counts after: the same four numbers as before 6a (nothing is rewritten; only new tables and columns are added)
+docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N -e "SELECT (SELECT COUNT(*) FROM project_store.users), (SELECT COUNT(*) FROM project_store.orders), (SELECT COUNT(*) FROM project_store.products), (SELECT COUNT(*) FROM project_store.inventory_log)"'
 ```
 
 ### Going back after a bad rebuild

@@ -54,7 +54,10 @@ def test_the_kind_comes_from_the_category_not_from_the_title_or_id(app, client, 
     cat.cover_kind = "hardware"
     rag.title = "Crypto Web AI"                                  # a title that names other kinds changes nothing
     db.session.commit()
-    assert 'data-motion-kind="hardware"' in tiles(client.get("/catalogue?q=Crypto").get_data(as_text=True))[0]
+    # pick this product's own tile by its link: "Crypto" also matches the seeded security project ("cryptography"), and
+    # which tile comes first differs between SQLite (microsecond timestamps) and MySQL (one-second ties, then id)
+    mine = [x for x in tiles(client.get("/catalogue?q=Crypto").get_data(as_text=True)) if f'/p/{rag.slug}"' in x]
+    assert len(mine) == 1 and 'data-motion-kind="hardware"' in mine[0]
 
 
 def test_the_motif_follows_the_kind_and_an_unknown_kind_falls_back_to_the_web_art(app, client, rag):

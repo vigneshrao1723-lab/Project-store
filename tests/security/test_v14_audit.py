@@ -161,10 +161,18 @@ def _clean(html):
 
 @pytest.mark.parametrize("p", PAYLOADS)
 def test_e12_search_and_the_404_page_escape_the_query(client, p):
-    for path in (f"/catalogue?q={p}", f"/nope?q={p}"):
+    """Also the three parameters ZAP flagged as "user controllable HTML attribute" (10031): the catalogue's `category`
+    (shown in a hidden input and in pager links) and the `next` value of /login and /register (carried into links)."""
+    from urllib.parse import quote
+    for path in (f"/catalogue?q={p}", f"/nope?q={p}", f"/catalogue?category={quote(p)}&q=x", f"/login?next={quote(p)}",
+                 f"/register?next={quote(p)}"):
         html = client.get(path).get_data(as_text=True)
         assert p not in html or p == "javascript:alert(1)", path
-        assert "<script>alert(1)" not in html and "<svg onload" not in html
+        assert "<script>alert(1)" not in html and "<svg onload" not in html and "<img src=x" not in html and 'onmouseover=' not in html.replace("&#39; onmouseover=", ""), path
+    html = client.get(f"/catalogue?category={quote(p)}").get_data(as_text=True)
+    assert 'name="category" value="' in html                                  # reflected, and only ever as an escaped attribute value
+    nxt = client.get("/login?next=" + quote(p)).get_data(as_text=True)
+    assert 'href="/register?next=' in nxt and 'href="javascript:' not in nxt
 
 
 @pytest.mark.parametrize("p", PAYLOADS)
@@ -322,7 +330,7 @@ def test_e11_compose_gives_the_web_app_and_sweeper_a_rows_only_account_and_migra
 def test_e11_the_init_script_grants_rows_only_on_the_store_schema():
     sql = (ROOT / "docker" / "mysql-init" / "10-app-user.sh").read_text(encoding="utf-8")
     grants = re.findall(r"GRANT (.+?) ON (\S+) TO", sql)
-    assert grants == [("SELECT, INSERT, UPDATE, DELETE", "\`${MYSQL_DATABASE}\`.*")], grants
+    assert grants == [("SELECT, INSERT, UPDATE, DELETE", r"\`${MYSQL_DATABASE}\`.*")], grants
     for word in ("DROP", "ALTER", "CREATE TABLE", "ALL PRIVILEGES", "GRANT OPTION", "FILE", "SUPER", "*.*"):
         assert word not in sql.split("<<EOSQL", 1)[1].split("EOSQL", 1)[0], word
     assert "MYSQL_PWD=" in sql and "-p" not in sql.split("mysql --protocol", 1)[1].split("\n", 1)[0]     # no password in argv
