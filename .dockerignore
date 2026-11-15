@@ -19,3 +19,14 @@ scripts
 bandit-baseline.json
 requirements-dev.txt
 requirements-dev.lock
+# Not needed at run time (v1.4 image audit found these inside): local tooling, the compose file and the MySQL init
+# folder (mounted into the db container from the host, never part of the app image), and contributor notes.
+.playwright-mcp
+CLAUDE.md
+docker-compose.yml
+docker
+pytest.ini
+.gitignore
+.gitattributes
+.pre-commit-config.yaml
+.gitleaksignore

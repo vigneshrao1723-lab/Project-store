@@ -10,10 +10,11 @@ def _vkey(v):
     return Version(v)
 
 
-FIXED_RUNTIME = {"flask": "3.1.3", "cryptography": "49.0.0", "requests": "2.33.0", "python-dotenv": "1.2.2"}
+FIXED_RUNTIME = {"flask": "3.1.3", "cryptography": "49.0.0", "requests": "2.33.0"}
 
 
-FIXED_DEV = {"pytest": "9.0.3"}
+# python-dotenv moved to the dev pins in v1.4 (nothing at run time uses it); its fixed version is still enforced there.
+FIXED_DEV = {"pytest": "9.0.3", "python-dotenv": "1.2.2"}
 
 
 def test_a5_runtime_dependencies_are_at_or_above_their_fixed_versions():

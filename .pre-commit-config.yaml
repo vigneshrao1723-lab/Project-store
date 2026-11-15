@@ -1,0 +1,7 @@
+# Optional local hooks (https://pre-commit.com): `pip install pre-commit` then `pre-commit install`.
+# Without pre-commit, the same scan runs from scripts/hooks/pre-commit (needs Docker): `git config core.hooksPath scripts/hooks`.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks

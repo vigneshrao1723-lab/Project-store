@@ -19,7 +19,9 @@ DEV_FILES = [".git/config", ".env", ".env.local", ".venv/pyvenv.cfg", "venv/pyve
              "instance/store.db", "local.db", ".vscode/settings.json", "htmlcov/index.html", ".coverage",
              "__pycache__/x.pyc", "app/__pycache__/x.cpython-312.pyc", "migrations/__pycache__/env.cpython-312.pyc",
              "app/services/__pycache__/orders.cpython-312.pyc", "app/static/js/app.js.map",
-             ".pytest_cache/README.md", "docs/ARCHITECTURE.md"]
+             ".pytest_cache/README.md", "docs/ARCHITECTURE.md",
+             # v1.4 image audit: local tooling, the compose file and the MySQL init folder were copied in
+             ".playwright-mcp/demo_v13.js", "CLAUDE.md", "docker-compose.yml", "docker/mysql-init/10-app-user.sh"]
 
 
 @pytest.mark.parametrize("path", NOT_SERVED)

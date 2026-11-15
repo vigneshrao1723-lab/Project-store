@@ -85,7 +85,9 @@ def test_the_cover_helper_marks_only_the_finished_drawing_as_html(app, rag):
 def test_compose_has_no_database_password_defaults_and_requires_them():
     text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     assert ":-store" not in text and ":-root" not in text
-    assert len(re.findall(r"\$\{DB_PASSWORD:\?", text)) == 3          # db, web and sweeper
+    assert len(re.findall(r"\$\{DB_PASSWORD:\?", text)) == 2          # db and migrate (the schema owner; v1.4)
+    assert len(re.findall(r"\$\{DB_APP_PASSWORD:\?", text)) == 3      # db (creates it), web and sweeper (rows only)
+    assert text.count("mysql+pymysql://store_app:") == 2 and text.count("mysql+pymysql://store:") == 1
     assert len(re.findall(r"\$\{DB_ROOT_PASSWORD:\?", text)) == 1
     assert "-p${" not in text
 

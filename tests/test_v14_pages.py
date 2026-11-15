@@ -285,4 +285,4 @@ def test_anonymise_account_erases_the_person_and_keeps_the_sales_record(app, buy
 
 def test_container_logs_are_rotated_as_the_privacy_policy_says():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    assert 'max-size: "10m"' in compose and 'max-file: "3"' in compose and compose.count("logging: *logging") == 3
+    assert 'max-size: "10m"' in compose and 'max-file: "3"' in compose and compose.count("logging: *logging") == 4          # db, migrate, web, sweeper

@@ -36,7 +36,9 @@ def ip_key():
 
 
 def _limit(scope):
-    limit, seconds = current_app.config["RATE_LIMITS"][scope]
+    """The (hits, window) for a scope. A RATE_LIMITS setting that leaves a scope out keeps that scope's default."""
+    from ..config import Config
+    limit, seconds = current_app.config["RATE_LIMITS"].get(scope) or Config.RATE_LIMITS[scope]
     return limit, timedelta(seconds=seconds)
 
 

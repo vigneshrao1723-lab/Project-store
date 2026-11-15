@@ -35,12 +35,18 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: project_store
+      # The schema owner: used only by the one-shot "migrate" service below (it can create and alter tables).
       MYSQL_USER: store
       MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      # The least-privilege account the web app and the sweeper use (rows only), created by docker/mysql-init on the
+      # first start of an empty volume. For an existing volume, see docs/RELEASE_STEPS_v1.4.md.
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env}
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     volumes:
       - dbdata:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    # No ports: MySQL is reachable only from the other containers on this compose network, never from the host.
     # No password on the command line, where `docker inspect` and `ps` would show it. mysqladmin ping exits 0
     # whenever the server answers, even when it refuses the login, and -h 127.0.0.1 only answers once the real
     # server (not MySQL's temporary start-up server, which has no network port) is up.
@@ -50,6 +56,26 @@ services:
       timeout: 3s
       retries: 20
 
+  # One shot, on every `up`: brings the schema to the latest migration and loads the catalogue on first run, as the
+  # schema owner, then exits. The web app starts only after it has finished successfully.
+  migrate:
+    build: .
+    logging: *logging
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      RUN_MIGRATIONS: "1"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      <<: *notify-env
+    healthcheck:
+      disable: true
+    command: ["flask", "db", "current"]
+
   web:
     build: .
     logging: *logging
@@ -57,17 +83,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
-      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
+      # rows only: SELECT, INSERT, UPDATE, DELETE on project_store (no DROP, ALTER, GRANT, FILE or SUPER)
+      DATABASE_URL: mysql+pymysql://store_app:${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      RUN_MIGRATIONS: "0"
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
       RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
       ALLOW_PRACTICE_GATEWAY: ${ALLOW_PRACTICE_GATEWAY:-false}
       RESERVATION_MINUTES: ${RESERVATION_MINUTES:-15}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       LOGIN_MAX_ATTEMPTS: ${LOGIN_MAX_ATTEMPTS:-5}
       LOGIN_LOCKOUT_MINUTES: ${LOGIN_LOCKOUT_MINUTES:-10}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-0}
@@ -75,18 +103,18 @@ services:
     ports:
       - "${WEB_PORT:-8000}:8000"
 
-  # Frees stock held by unpaid orders even when nobody is browsing.
+  # Frees stock held by unpaid orders and retries order messages, even when nobody is browsing.
   sweeper:
     build: .
     logging: *logging
     restart: unless-stopped
     depends_on:
       web:
-        # Healthy means the entrypoint has created the tables, so the first sweep cannot fail.
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://store:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://store_app:${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env}@db:3306/project_store?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      RUN_MIGRATIONS: "0"
       <<: *notify-env
     # This container runs no web server, so the image's HTTP healthcheck would always fail.
     healthcheck:

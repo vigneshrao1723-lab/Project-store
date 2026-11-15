@@ -1,0 +1,4 @@
+# gitleaks findings checked by hand and found harmless (one fingerprint per line).
+# 2026-11-15: the generic-api-key rule ran across a line break from the EMPTY RAZORPAY_WEBHOOK_SECRET= in the first
+# .env.example into RESERVATION_MINUTES=15. No secret was ever committed; see docs/SECURITY_AUDIT.md, item 15.
+d13591a7ef68749b38dd758697a8036b77743163:.env.example:generic-api-key:9

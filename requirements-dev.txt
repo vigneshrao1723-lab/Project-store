@@ -1,6 +1,9 @@
 # Everything needed to develop and test. requirements-dev.lock pins all of it (with hashes) for CI.
 -r requirements.txt
-pytest==9.0.3
+# Local development only: lets `flask` commands read .env. Nothing in app/ imports it and the image never has a
+# .env, so it is not a runtime dependency (moved here in v1.4 after a deptry check).
+python-dotenv==1.2.4
+pytest==9.2.0
 pytest-cov==7.1.0
 # Security gates that CI runs (see .github/workflows/ci.yml).
 pip-audit==2.10.1

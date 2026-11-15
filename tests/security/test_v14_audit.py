@@ -302,3 +302,40 @@ def test_e2_every_setting_the_app_reads_is_listed_in_env_example():
     example = {l.split("=", 1)[0] for l in (ROOT / ".env.example").read_text(encoding="utf-8").splitlines() if "=" in l and not l.startswith("#")}
     missing = names - example - {"TEST_DATABASE_URL"}                    # test-only, documented in the README
     assert not missing, missing
+
+
+# ---- item 11: the app connects as a rows-only MySQL account -------------------------------------------------------------------
+
+def test_e11_compose_gives_the_web_app_and_sweeper_a_rows_only_account_and_migrates_as_the_owner():
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    web = compose[compose.index("\n  web:"):compose.index("\n  sweeper:")]
+    sweeper = compose[compose.index("\n  sweeper:"):compose.index("\nvolumes:")]
+    migrate = compose[compose.index("\n  migrate:"):compose.index("\n  web:")]
+    assert "mysql+pymysql://store_app:" in web and "mysql+pymysql://store_app:" in sweeper
+    assert "mysql+pymysql://store:" in migrate and 'RUN_MIGRATIONS: "1"' in migrate
+    assert 'RUN_MIGRATIONS: "0"' in web and 'RUN_MIGRATIONS: "0"' in sweeper
+    assert "condition: service_completed_successfully" in web
+    db_block = compose[compose.index("\n  db:"):compose.index("\n  migrate:")]
+    assert "\n    ports:" not in db_block and "./docker/mysql-init:/docker-entrypoint-initdb.d:ro" in db_block
+
+
+def test_e11_the_init_script_grants_rows_only_on_the_store_schema():
+    sql = (ROOT / "docker" / "mysql-init" / "10-app-user.sh").read_text(encoding="utf-8")
+    grants = re.findall(r"GRANT (.+?) ON (\S+) TO", sql)
+    assert grants == [("SELECT, INSERT, UPDATE, DELETE", "\`${MYSQL_DATABASE}\`.*")], grants
+    for word in ("DROP", "ALTER", "CREATE TABLE", "ALL PRIVILEGES", "GRANT OPTION", "FILE", "SUPER", "*.*"):
+        assert word not in sql.split("<<EOSQL", 1)[1].split("EOSQL", 1)[0], word
+    assert "MYSQL_PWD=" in sql and "-p" not in sql.split("mysql --protocol", 1)[1].split("\n", 1)[0]     # no password in argv
+    assert 'echo "10-app-user.sh: could not create store_app" >&2' in sql                       # a failure is never reported as done
+    assert 'if [ -z "${DB_APP_PASSWORD:-}" ]' in sql                             # never an account without a password
+
+
+def test_e11_the_entrypoint_migrates_only_when_asked():
+    entry = (ROOT / "docker-entrypoint.sh").read_text(encoding="utf-8")
+    assert 'if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then' in entry and entry.index("flask db upgrade") > entry.index("RUN_MIGRATIONS")
+
+
+def test_e3_shell_scripts_that_run_in_containers_have_unix_line_endings():
+    """A CR in the shebang line makes Docker answer "exec ./docker-entrypoint.sh: no such file or directory"."""
+    for f in [ROOT / "docker-entrypoint.sh", *(ROOT / "docker" / "mysql-init").glob("*.sh"), *(ROOT / "scripts").glob("*.sh")]:
+        assert b"\r" not in f.read_bytes(), f

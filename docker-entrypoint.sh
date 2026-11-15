@@ -19,9 +19,14 @@ with app.app_context():
     else:
         raise SystemExit("database never became ready")
 PY
-# A database created before migrations existed has the tables but no version record. Mark it as being at
-# the first migration so the upgrade below only applies what is new. Does nothing on any other database.
-flask adopt-legacy-db
-flask db upgrade
-flask seed --if-empty
+# Schema changes need the owner account. Under docker compose the one-shot "migrate" service runs them
+# (RUN_MIGRATIONS=1) and the web app and sweeper, which connect as the rows-only account, skip them
+# (RUN_MIGRATIONS=0). A single container with no setting (the CI smoke test) migrates as before.
+if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
+  # A database created before migrations existed has the tables but no version record. Mark it as being at
+  # the first migration so the upgrade below only applies what is new. Does nothing on any other database.
+  flask adopt-legacy-db
+  flask db upgrade
+  flask seed --if-empty
+fi
 exec "$@"

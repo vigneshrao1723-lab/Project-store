@@ -1,0 +1,8 @@
+#!/bin/sh
+# Refuse a commit that would add a secret. Scans only what is staged, with the same gitleaks version as CI, in Docker
+# (nothing to install). Enable it once with: git config core.hooksPath scripts/hooks
+# Findings are redacted; a false positive is added to .gitleaksignore after a human has looked at it.
+set -e
+root="$(git rev-parse --show-toplevel)"
+exec docker run --rm -v "$root:/repo" --entrypoint sh zricethezav/gitleaks:v8.30.1 -c \
+  'git config --global --add safe.directory /repo && cd /repo && gitleaks git --pre-commit --staged --redact --no-banner /repo'

@@ -7,8 +7,8 @@ section of docs/ARCHITECTURE.md). Each says when it was last updated and that it
 Names, addresses and contact details come from the environment (CONTACT_*, SELLER_*), never from the code.
 """
 import json
-import re
 from datetime import timedelta
+from html import escape
 from pathlib import Path
 
 from flask import Blueprint, Response, current_app, redirect, render_template, url_for
@@ -81,8 +81,7 @@ def public_urls():
 
 @bp.get("/sitemap.xml")
 def sitemap():
-    from xml.sax.saxutils import escape
-    body = "".join(f"<url><loc>{escape(_base() + u)}</loc></url>" for u in public_urls())
+    body = "".join(f"<url><loc>{escape(_base() + u, quote=False)}</loc></url>" for u in public_urls())
     xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>\n'
     return Response(xml, mimetype="application/xml")
 
