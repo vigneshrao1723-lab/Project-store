@@ -261,3 +261,10 @@ def test_the_shelf_module_has_no_loop_or_observer_of_its_own():
     assert "requestAnimationFrame" not in src and "IntersectionObserver" not in src and "setInterval" not in src
     scroll = (ROOT / "app" / "static" / "js" / "fx-scroll.js").read_text(encoding="utf-8")
     assert "window.fxShelf.tick(now, y)" in scroll and '"fxshelf-wake", schedule' in scroll
+
+
+def test_the_loop_property_is_registered_as_not_inherited():
+    """--sx changes every frame. Unregistered custom properties inherit, so writing one on the track would restyle every
+    card and cover inside it each frame (measured: shelf p95 49.9 ms before, 33.4 ms after, headless, 1280x800)."""
+    css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
+    assert '@property --sx { syntax: "<number>"; inherits: false; initial-value: 0; }' in css
