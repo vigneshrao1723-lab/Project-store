@@ -235,7 +235,7 @@ pytest --cov=app --cov-report=term-missing
 TEST_DATABASE_URL="mysql+pymysql://store:store@127.0.0.1:3306/project_store_test?charset=utf8mb4" pytest
 ```
 
-Without MySQL, the 3 concurrency tests skip; CI runs them against a MySQL service. A few motion tests run the page scripts under Node and skip if Node is not installed.
+Without MySQL, the 3 concurrency tests skip; CI runs them against a MySQL service (only the four files named in `.github/workflows/ci.yml`). To run the **whole** suite on MySQL, give the test database a password that is not a placeholder (not `store`, `root` or `password`): several security tests build a production-style app, and since v1.4 that app refuses a placeholder database password, exactly as it would in production. The v1.4 report says which files were run on MySQL and how each ended. A few motion tests run the page scripts under Node and skip if Node is not installed.
 
 ## REST API
 
