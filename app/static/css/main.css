@@ -661,6 +661,7 @@ html.cookie-ok .cookie-note { display: none; }
 .policy th, .policy td { text-align: left; vertical-align: top; padding: .55rem .6rem; border-bottom: 1px solid var(--line); }
 .policy th { color: var(--white); font-family: var(--font-display); }
 .policy .table-wrap { overflow-x: auto; }
+.policy .table-wrap table { min-width: 36rem; }          /* narrow phones scroll the table sideways instead of squeezing every column to a word per line */
 .policy dt { font-weight: 700; color: var(--white); margin-top: 1rem; }
 .policy dd { margin: .2rem 0 0; }
 .err-actions { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-top: 1.4rem; }
