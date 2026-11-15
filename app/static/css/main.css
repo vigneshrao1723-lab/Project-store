@@ -661,7 +661,15 @@ html.cookie-ok .cookie-note { display: none; }
 .policy th, .policy td { text-align: left; vertical-align: top; padding: .55rem .6rem; border-bottom: 1px solid var(--line); }
 .policy th { color: var(--white); font-family: var(--font-display); }
 .policy .table-wrap { overflow-x: auto; }
-.policy .table-wrap table { min-width: 36rem; }          /* narrow phones scroll the table sideways instead of squeezing every column to a word per line */
+/* On narrow screens each row of a policy table becomes a labelled card, so no column (the cookie duration, how long data is
+   kept) is ever hidden off to the side; the header row stays for screen readers only. */
+@media (max-width: 620px) {
+  .policy thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .policy table, .policy tbody, .policy tr, .policy td { display: block; }
+  .policy tr { padding: .8rem 0; border-bottom: 1px solid var(--line); }
+  .policy td { border: 0; padding: .25rem 0; }
+  .policy td::before { content: attr(data-label); display: block; font: 700 .76rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+}
 .policy dt { font-weight: 700; color: var(--white); margin-top: 1rem; }
 .policy dd { margin: .2rem 0 0; }
 .err-actions { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-top: 1.4rem; }

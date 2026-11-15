@@ -6,12 +6,12 @@ so there is nothing to opt in to or out of. This page lists every cookie the sto
 browser storage it uses, which never leaves your browser.</p>
 
 <h2>Cookies</h2>
-<div class="table-wrap" tabindex="0" role="region" aria-label="Cookies (scrolls sideways on small screens)">
+<div class="table-wrap">
 <table>
   <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Duration</th><th scope="col">Essential?</th></tr></thead>
   <tbody>
-    <tr><td><code>session</code></td><td>Keeps you signed in, holds the security token that protects every form from cross-site request forgery, and carries one-time notices such as "Payment received". Sent only to this site, not readable by scripts (HttpOnly), SameSite=Lax.</td><td>Until you close your browser</td><td>Yes</td></tr>
-    <tr><td><code>remember_token</code></td><td>Set only if you tick "Keep me signed in on this device": signs you back in after the browser is closed. Signing out removes it. HttpOnly, SameSite=Lax.</td><td>14 days</td><td>Yes (you ask for it)</td></tr>
+    <tr><td data-label="Name"><code>session</code></td><td data-label="Purpose">Keeps you signed in, holds the security token that protects every form from cross-site request forgery, and carries one-time notices such as "Payment received". Sent only to this site, not readable by scripts (HttpOnly), SameSite=Lax.</td><td data-label="Duration">Until you close your browser</td><td data-label="Essential?">Yes</td></tr>
+    <tr><td data-label="Name"><code>remember_token</code></td><td data-label="Purpose">Set only if you tick "Keep me signed in on this device": signs you back in after the browser is closed. Signing out removes it. HttpOnly, SameSite=Lax.</td><td data-label="Duration">14 days</td><td data-label="Essential?">Yes (you ask for it)</td></tr>
   </tbody>
 </table>
 </div>
@@ -20,13 +20,13 @@ browser storage it uses, which never leaves your browser.</p>
 <h2>Browser storage (not cookies)</h2>
 <p>These are kept by your browser for this site only. They hold no personal data and are never sent to the store or to
 anyone else.</p>
-<div class="table-wrap" tabindex="0" role="region" aria-label="Browser storage (scrolls sideways on small screens)">
+<div class="table-wrap">
 <table>
   <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Duration</th><th scope="col">Essential?</th></tr></thead>
   <tbody>
-    <tr><td><code>ps-cookie-note</code> (localStorage)</td><td>Remembers that you pressed "OK" on the cookie notice, so it stops showing</td><td>Until you clear this site's data</td><td>Yes (records your choice)</td></tr>
-    <tr><td><code>ps-intro</code> (sessionStorage)</td><td>Plays the short intro animation once per tab instead of on every page</td><td>Until the tab is closed</td><td>No, but it stays in your browser</td></tr>
-    <tr><td><code>ps-paid-&lt;order&gt;</code> (sessionStorage)</td><td>Plays the payment tick animation once per order instead of on every reload</td><td>Until the tab is closed</td><td>No, but it stays in your browser</td></tr>
+    <tr><td data-label="Name"><code>ps-cookie-note</code> (localStorage)</td><td data-label="Purpose">Remembers that you pressed "OK" on the cookie notice, so it stops showing</td><td data-label="Duration">Until you clear this site's data</td><td data-label="Essential?">Yes (records your choice)</td></tr>
+    <tr><td data-label="Name"><code>ps-intro</code> (sessionStorage)</td><td data-label="Purpose">Plays the short intro animation once per tab instead of on every page</td><td data-label="Duration">Until the tab is closed</td><td data-label="Essential?">No, but it stays in your browser</td></tr>
+    <tr><td data-label="Name"><code>ps-paid-&lt;order&gt;</code> (sessionStorage)</td><td data-label="Purpose">Plays the payment tick animation once per order instead of on every reload</td><td data-label="Duration">Until the tab is closed</td><td data-label="Essential?">No, but it stays in your browser</td></tr>
   </tbody>
 </table>
 </div>

@@ -117,7 +117,7 @@ def test_the_cookie_policy_lists_every_cookie_the_app_really_sets(app, client, u
     policy = client.get("/cookies").get_data(as_text=True)
     assert names and names <= {"session", "remember_token"}, names
     for n in names:
-        assert f"<tr><td><code>{n}</code></td>" in policy, n
+        assert f'<tr><td data-label="Name"><code>{n}</code></td>' in policy, n
     js = "".join(f.read_text(encoding="utf-8") for f in (ROOT / "app" / "static" / "js").glob("*.js"))
     assert "document.cookie" not in js                          # no script sets a cookie
     for key in re.findall(r'(?:local|session)Storage\.setItem\("([\w-]+)', js):
