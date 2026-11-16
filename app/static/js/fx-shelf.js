@@ -1,11 +1,12 @@
-/* The home shelf as an endless loop (v1.4): drifts, and a scroll, sideways wheel or drag pushes it either way.
-   Copies are aria-hidden and inert. Hover, focus and the Pause button stop the drift. No loop of its own (fx-scroll.js
-   calls window.fxShelf.tick). Runs only with fx-on and without "shelf-loop" in app/fx.json. See docs/ARCHITECTURE.md. */
+/* The home shelf as an endless loop (v1.4). It drifts from load; a mouse over it, focus on a card and the Pause button
+   stop it; with reduced motion it starts paused. fx-scroll.js calls window.fxShelf.tick. See docs/ARCHITECTURE.md. */
 (() => {
   "use strict";
   const root = document.documentElement, sec = document.querySelector('[data-fx="hscroll"]');
   const stage = sec && sec.querySelector(".hs-stage"), track = sec && sec.querySelector(".hs-track");
-  if (!stage || !track || !root.classList.contains("fx-on") || root.classList.contains("fx-off-shelf-loop")) return;
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (!stage || !track || !(root.classList.contains("fx-on") || mq.matches) || root.classList.contains("fx-off-shelf-loop")) return;
+  if (!root.classList.contains("fx-on")) root.classList.add("fx-shelf-rm");
   const cards = [...track.children];
   if (cards.length < 2) return;
   const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
@@ -24,7 +25,7 @@
   let after = copy();
   after.forEach((k) => track.appendChild(k));
   sec.classList.add("is-loop");
-  const s = { x: 0, v: 0, dir: 1, paused: false, calm: false, hover: false, focus: false, lock: false, start: null, moving: false, lastY: null, t: 0, P: 0, lo: 0, stale: true };
+  const s = { x: 0, v: 0, dir: 1, paused: mq.matches, calm: mq.matches, hover: false, focus: false, lock: false, start: null, moving: false, lastY: null, t: 0, P: 0, lo: 0, stale: true };
   const pos = (el) => el.offsetLeft - track.firstChild.offsetLeft;
   const measure = () => {
     s.stale = false;
@@ -44,9 +45,9 @@
       s.t = now;
       const r = sec.getBoundingClientRect();
       if (r.bottom <= 0 || r.top >= window.innerHeight) { s.lastY = null; return false; }
-      if (s.lastY !== null && y !== s.lastY && !s.moving && !s.lock) push(y - s.lastY);       // scrolling pushes it
+      if (s.lastY !== null && y !== s.lastY && !s.moving && !s.lock && !s.calm) push(y - s.lastY);   // scrolling pushes it (not with reduced motion)
       s.lastY = y;
-      const target = s.paused || s.calm || s.hover || s.focus ? 0 : s.dir * speed;
+      const target = s.paused || s.hover || s.focus ? 0 : s.dir * speed;
       if (!s.moving && !s.lock) {
         s.v += (target - s.v) * (1 - Math.exp(-dt / 0.6));
         s.x += s.v * dt;
@@ -57,17 +58,17 @@
     },
   };
   const btn = sec.querySelector("[data-shelf-toggle]");
+  const setPaused = (v) => {
+    s.paused = v;
+    if (btn) { btn.dataset.state = v ? "paused" : "playing"; btn.querySelector("[data-label]").textContent = v ? "Play" : "Pause"; }
+    wake();
+  };
   if (btn) {
     btn.hidden = false;
-    on(btn, "click", () => {
-      s.paused = !s.paused;
-      btn.dataset.state = s.paused ? "paused" : "playing";
-      btn.querySelector("[data-label]").textContent = s.paused ? "Play" : "Pause";
-      wake();
-    });
+    setPaused(s.paused);
+    on(btn, "click", () => setPaused(!s.paused));
   }
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  if (mq.addEventListener) on(mq, "change", (e) => { s.calm = e.matches; wake(); });
+  if (mq.addEventListener) on(mq, "change", (e) => { s.calm = e.matches; if (e.matches) setPaused(true); else wake(); });
   const hover = (v) => (e) => { if (e.pointerType === "mouse") { s.hover = v; wake(); } };
   on(stage, "pointerenter", hover(true));
   on(stage, "pointerleave", hover(false));
@@ -102,7 +103,7 @@
   on(stage, "pointerup", release);
   on(stage, "pointercancel", release);
   on(stage, "click", (e) => { if (s.suppress) { s.suppress = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  on(sec, "focusin", (e) => {
+  on(track, "focusin", (e) => {                                             // cards only, not the Pause button
     s.focus = true;
     const card = e.target.closest(".hs-card");
     if (cards.indexOf(card) >= 0) {
@@ -113,7 +114,7 @@
     }
     wake();
   });
-  on(sec, "focusout", (e) => { if (!sec.contains(e.relatedTarget)) { s.focus = s.lock = false; wake(); } });
+  on(track, "focusout", (e) => { if (!track.contains(e.relatedTarget)) { s.focus = s.lock = false; wake(); } });
   on(window, "resize", () => { s.stale = true; wake(); }, { passive: true });
   on(window, "pagehide", () => { offs.forEach((f) => f()); delete window.fxShelf; }, { once: true });
   window.dispatchEvent(new Event("fxshelf-ready"));

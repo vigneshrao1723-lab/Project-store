@@ -1,6 +1,7 @@
 """The home shelf's endless loop, fx-shelf.js (v1.4), run under node against a small fake DOM. fx-scroll.js drives it by
 calling window.fxShelf.tick(now, scrollY) every frame; here the test calls tick itself. The markup, stylesheet and switch
-are checked at the bottom."""
+are checked at the bottom. Defaults: it drifts from load with no click; the Pause button is clipped until keyboard
+focus; with prefers-reduced-motion: reduce it starts paused and the button reads "Play"."""
 import json
 import re
 import shutil
@@ -65,7 +66,7 @@ function world(opts = {}) {
   sec.append(btn, stage); stage.append(track);
   const win = {
     innerHeight: 800,
-    matchMedia: () => ({ matches: false, addEventListener: (t, f) => mqL.push(f), removeEventListener: (t, f) => { const i = mqL.indexOf(f); if (i >= 0) mqL.splice(i, 1); } }),
+    matchMedia: () => ({ matches: !!opts.reduced, addEventListener: (t, f) => mqL.push(f), removeEventListener: (t, f) => { const i = mqL.indexOf(f); if (i >= 0) mqL.splice(i, 1); } }),
     addEventListener: (t, f, o) => { (winL[t] = winL[t] || []).push(f); },
     removeEventListener: (t, f) => { const l = winL[t] || []; const i = l.indexOf(f); if (i >= 0) l.splice(i, 1); },
     dispatchEvent: (ev) => { events.push(ev.type); },
@@ -81,7 +82,7 @@ function world(opts = {}) {
   w.shelf = () => win.fxShelf;
   w.s = () => win.fxShelf.state;
   w.tick = (ms, y = 0) => { const end = now + ms; let more = true; while (now < end) { now += 16; more = win.fxShelf.tick(now, y); } return more; };
-  w.fire = (target, type, ev = {}) => { const e = Object.assign({ target, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; } }, ev); (target.L[type] || []).slice().forEach((l) => l.f(e)); return e; };
+  w.fire = (target, type, ev = {}) => { const e = Object.assign({ target, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; } }, ev); for (let n = target; n; n = type === "pointerenter" || type === "pointerleave" ? null : n.parentNode) (n.L[type] || []).slice().forEach((l) => l.f(e)); return e; };   // events bubble, except pointerenter and pointerleave
   w.at = (t) => { now = t; };
   w.setTop = (t) => { secTop = t; };
   w.sx = () => parseFloat(track.style.props["--sx"]);
@@ -207,21 +208,69 @@ def test_keyboard_focus_stops_it_and_brings_the_real_card_fully_into_view():
     r = run("""
       w.tick(16); const s = w.s(); s.x = s.lo + 900; w.tick(16);
       const card = w.cards[0], link = card.children[0];
-      w.fire(w.sec, "focusin", { target: link });
+      w.fire(w.track, "focusin", { target: link });
       const left = card.offsetLeft - w.track.firstChild.offsetLeft - s.x;
       w.tick(2000); const still = s.x;
-      w.fire(w.sec, "focusout", { target: link, relatedTarget: w.cards[1].children[0] }); const kept = s.focus;
-      w.fire(w.sec, "focusout", { target: link, relatedTarget: null }); w.tick(3000);
+      w.fire(w.track, "focusout", { target: link, relatedTarget: w.cards[1].children[0] }); const kept = s.focus;
+      w.fire(w.track, "focusout", { target: link, relatedTarget: null }); w.tick(3000);
       const result = { left, lock: still === s.x ? "moved" : "x", stillSame: true, kept, after: s.v, focus: s.focus };""")
     assert r["left"] == 24                                                    # the focused card sits at the page gutter
     assert r["kept"] is True and r["focus"] is False and r["after"] > 20
 
 
-def test_reduced_motion_switched_on_while_open_stops_the_drift():
+def test_reduced_motion_switched_on_while_open_stops_the_drift_and_the_button_says_play():
     r = run("""
       w.tick(2000); w.mqL.forEach((f) => f({ matches: true })); w.tick(4000);
-      const result = { v: w.s().v };""")
-    assert abs(r["v"]) < 0.5
+      const result = { v: w.s().v, label: w.label.textContent, state: w.btn.dataset.state };""")
+    assert abs(r["v"]) < 0.5 and r["label"] == "Play" and r["state"] == "paused"
+
+
+def test_it_starts_drifting_on_load_with_no_click_and_the_button_starts_on_pause():
+    r = run("""
+      const before = { paused: w.s().paused, label: w.label.textContent, state: w.btn.dataset.state, shown: w.btn.hidden === false };
+      w.tick(3000);
+      const result = { before, v: w.s().v, moved: w.s().x !== 0 };""")
+    assert r["before"] == {"paused": False, "label": "Pause", "state": "playing", "shown": True}
+    assert r["v"] > 20 and r["moved"]
+
+
+def test_with_reduced_motion_the_loop_is_built_but_starts_paused_and_the_button_reads_play():
+    r = run("""
+      const built = { loop: w.sec.classList.contains("is-loop"), kids: w.track.children.length, rm: w.root.classList.contains("fx-shelf-rm"),
+        fxOn: w.root.classList.contains("fx-on"), label: w.label.textContent, state: w.btn.dataset.state, shown: w.btn.hidden === false };
+      w.tick(4000); const still = { v: w.s().v, more: w.tick(16) };
+      w.fire(w.btn, "click"); w.tick(4000);
+      const play = { v: w.s().v, label: w.label.textContent, state: w.btn.dataset.state };
+      const result = { built, still, play };""", "{ noFx: true, reduced: true }")
+    assert r["built"]["loop"] and r["built"]["kids"] >= 12 and r["built"]["rm"] and r["built"]["fxOn"] is False
+    assert r["built"]["label"] == "Play" and r["built"]["state"] == "paused" and r["built"]["shown"]
+    assert abs(r["still"]["v"]) < 0.5 and r["still"]["more"] is False           # nothing moves until Play is pressed
+    assert r["play"]["v"] > 20 and r["play"]["label"] == "Pause" and r["play"]["state"] == "playing"
+
+
+def test_with_reduced_motion_the_page_scroll_does_not_push_it_but_a_sideways_wheel_still_does():
+    r = run("""
+      w.tick(16, 0); w.tick(16, 0); w.tick(16, 400); w.tick(16, 900); const scrolled = w.s().v;
+      w.fire(w.stage, "wheel", { deltaX: 200, deltaY: 0, deltaMode: 0 }); const wheel = w.s().v;
+      const result = { scrolled, wheel };""", "{ noFx: true, reduced: true }")
+    assert abs(r["scrolled"]) < 0.5 and r["wheel"] > 100
+
+
+def test_without_motion_and_without_a_reduced_motion_preference_it_still_does_nothing():
+    r = run("const result = { api: !!w.win.fxShelf, rm: w.root.classList.contains('fx-shelf-rm'), btn: w.btn.hidden, kids: w.track.children.length };", "{ noFx: true }")
+    assert r == {"api": False, "rm": False, "btn": True, "kids": 4}
+
+
+def test_focus_on_the_pause_button_does_not_hold_the_row_so_space_and_enter_really_toggle_it():
+    """The button sits in the same stage as the cards. Only focus on the cards stops the drift."""
+    r = run("""
+      w.tick(2000);
+      w.fire(w.btn, "focusin", { target: w.btn });                             // keyboard focus lands on the button (the event bubbles)
+      w.tick(3000); const focused = w.s().v;
+      w.fire(w.btn, "click"); w.tick(4000); const paused = w.s().v;           // Space or Enter on a button is a click
+      w.fire(w.btn, "click"); w.tick(4000); const resumed = w.s().v;
+      const result = { focused, paused, resumed, hold: w.s().focus };""")
+    assert r["focused"] > 20 and abs(r["paused"]) < 0.5 and r["resumed"] > 20 and r["hold"] is False
 
 
 def test_pagehide_removes_every_listener_and_the_api():
@@ -229,8 +278,8 @@ def test_pagehide_removes_every_listener_and_the_api():
       w.tick(16);
       w.winL.pagehide.slice().forEach((f) => f());
       const count = (n) => Object.values(n.L).reduce((a, l) => a + l.length, 0);
-      const result = { api: !!w.win.fxShelf, stage: count(w.stage), sec: count(w.sec), btn: count(w.btn), resize: (w.winL.resize || []).length };""")
-    assert r == {"api": False, "stage": 0, "sec": 0, "btn": 0, "resize": 0}
+      const result = { api: !!w.win.fxShelf, stage: count(w.stage), track: count(w.track), sec: count(w.sec), btn: count(w.btn), resize: (w.winL.resize || []).length };""")
+    assert r == {"api": False, "stage": 0, "track": 0, "sec": 0, "btn": 0, "resize": 0}
 
 
 # ---- markup, stylesheet, switch ----------------------------------------------------------------------------------------
@@ -250,7 +299,7 @@ def test_the_home_page_loads_the_shelf_module_after_the_scroll_system_with_a_hid
 def test_the_loop_styles_only_apply_with_the_script_and_the_switch_on():
     css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
     rules = re.findall(r"([^{}]*\.is-loop[^{}]*)\{", css)
-    assert rules and all("html.fx-on:not(.fx-off-shelf-loop)" in r for r in rules)
+    assert rules and all("html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop)" in r for r in rules)
     assert "touch-action: pan-y" in css and "translate3d(calc(var(--sx, 0) * -1px), 0, 0)" in css
     tuning = (ROOT / "app" / "static" / "css" / "fx-tuning.css").read_text(encoding="utf-8")
     assert 'html[data-fx-off~="shelf-loop"] .shelf-toggle { display: none !important; }' in tuning
@@ -268,3 +317,55 @@ def test_the_loop_property_is_registered_as_not_inherited():
     card and cover inside it each frame (measured: shelf p95 49.9 ms before, 33.4 ms after, headless, 1280x800)."""
     css = (ROOT / "app" / "static" / "css" / "motion3.css").read_text(encoding="utf-8")
     assert '@property --sx { syntax: "<number>"; inherits: false; initial-value: 0; }' in css
+
+
+def test_the_pause_button_is_clipped_for_the_mouse_and_shown_only_on_keyboard_focus_without_moving_anything():
+    css = (ROOT / "app" / "static" / "css" / "main.css").read_text(encoding="utf-8")
+    hidden = re.search(r"\.shelf-toggle:not\(:focus-visible\)\s*\{([^}]*)\}", css).group(1)
+    for need in ("position: absolute", "width: 1px", "height: 1px", "overflow: hidden", "clip-path: inset(50%)"):
+        assert need in hidden, need
+    assert "display:" not in hidden and "visibility" not in hidden and "opacity" not in hidden   # still focusable, still read out
+    shown = re.search(r"\.shelf-toggle:focus-visible\s*\{([^}]*)\}", css).group(1)
+    assert "position: absolute" in shown                                                    # out of the flow: no layout shift
+    assert re.search(r"\.shelf-head\s*\{[^}]*position: relative", css)
+    assert "[hidden] { display: none; }" in css                                             # hidden until the script runs it
+
+
+REDUCED_SCROLL = r"""
+  const vm = require("vm"), fs = require("fs");
+  const src = fs.readFileSync(process.argv[1], "utf8");
+  const winL = {}, docL = {}, frames = [], classes = [], ticks = [];
+  let more = true;
+  const win = { innerHeight: 800, pageYOffset: 120,
+    matchMedia: (q) => ({ matches: /reduce/.test(q), addEventListener() {} }),
+    addEventListener: (t, f) => { (winL[t] = winL[t] || []).push(f); }, removeEventListener: (t, f) => { winL[t] = (winL[t] || []).filter((x) => x !== f); },
+    fxShelf: { tick: (now, y) => { ticks.push(y); return more; } }, location: { search: "" } };
+  const doc = { hidden: false, body: { dataset: { page: "home" } }, documentElement: { dataset: {}, classList: { add: (c) => classes.push(c) } },
+    addEventListener: (t, f) => { (docL[t] = docL[t] || []).push(f); }, removeEventListener() {}, querySelector: () => null, querySelectorAll: () => [] };
+  win.window = win;
+  vm.runInNewContext(src, { window: win, document: doc, requestAnimationFrame: (f) => { frames.push(f); return frames.length; }, cancelAnimationFrame() {},
+    navigator: {}, performance: { now: () => 0 }, getComputedStyle: () => ({ getPropertyValue: () => "" }),
+    IntersectionObserver: function () { throw new Error("no observer"); }, Math, Number, String, Array, Object, Set, Map, parseFloat, RegExp });
+  const wired = ["fxshelf-ready", "fxshelf-wake", "scroll", "resize"].every((n) => (winL[n] || []).length === 1) && (docL.visibilitychange || []).length === 1;
+  const idleFrames = frames.length;
+  winL["fxshelf-wake"][0]();                                   // the shelf asks for a frame
+  winL["scroll"][0]();                                         // a second request in the same frame is folded in
+  const queued = frames.length - idleFrames;
+  frames.shift()(16);                                          // the frame runs: tick, which keeps asking
+  const afterOne = { ticks: ticks.slice(), queued: frames.length };
+  more = false; frames.shift()(32);                            // the shelf stops asking: no more frames
+  console.log(JSON.stringify({ wired, idleFrames, queued, afterOne, last: frames.length, classes, ticks: ticks.length }));
+"""
+
+
+def test_the_reduced_motion_branch_of_the_scroll_script_runs_only_the_shelf_frame_loop():
+    """fx-scroll.js, run under node with prefers-reduced-motion: reduce: no fx-on, no observer, but one frame per wake or
+    scroll that calls window.fxShelf.tick with the scroll position, and no more once the shelf stops asking."""
+    if not NODE:
+        pytest.skip("node is not installed")
+    out = subprocess.run([NODE, "-e", REDUCED_SCROLL, str(ROOT / "app" / "static" / "js" / "fx-scroll.js")], capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    r = json.loads(out.stdout.strip().splitlines()[-1])
+    assert r["wired"] and r["idleFrames"] == 0 and r["queued"] == 1
+    assert r["afterOne"] == {"ticks": [120], "queued": 1} and r["last"] == 0 and r["ticks"] == 2
+    assert r["classes"] == []                                    # no fx-on, no fx-lite: the rest of the site stays still

@@ -108,10 +108,21 @@ def page(extra, opts="{}"):
 
 # ---- when it does not run ----------------------------------------------------------------------------------------------
 
-def test_it_does_nothing_for_admin_and_error_pages_for_reduced_motion_and_without_an_observer():
-    for opts in ('{ page: "none" }', '{ calm: true }', '{ noIO: true }', '{ page: "none", calm: true, noIO: true }'):
-        r = run_node(page("const result = { on: [...w.rootClasses], observers: w.observers.length, listeners: Object.keys(w.listeners), writes: w.writes.length, queued: w.pending(), below: rise_below.classList.s.size };", opts))
+STILL = "const result = { on: [...w.rootClasses], observers: w.observers.length, listeners: Object.keys(w.listeners), writes: w.writes.length, queued: w.pending(), below: rise_below.classList.s.size };"
+
+
+def test_it_does_nothing_for_admin_and_error_pages_and_without_an_observer():
+    for opts in ('{ page: "none" }', '{ noIO: true }', '{ page: "none", calm: true, noIO: true }'):
+        r = run_node(page(STILL, opts))
         assert r == {"on": [], "observers": 0, "listeners": [], "writes": 0, "queued": 0, "below": 0}, (opts, r)
+
+
+def test_with_reduced_motion_only_the_shelf_gets_frames_nothing_else_is_set_up():
+    """The one frame loop stays the only loop. With reduced motion it is woken only by the shelf, the scroll and a resize
+    (and by the tab coming back), sets no class, makes no observer and queues nothing until one of them fires."""
+    r = run_node(page(STILL, "{ calm: true }"))
+    assert r == {"on": [], "observers": 0, "writes": 0, "queued": 0, "below": 0,
+                 "listeners": ["fxshelf-ready", "fxshelf-wake", "scroll", "resize", "doc:visibilitychange"]}, r
 
 
 def test_a_page_with_no_data_page_at_all_does_nothing():

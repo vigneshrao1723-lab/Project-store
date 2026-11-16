@@ -344,16 +344,17 @@ html.fx-on [data-fx="clip"].is-in { clip-path: inset(0 0 0 0); }
 
 /* shelf-loop (v1.4): fx-scroll.js turns the shelf into an endless loop. It drifts slowly; scrolling, a sideways wheel
    or trackpad swipe and a drag push it either way and it eases back to the drift (--sx is how far it has travelled, in
-   px). Copies of the cards fill the loop; they are aria-hidden and inert. Without the script, with reduced motion or
-   with "shelf-loop" in app/fx.json none of this applies and the shelf stays a plain sideways-scrolling row. */
+   px). Copies of the cards fill the loop; they are aria-hidden and inert. Without the script or with "shelf-loop" in
+   app/fx.json none of this applies and the shelf stays a plain sideways-scrolling row. With reduced motion the script
+   adds fx-shelf-rm to <html> instead of fx-on: the same loop, but it starts paused and does not follow the page scroll. */
 /* --sx changes every frame; registered as non-inherited so only the track restyles, never the cards and covers in it */
 @property --sx { syntax: "<number>"; inherits: false; initial-value: 0; }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop .hs-stage { overflow: hidden; scroll-snap-type: none; touch-action: pan-y; cursor: grab; }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-dragging .hs-stage { cursor: grabbing; }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop .hs-track { padding: 0; transform: translate3d(calc(var(--sx, 0) * -1px), 0, 0); }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-focus .hs-track { transform: translate3d(calc(var(--sx, 0) * -1px), 0, 0); }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-focus .hs-stage { overflow: hidden; }
-html.fx-on:not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-dragging .hs-card a { pointer-events: none; }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop .hs-stage { overflow: hidden; scroll-snap-type: none; touch-action: pan-y; cursor: grab; }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-dragging .hs-stage { cursor: grabbing; }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop .hs-track { padding: 0; transform: translate3d(calc(var(--sx, 0) * -1px), 0, 0); }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-focus .hs-track { transform: translate3d(calc(var(--sx, 0) * -1px), 0, 0); }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-focus .hs-stage { overflow: hidden; }
+html:is(.fx-on, .fx-shelf-rm):not(.fx-off-shelf-loop) [data-fx="hscroll"].is-loop.is-dragging .hs-card a { pointer-events: none; }
 
 /* marquee: a slow ticker of what the store is built with. CSS only; it pauses on hover and stops for reduced motion. */
 .stack-band { border-bottom: 1px solid var(--line); background: rgb(var(--panel-rgb) / .96); overflow: hidden; }

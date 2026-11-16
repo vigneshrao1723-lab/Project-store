@@ -2,6 +2,15 @@
 
 Dates are commit dates. The newest release is first.
 
+## 1.4.1 (unreleased, branch `fix/shelf-autoplay-hidden-pause`)
+
+A small fix to the home shelf ("The whole shelf, side by side").
+
+* **The Pause / Play button is hidden for the mouse.** It stays in the page, in the tab order, with its name ("Pause the moving shelf" / "Play the moving shelf"); it is clipped to nothing until it has keyboard focus (`:focus-visible`), then shown over the head of the section without moving anything (on phones it sits over the top of the cards, not over the heading).
+* **Space or Enter now really resumes it.** Focus on the button used to count as focus in the row, which held the shelf still after "Play". Only focus on a card stops the drift now. Mouse hover over the row still pauses it and leaving resumes it.
+* **It drifts from load with no click** (it already did; now covered by a test).
+* **Reduced motion:** the shelf is built, starts paused, and the button reads "Play" and is reachable; the page scroll does not push it, a drag or sideways wheel still moves it, Play starts the drift. `fx-scroll.js` runs only a frame loop for the shelf in that mode (still no `fx-on`). The Accessibility Statement says so.
+
 ## 1.4.0 (unreleased, branch `v1.4-final`)
 
 Policies and compliance for an India-based seller of digital products, the owner's real contact details with a

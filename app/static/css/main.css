@@ -628,10 +628,16 @@ body[data-bg="gl"][data-page="account"] main > .wrap { background: rgb(var(--pan
 }
 
 /* ===== Home shelf: its head and the Pause / Play button for the endless loop (v1.4; the loop itself is in motion3.css and fx-shelf.js) ===== */
-.shelf-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem 1.2rem; }
+.shelf-head { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem 1.2rem; }
 .shelf-toggle { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.6rem; padding: .45rem 1rem; border: 1px solid var(--muted); border-radius: 999px; background: var(--panel); color: var(--white); font: 700 .9rem var(--font-display); cursor: pointer; }
 .shelf-toggle:hover { border-color: var(--amber); }
 .shelf-toggle[hidden] { display: none; }
+/* Hidden for the mouse, there for the keyboard: clipped to nothing (not display:none or visibility:hidden, which would
+   remove it from the tab order) and out of the flow, so showing it moves nothing. It appears over the top right of the
+   head while it has keyboard focus. */
+.shelf-toggle:not(:focus-visible) { position: absolute; top: 0; right: var(--gutter); width: 1px; height: 1px; min-height: 0; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.shelf-toggle:focus-visible { position: absolute; top: 0; right: var(--gutter); z-index: 3; }
+@media (max-width: 640px) { .shelf-toggle:focus-visible { top: calc(100% - 1.2rem); } }   /* the heading fills the width here: sit over the top of the cards, not over text */
 .shelf-toggle svg { width: 14px; height: 14px; fill: currentColor; }
 .shelf-toggle .ico-play { display: none; }
 .shelf-toggle[data-state="paused"] .ico-play { display: inline; }

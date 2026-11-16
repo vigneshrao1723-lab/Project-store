@@ -19,7 +19,13 @@
   const page = body && body.dataset.page;
   if (!page || page === "none") return;
   if (page === "admin" && OFF.indexOf("admin-motion") >= 0) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let raf = 0;
+  if (reduced) {                       // only the shelf gets frames (see frame)
+    ["fxshelf-ready", "fxshelf-wake", "scroll", "resize"].forEach((n) => window.addEventListener(n, schedule, { passive: true }));
+    document.addEventListener("visibilitychange", schedule);
+    return;
+  }
   if (!("IntersectionObserver" in window)) return;
 
   const root = document.documentElement;
@@ -44,7 +50,7 @@
   const settle = new Set();          // just left: one last measurement
   const counting = [];               // counters that are counting up right now
   const cleanups = [];
-  let raf = 0, docH = 0, condensed = false;
+  let docH = 0, condensed = false;
 
   function put(el, name, value) {
     const v = typeof value === "number" ? value.toFixed(3) : value;
@@ -198,6 +204,7 @@
   // ---- the loop
   function frame(now) {
     raf = 0;
+    if (reduced) { if (window.fxShelf && window.fxShelf.tick(now, window.pageYOffset || 0)) schedule(); return; }
     if (probing) {
       probeN++; probeT0 = probeT0 || now;
       if (now - probeT0 >= 500) {
